@@ -1,0 +1,9 @@
+{
+  "name": "ai-quota-control-pwa",
+  "version": "3.0.0",
+  "private": true,
+  "description": "Public-safe mobile-first manual AI quota PWA",
+  "scripts": {
+    "test": "node tests/verify.cjs"
+  }
+}
