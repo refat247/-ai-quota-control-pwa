@@ -1,21 +1,32 @@
 # Changelog
 
-All notable changes are documented here using [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+All notable changes follow SemVer and Keep a Changelog.
+
+## [3.0.1] - 2026-11-14
+
+### Fixed
+- Block manual editing and local persistence on the shared GitHub Pages host; existing browser data is not deleted.
+- Detect `xAI` as a Grok provider alias for unsupported five-hour quotas.
+- Revalidate `/` responses with Firebase Hosting `Cache-Control: no-cache`.
+- Block private JSON import at the known shared `refat247.github.io` browser origin; require a dedicated hostname before private onboarding.
+- Reject imported Grok 5-hour quotas in the same cross-record validation path used by both import methods.
+- Add explicit export-first confirmation before replacing browser records.
+- Correct stale HTML submit label; improve contrast and modal background focus isolation.
+- Correct release/Pages documentation and add browser regression tests beyond static checks.
+
+### Added
+- Paste JSON import for Android download workarounds, through the same validator as file import.
+- Firebase Hosting Spark deployment preparation using an explicit five-asset `dist/` allowlist; no Firebase project/account mutation or real deployment was made.
+
+### Not yet verified
+- Real Android Chrome import / close-reopen persistence, PWA offline and installation on dedicated Firebase hostname.
+- Threat model and privacy acceptance of plaintext browser storage on any hosted origin.
 
 ## [3.0.0] - 2026-11-14
 
 ### Added
-- First **public-safe GitHub repository** release candidate of the v3 mobile-first PWA shell.
-- Same-origin browser storage with explicit write/read-back checks and a visible save status.
-- Offline service worker, web app manifest, responsive navigation and touch-friendly quota editing.
-- JSON import/export so private user records stay **outside public Git history**.
-- Automated version/privacy/PWA smoke checks.
+- First public-safe PWA app shell, per-origin localStorage, JSON import/export, service-worker assets.
+- GitHub Pages build and deployment workflow successful for commit `084b4abf67fdb4bd5aedd93eb9d7f34ca1f52654`.
 
-### Changed
-- Replaced v2.x local-file per-edit download persistence with an HTTPS single-URL workflow.
-- Removed duplicate DOCTYPE from the previous local prototype and rebuilt public icons as minimal two-color raster assets.
-
-### Known limitations
-- No live Google/Claude/ChatGPT/Grok quota API and no automatic account sync.
-- Browser site-data deletion may remove locally saved private records.
-- GitHub Pages deployment, PWA installation and **real Android Chrome close/reopen persistence** are pending external verification.
+### Limitations
+- Prior v3.0.0 browser-level Android persistence remains unverified. Original user-private JSON was never committed to GitHub.
