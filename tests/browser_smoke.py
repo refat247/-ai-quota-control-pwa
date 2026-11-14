@@ -15,7 +15,7 @@ def fixture():
     windows=['weekly','5h','custom']
     quotas=[{'id':f'q{i}','subId':f's{i%6}','model':f'Test Pool {i}','scope':'synthetic','window':'weekly' if i%6==5 else windows[i%3], 'used':'15', 'nextReset':'','behavior':'manual','cycleHours':'','project':False,'verified':False,'note':''} for i in range(17)]
     milestones=[{'id':f'm{i}','title':f'Synthetic date {i}','date':'','kind':'test','note':''} for i in range(6)]
-    return {'meta':{'snapshot':'synthetic','version':'3.0.1','updated':''}, 'subs':subs,'quotas':quotas,'milestones':milestones}
+    return {'meta':{'snapshot':'synthetic','version':'3.0.2','updated':''}, 'subs':subs,'quotas':quotas,'milestones':milestones}
 
 def assert_page(page,expression,msg):
     assert page.evaluate(expression), msg
@@ -53,6 +53,27 @@ def main():
             ctx,page,errs=get_page(width)
             assert_page(page,'document.documentElement.scrollWidth <= window.innerWidth',f'overflow at {width}')
             assert 'PRIVATE IMPORT HOLD' not in page.locator('#saveStatus').inner_text(), 'not github host'
+            if width==390:
+                # Fresh installation: no plan exists, so Quotas -> Add must guide.
+                page.locator('button[data-tab="quotas"]').first.click()
+                assert 'Start with a Plan' in page.locator('#appview').inner_text()
+                page.locator('button[data-new="quota"]').first.click()
+                assert page.locator('#sheetTitle').inner_text()=='Add plan', 'empty subscription opened impossible quota editor'
+                assert 'Step 1 of 2' in page.locator('#sheetHint').inner_text()
+                page.locator('input[name="provider"]').fill('Synthetic Provider')
+                page.locator('input[name="plan"]').fill('Test Only')
+                page.locator('#sheetSave').click()
+                assert page.locator('#sheetTitle').inner_text()=='Add quota', 'Plan save did not resume quota form'
+                assert 'Step 2 of 2' in page.locator('#sheetHint').inner_text()
+                assert page.locator('select[name="subId"]').input_value()!=''
+                page.locator('input[name="model"]').fill('Demo Model')
+                page.locator('input[name="used"]').fill('42')
+                page.locator('#sheetSave').click()
+                saved=json.loads(page.evaluate('localStorage.getItem("'+STORE+'")'))
+                assert len(saved['subs'])==1 and len(saved['quotas'])==1, 'guided Plan/Quota not saved'
+                assert str(saved['quotas'][0]['used'])=='42'
+                assert saved['quotas'][0]['subId']==saved['subs'][0]['id']
+                print('PASS first-run: Add quota guides to Plan, resumes quota and saves')
             page.locator('button[data-tab="backup"]').first.click()
             assert page.locator('#pasteJSON').count()==1, 'missing paste UI'
             if width==390:

@@ -1,8 +1,10 @@
 # AI Quota Control PWA
 
-**Version:** 3.0.1 · **Status:** Repair PR candidate; deployed GitHub Pages v3.0.0 remains **PRIVATE IMPORT HOLD** pending isolated hosting.
+**Version:** 3.0.2 · **Status:** First-run UX patch candidate. Dedicated Firebase Hosting v3.0.1 deploy succeeded per owner terminal; real Android persistence remains unverified. GitHub Pages private import/edit HOLD.
 
 A mobile-first manual AI quota tracker. Not a provider API, automatic quota update, paid subscription sync, or alert service.
+
+**First-use order:** create a Plan (subscription) before adding a quota. When none exist, Quotas → Add guides the user to create a Plan and resumes the quota form after the Plan is saved. This does not change the JSON data schema.
 
 ## Privacy rule
 
