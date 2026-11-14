@@ -72,6 +72,10 @@ def main():
                 page.locator('#pasteJSON').fill(json.dumps(bad))
                 page.locator('button[data-action="pasteImport"]').click()
                 assert page.evaluate('localStorage.getItem("'+STORE+'")')==before_bad, 'invalid import replaced previously saved data'
+                bad_alias=fixture();bad_alias['subs'][5]['provider']='xAI';bad_alias['quotas'][5]['window']='5h'
+                page.locator('#pasteJSON').fill(json.dumps(bad_alias))
+                page.locator('button[data-action="pasteImport"]').click()
+                assert page.evaluate('localStorage.getItem("'+STORE+'")')==before_bad, 'xAI 5h alias accepted'
                 page.locator('button[data-tab="quotas"]').first.click()
                 assert page.locator('#quotaList .quota-card').count()==17, 'quota cards count'
                 page.locator('[data-quick="q0"]').first.click()
@@ -99,8 +103,12 @@ def main():
         page.locator('#filePicker').set_input_files(files={'name':'dummy.json','mimeType':'application/json','buffer':json.dumps(fixture()).encode()})
         page.wait_for_timeout(300)
         assert page.evaluate('localStorage.getItem("'+STORE+'")') is None,'shared-origin import succeeded'
+        page.locator('button[data-tab="subscriptions"]').first.click()
+        page.locator('button[data-new="sub"]').first.click()
+        assert not page.locator('#sheetback').evaluate('(e)=>e.classList.contains("open")'), 'editor opened on shared origin'
+        assert page.evaluate('localStorage.getItem("'+STORE+'")') is None,'shared-origin manual edit wrote storage'
         ctx.close()
-        print('PASS shared github.io origin file and paste blocked')
+        print('PASS shared github.io origin import and manual editor blocked')
         # Simulate quota-save storage failure, status must not claim saved.
         init="const real=window.localStorage.setItem.bind(window.localStorage); window.localStorage.setItem=function(k,v){if(k==='"+STORE+"')throw Error('Simulated quota storage failure');return real(k,v)};"
         ctx,page,_=get_page(390,BASE,init,stored=json.dumps(fixture()))

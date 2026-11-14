@@ -5,6 +5,9 @@ All notable changes follow SemVer and Keep a Changelog.
 ## [3.0.1] - 2026-11-14
 
 ### Fixed
+- Block manual editing and local persistence on the shared GitHub Pages host; existing browser data is not deleted.
+- Detect `xAI` as a Grok provider alias for unsupported five-hour quotas.
+- Revalidate `/` responses with Firebase Hosting `Cache-Control: no-cache`.
 - Block private JSON import at the known shared `refat247.github.io` browser origin; require a dedicated hostname before private onboarding.
 - Reject imported Grok 5-hour quotas in the same cross-record validation path used by both import methods.
 - Add explicit export-first confirmation before replacing browser records.
