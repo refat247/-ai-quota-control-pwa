@@ -1,6 +1,6 @@
 {
   "name": "ai-quota-control-pwa",
-  "version": "3.0.1",
+  "version": "3.0.2",
   "private": true,
   "description": "Public-safe mobile-first manual AI quota tracker",
   "scripts": {

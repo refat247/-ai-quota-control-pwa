@@ -2,6 +2,18 @@
 
 All notable changes follow SemVer and Keep a Changelog.
 
+## [3.0.2] - 2026-11-14
+
+### Fixed
+- First-time Quotas → Add guides through Add Plan if no subscription exists; then opens the quota form with the saved Plan selected.
+- An empty Plan list no longer silently produces a blank selector and failed quota submission.
+- Cancelling the guided Plan setup clears onboarding state; the JSON schema is unchanged.
+- Added synthetic browser regression test for Plan → quota onboarding.
+
+### Unverified
+- Physical Android Chrome Custom Tab/browser restart persistence and offline/PWA install remain unverified.
+- Private JSON onboarding still requires privacy and device acceptance; no personal data is included.
+
 ## [3.0.1] - 2026-11-14
 
 ### Fixed
