@@ -1,36 +1,44 @@
 # AI Quota Control PWA
 
-**Version:** 3.0.0 · **Status:** Public-safe app source; production deployment requires GitHub Pages after the release PR is reviewed and merged.
+**Version:** 3.0.1 · **Status:** Repair PR candidate; deployed GitHub Pages v3.0.0 remains **PRIVATE IMPORT HOLD** pending isolated hosting.
 
-Mobile-first, offline-ready quota tracking for ChatGPT, Claude, Gemini/Antigravity, Grok and other subscriptions. This is a **manual tracker**, not a live quota API.
+A mobile-first manual AI quota tracker. Not a provider API, automatic quota update, paid subscription sync, or alert service.
 
-## Privacy boundary
+## Privacy rule
 
-This repository contains **only the public application shell**. It deliberately contains **no** account emails, quota percentages, renewal/cancellation history or private JSON backups. Personal data can be imported locally into the browser and is stored under that website's browser origin; it is **not sent to this repository or synced between devices**.
+The original GitHub Pages project URL `https://refat247.github.io/-ai-quota-control-pwa/` shares its browser **origin** with any sibling Pages project on `https://refat247.github.io`. Browser `localStorage` is not isolated by path. v3.0.1 **blocks file and paste JSON import on that known shared origin**. Do not enter private account details manually on the old host either. There is no evidence of past compromise.
 
-Never commit private exports, medical records, passwords, API tokens or billing credentials. Do not treat browser storage as an encrypted vault. Clearing site data, resetting Chrome or changing origin can erase saved data; export a private JSON backup periodically.
+The application shell contains no private subscription JSON, owner emails, usage values or billing records. **Never publish private export data** to GitHub, Firebase Hosting, CI logs, screenshots, issues, or public bug reports. Encrypted storage is *not* implemented. Browser data can be erased by clearing site data or switching devices.
 
-## After the owner merges the release PR
+## Secure hosting preparation: Firebase Hosting (Spark)
 
-1. In this repository select **Settings → Pages → Build and deployment → Deploy from a branch**.
-2. Select **main**, **/(root)**, and **Save**.
-3. Open the published HTTPS URL on Android Chrome; do not open `index.html` as a downloaded local file.
-4. On the **Backup** tab, choose **Import my data (once)** and select the separate private JSON from your ChatGPT download. **Never upload that JSON to GitHub.**
-5. Edit a quota and choose Save. Close and reopen **the same HTTPS URL**: the edited value should persist in that browser. Test this on your actual device before relying on it.
-6. Optionally use Chrome **Add to Home screen**. Backup private data before browser/site-data deletion.
+Firebase **Hosting** (not **App Hosting**) can serve the static app on a unique `<SITE_ID>.web.app` origin under Spark. Create a dedicated Firebase project and site reserved for this dashboard, with Spark/no billing, then verify the final hostname before importing personal data. Do **not** confuse `*.firebaseapp.com` default auth domain with server-side secure private storage: data remains in browser `localStorage` on the hostname you actually open.
 
-No file is downloaded on each edit. Offline mode depends on service-worker activation and browser cache.
+**Owner steps after release approval, before real data:**
 
-## Development and verification
+1. Create a **separate Firebase project** at https://console.firebase.google.com/, choose **Spark** (no card). Use a globally unique project/site ID. As of 15 Oct 2026, a default Hosting site may need to be created when initializing Hosting.
+2. From the approved checkout, run `npm run build:hosting`. It copies ONLY these five files into `dist/`: `index.html`, `sw.js`, `manifest.webmanifest`, `icon-192.png`, `icon-512.png`. This avoids accidentally serving repository tests, logs and private JSON.
+3. Authenticate Firebase CLI **locally/Cloud Shell as the owner**: `firebase login`; then `firebase init hosting` or `firebase use --add`, select the specific existing project and confirm `dist` as public directory. **Do not override** the included `firebase.json` or `dist/` whitelist. If `firebase init` prompts to overwrite files, decline and inspect settings.
+4. Deploy with `firebase deploy --only hosting --project YOUR_PROJECT_ID`. **Replace the placeholder**; project/site availability must be checked in your own console. No automatic GitHub-to-Firebase deploy or paid plan is configured by this PR.
+5. Confirm the published URL is the dedicated `https://SITE_ID.web.app/`, not any `github.io` path. Open it in Chrome and test with **synthetic** data first.
+6. Only after an independent privacy review and Android acceptance, optionally import the private JSON using **Backup → file import or Paste JSON**. If replacing records, export existing backup first. Pasted text is cleared after import attempt; Android clipboard history might retain it.
 
-```sh
+For day-to-day use: use the same HTTPS hostname in non-incognito Chrome. Quota edits save locally with read-back verification and no new HTML download. This does **not** synchronize across devices. Export private JSON backup periodically and store it privately.
+
+## Browser acceptance gates
+
+On synthetic fixtures: (a) 6 plans / 17 quota pools / 6 milestones import, (b) editor uses Save changes, (c) invalid Grok 5-hour import rejected, (d) 42% edit remains after reopening *the same origin*, (e) failed localStorage writes do not claim Saved automatically, (f) offline install/update on actual Android Chrome and 320px/390px layout (separate checks).
+
+## Tests / Release
+
+```bash
 npm test
+npm run build:hosting
+python tests/browser_smoke.py
 ```
 
-No npm install is required for the static smoke suite (only Node.js). The tests check version consistency, basic PWA structure, safe public source and JavaScript syntax. They are not proof of Android persistence or account-specific provider quotas.
+`tests/browser_smoke.py` requires Python Playwright and Chromium. It exercises local HTTP browser functionality; **passing it is not a physical Android Chrome test**. The GitHub Actions workflow runs smoke checks on a PR. Existing GitHub Pages main is not changed until owner-controlled merge.
 
-Local preview: `python -m http.server 8787` then open `http://localhost:8787`. GitHub Pages HTTPS is needed for end-user deployment.
+SemVer: v3.0.1 is a compatible bugfix/UX repair to v3.0.0; original JSON schema and localStorage key retained. **Independent review and owner merge remain separate.**
 
-## Canonical governance
-
-Workstream: `CROSS-SUBSCRIPTION-AI-ROUTING`. Initial public release follows SemVer 2.0.0. Current declarations: `package.json`, `README.md`, `CHANGELOG.md` and the app's `VERSION` constant. Owner-controlled merge is required. The GitHub source, Pages activation, real Android smoke test and private-data import are independent completion gates.
+KOS canonical ID: `CROSS-SUBSCRIPTION-AI-ROUTING`.

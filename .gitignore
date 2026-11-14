@@ -1,4 +1,4 @@
-# Private records must stay outside public Git history
+# Never commit private records, backups, or secrets
 *PRIVATE*.json
 *private*.json
 private/
@@ -6,4 +6,7 @@ private/
 .env
 .env.*
 node_modules/
+dist/
 .DS_Store
+__pycache__/
+*.pyc
