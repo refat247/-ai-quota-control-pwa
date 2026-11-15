@@ -26,6 +26,7 @@ jobs:
       url: https://ai-quota-e7258.web.app/
     permissions:
       contents: read
+      actions: read # GitHub environments/production read-only API check
       id-token: write
     steps:
       - name: Fail closed unless protected main and reviewer policy are verified
