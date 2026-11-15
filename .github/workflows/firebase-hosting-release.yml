@@ -1,0 +1,73 @@
+# Fail-closed Firebase Hosting workflow. UNSET FIREBASE_DEPLOY_ENABLED => NO DEPLOY.
+# Owner must separately protect main, add production required reviewer, and set up WIF.
+name: firebase-hosting-release
+on:
+  workflow_run:
+    workflows: ["verify-public-pwa"]
+    types: [completed]
+    branches: [main]
+permissions:
+  contents: read
+concurrency:
+  group: firebase-hosting-production
+  cancel-in-progress: false
+jobs:
+  deploy:
+    name: approved-firebase-hosting-release
+    if: >-
+      ${{ github.event.workflow_run.conclusion == 'success' &&
+         github.event.workflow_run.event == 'push' &&
+         github.event.workflow_run.head_branch == 'main' &&
+         github.event.workflow_run.head_repository.full_name == github.repository &&
+         vars.FIREBASE_DEPLOY_ENABLED == 'true' }}
+    runs-on: ubuntu-24.04
+    environment:
+      name: production
+      url: https://ai-quota-e7258.web.app/
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Fail closed unless protected main and reviewer policy are verified
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO_NAME: ${{ github.repository }}
+          RELEASE_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          set -euo pipefail
+          test "$(gh api "repos/$REPO_NAME/branches/main" --jq '.protected')" = "true" \
+            || { echo "HOLD: main branch is not protected"; exit 1; }
+          test "$(gh api "repos/$REPO_NAME/branches/main" --jq '.commit.sha')" = "$RELEASE_SHA" \
+            || { echo "HOLD: a newer commit is on main"; exit 1; }
+          reviewers="$(gh api "repos/$REPO_NAME/environments/production" --jq '[.protection_rules[]? | select(.type == "required_reviewers")] | length')"
+          test "$reviewers" -ge 1 \
+            || { echo "HOLD: production has no required-reviewer protection"; exit 1; }
+      - name: Checkout the exact verified commit
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+          persist-credentials: false
+      - name: Set up Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '22'
+      - name: Build only allowlisted static Hosting files
+        run: npm run build:hosting
+      - name: Use short-lived Workload Identity Federation
+        uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3
+        with:
+          project_id: ai-quota-e7258
+          workload_identity_provider: ${{ vars.GCP_WIF_PROVIDER }}
+          service_account: ${{ vars.GCP_DEPLOY_SERVICE_ACCOUNT }}
+      - name: Deploy only existing Firebase Hosting project
+        shell: bash
+        env:
+          RELEASE_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          set -euo pipefail
+          npx --yes firebase-tools@15.36.0 deploy \
+            --only hosting \
+            --project ai-quota-e7258 \
+            --non-interactive \
+            --message "Owner-approved GitHub release $RELEASE_SHA"
