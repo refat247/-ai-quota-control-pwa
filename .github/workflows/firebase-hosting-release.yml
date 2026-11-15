@@ -146,7 +146,7 @@ jobs:
           project_id: ai-quota-e7258
           workload_identity_provider: ${{ vars.GCP_WIF_PROVIDER }}
           service_account: ${{ vars.GCP_DEPLOY_SERVICE_ACCOUNT }}
-      - name: Recheck main SHA immediately before Hosting deploy
+      - name: Recheck main SHA and deploy approved Firebase Hosting bundle
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
@@ -157,12 +157,6 @@ jobs:
           actual="$(gh api "repos/$REPO_NAME/branches/main" --jq '.commit.sha')"
           test "$actual" = "$RELEASE_SHA" \
             || { echo "HOLD: main advanced; do not deploy an older bundle"; exit 1; }
-      - name: Deploy only approved Firebase Hosting project
-        shell: bash
-        env:
-          RELEASE_SHA: ${{ github.event.workflow_run.head_sha }}
-        run: |
-          set -euo pipefail
           npx --yes firebase-tools@15.36.0 deploy \
             --only hosting \
             --project ai-quota-e7258 \
