@@ -45,7 +45,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          node ${{'NODE'
+          node <<'NODE'
           const fs = require('node:fs');
           const path = require('node:path');
           const expected = ['index.html','sw.js','manifest.webmanifest','icon-192.png','icon-512.png'].sort();
@@ -77,7 +77,13 @@ jobs:
   deploy:
     name: approved-firebase-hosting-release
     needs: build
-    if: ${{ needs.build.result == 'success' }}
+    if: >-
+      ${{ needs.build.result == 'success' &&
+         github.event.workflow_run.conclusion == 'success' &&
+         github.event.workflow_run.event == 'push' &&
+         github.event.workflow_run.head_branch == 'main' &&
+         github.event.workflow_run.head_repository.full_name == github.repository &&
+         vars.FIREBASE_DEPLOY_ENABLED == 'true' }}
     runs-on: ubuntu-24.04
     environment:
       name: production
@@ -121,7 +127,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          node ${{'NODE'
+          node <<'NODE'
           const fs = require('node:fs');
           const path = require('node:path');
           const expected = ['index.html','sw.js','manifest.webmanifest','icon-192.png','icon-512.png'].sort();
@@ -157,6 +163,7 @@ jobs:
           actual="$(gh api "repos/$REPO_NAME/branches/main" --jq '.commit.sha')"
           test "$actual" = "$RELEASE_SHA" \
             || { echo "HOLD: main advanced; do not deploy an older bundle"; exit 1; }
+          unset GH_TOKEN GITHUB_TOKEN
           npx --yes firebase-tools@15.36.0 deploy \
             --only hosting \
             --project ai-quota-e7258 \
