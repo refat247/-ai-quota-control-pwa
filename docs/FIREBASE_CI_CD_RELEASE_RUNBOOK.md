@@ -42,3 +42,20 @@ References: https://docs.github.com/en/actions/how-tos/deploy/configure-and-mana
 - GitHub API main protected:true with both required checks is verified; full branch policy settings and production environment / repo variables / GCP IAM remain owner-side verification gates.
 - Build job does not receive id-token:write; deploy job receives it only after production environment approval, then uses pinned google-github-actions/auth. The Firebase CLI version is pinned to 15.36.0, but an npm package-integrity lock is not separately implemented. Review this residual supply-chain exposure before real release.
 - Never turn on FIREBASE_DEPLOY_ENABLED or merge the Draft PR merely because the PR CI passes. Deploy only after separate owner authorization, WIF proof and rollback receipt.
+
+## A43 — Manual WIF authentication-only smoke gate (16 November 2026)
+
+**New draft file:** `.github/workflows/wif-auth-smoke.yml`. This is a separate, manual-only workflow. It contains **no Firebase CLI, deploy, checkout, build, personal-data access or artifact upload**. A production environment approval is still required because the existing Google OIDC CEL condition requires `environment == production`. This can generate a GitHub **environment deployment record**, but does **not** create a Firebase Hosting release.
+
+**Sequencing dependency:** GitHub accepts `workflow_dispatch` only when the workflow file exists on the repository default branch. The current `main` only has `verify.yml`, so an actual WIF test **cannot be run from the unmerged feature branch** under the provider's `ref == refs/heads/main` restriction. We will **not** weaken CEL or bypass protected-main policy for the test.
+
+**Low-iteration safe path:**
+1. Keep Draft PR #4 disabled for release by leaving repository variable `FIREBASE_DEPLOY_ENABLED` OFF/UNSET. The new probe is manual-only and does not share release code or deploy commands.
+2. Independently review the **new exact PR HEAD** and CI delta for the added probe plus this runbook clarification. Historical Grok `READY_FOR_OWNER_REVIEW` on `d51a3a04985de3f4a6116b5b2ca4e2cfa9b6b992` does **not** attest the new HEAD.
+3. Seek **explicit, separate owner approval for PR #4 merge**, despite WIF live test being pending. This approval is solely for installing the **disabled release path + nondeploy manual probe**, **not** a production deploy.
+4. After approved merge, ensure release flag still OFF/UNSET. Owner manually chooses Actions → `wif-auth-smoke` → Run workflow → `main`; owner approves only that `production` environment job.
+5. Probe checks GitHub repository/main ref and exact provider/SA environment variables. It requests a `300s` Google service-account access token using the already-pinned `google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093`, `id-token: write`, `create_credentials_file: 'false'` and `export_environment_variables: 'false'`. It never prints token content. Successful job demonstrates short-lived WIF+SA impersonation, **not** Firebase Hosting functional permission or release correctness.
+6. Capture GitHub Actions run URL, job outcome, exact main SHA, reviewer approval, and any auth errors; do **not** infer success from Save or CI-only PASS. If the test fails twice for materially different reasons, HOLD without weakening IAM or allowing deployment.
+7. Separate owner **production deployment** approval (and prior Firebase release/rollback evidence) is mandatory before setting `FIREBASE_DEPLOY_ENABLED=true`. Never turn it on as part of this probe.
+
+**A43 state:** PROBE_WORKFLOW_DRAFTED, LIVE_WIF_AUTH_NOT_RUN, PR_MERGE_HOLD, PRODUCTION_DEPLOY_HOLD. Do not mark the WIF test PASS from workflow YAML inspection.
