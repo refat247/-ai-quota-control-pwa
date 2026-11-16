@@ -1,0 +1,171 @@
+# Owner-controlled release to the existing Firebase Hosting site.
+# Fail-closed: repository variable FIREBASE_DEPLOY_ENABLED must equal true.
+name: firebase-hosting-release
+
+on:
+  workflow_run:
+    workflows: ["verify-public-pwa"]
+    types: [completed]
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: firebase-hosting-production
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: verified-public-bundle
+    if: >-
+      ${{ github.event.workflow_run.conclusion == 'success' &&
+         github.event.workflow_run.event == 'push' &&
+         github.event.workflow_run.head_branch == 'main' &&
+         github.event.workflow_run.head_repository.full_name == github.repository &&
+         vars.FIREBASE_DEPLOY_ENABLED == 'true' }}
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout the exact tested main commit
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+          persist-credentials: false
+      - name: Set up Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '22'
+      - name: Recheck app tests and build only public assets
+        run: |
+          npm test
+          npm run build:hosting
+      - name: Enforce fixed Hosting allowlist outside source build script
+        shell: bash
+        run: |
+          set -euo pipefail
+          node <<'NODE'
+          const fs = require('node:fs');
+          const path = require('node:path');
+          const expected = ['index.html','sw.js','manifest.webmanifest','icon-192.png','icon-512.png'].sort();
+          const config = JSON.parse(fs.readFileSync('firebase.json','utf8'));
+          const h = config.hosting;
+          if (!h || typeof h !== 'object' || Array.isArray(h) ||
+              h.public !== 'dist' || h.site !== undefined || h.target !== undefined ||
+              h.predeploy !== undefined || h.postdeploy !== undefined)
+            throw Error('HOLD: unexpected Firebase Hosting configuration');
+          const actual = fs.readdirSync('dist').sort();
+          if (JSON.stringify(actual) !== JSON.stringify(expected))
+            throw Error('HOLD: dist file allowlist mismatch');
+          for (const file of actual) {
+            if (!fs.lstatSync(path.join('dist',file)).isFile())
+              throw Error('HOLD: dist file is not a regular file: ' + file);
+          }
+          console.log('PASS: exactly five regular public Hosting files and dist-only target');
+          NODE
+      - name: Transfer only the validated public bundle to deploy job
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: public-hosting-bundle
+          path: |
+            dist/
+            firebase.json
+          if-no-files-found: error
+          retention-days: 1
+
+  deploy:
+    name: approved-firebase-hosting-release
+    needs: build
+    if: >-
+      ${{ needs.build.result == 'success' &&
+         github.event.workflow_run.conclusion == 'success' &&
+         github.event.workflow_run.event == 'push' &&
+         github.event.workflow_run.head_branch == 'main' &&
+         github.event.workflow_run.head_repository.full_name == github.repository &&
+         vars.FIREBASE_DEPLOY_ENABLED == 'true' }}
+    runs-on: ubuntu-24.04
+    environment:
+      name: production
+      url: https://ai-quota-e7258.web.app/
+    permissions:
+      contents: read
+      actions: read
+      id-token: write
+    steps:
+      - name: Fail closed on incomplete GitHub protection rules
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO_NAME: ${{ github.repository }}
+          RELEASE_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          set -euo pipefail
+          branch_json="$(gh api "repos/$REPO_NAME/branches/main")"
+          echo "$branch_json" | jq -e '.protected == true' >/dev/null \
+            || { echo "HOLD: main branch not protected"; exit 1; }
+          echo "$branch_json" | jq -e --arg sha "$RELEASE_SHA" '.commit.sha == $sha' >/dev/null \
+            || { echo "HOLD: verified SHA is no longer main HEAD"; exit 1; }
+          for check in static-checks browser-smoke; do
+            echo "$branch_json" | jq -e --arg check "$check" \
+              '(.protection.required_status_checks.contexts // []) | index($check) != null' >/dev/null \
+              || { echo "HOLD: missing required status check $check"; exit 1; }
+          done
+          env_json="$(gh api "repos/$REPO_NAME/environments/production")"
+          echo "$env_json" | jq -e '
+            .can_admins_bypass == false and
+            .deployment_branch_policy.protected_branches == true and
+            any(.protection_rules[]?;
+              .type == "required_reviewers" and ((.reviewers // []) | length > 0))
+          ' >/dev/null \
+            || { echo "HOLD: production reviewers, admin-bypass ban, or protected-branch policy missing"; exit 1; }
+      - name: Download bundle built without OIDC permission
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: public-hosting-bundle
+      - name: Verify downloaded assets before authentication
+        shell: bash
+        run: |
+          set -euo pipefail
+          node <<'NODE'
+          const fs = require('node:fs');
+          const path = require('node:path');
+          const expected = ['index.html','sw.js','manifest.webmanifest','icon-192.png','icon-512.png'].sort();
+          const config = JSON.parse(fs.readFileSync('firebase.json','utf8'));
+          const h = config.hosting;
+          if (!h || typeof h !== 'object' || Array.isArray(h) ||
+              h.public !== 'dist' || h.site !== undefined || h.target !== undefined ||
+              h.predeploy !== undefined || h.postdeploy !== undefined)
+            throw Error('HOLD: unexpected Hosting configuration in build artifact');
+          const actual = fs.readdirSync('dist').sort();
+          if (JSON.stringify(actual) !== JSON.stringify(expected))
+            throw Error('HOLD: downloaded files failed allowlist');
+          for (const file of actual) {
+            if (!fs.lstatSync(path.join('dist',file)).isFile())
+              throw Error('HOLD: non-regular file in dist: ' + file);
+          }
+          console.log('PASS: deployment bundle allowlist');
+          NODE
+      - name: Authenticate using short-lived GCP WIF
+        uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3
+        with:
+          project_id: ai-quota-e7258
+          workload_identity_provider: ${{ vars.GCP_WIF_PROVIDER }}
+          service_account: ${{ vars.GCP_DEPLOY_SERVICE_ACCOUNT }}
+      - name: Recheck main SHA and deploy approved Firebase Hosting bundle
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO_NAME: ${{ github.repository }}
+          RELEASE_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          set -euo pipefail
+          actual="$(gh api "repos/$REPO_NAME/branches/main" --jq '.commit.sha')"
+          test "$actual" = "$RELEASE_SHA" \
+            || { echo "HOLD: main advanced; do not deploy an older bundle"; exit 1; }
+          unset GH_TOKEN GITHUB_TOKEN
+          npx --yes firebase-tools@15.36.0 deploy \
+            --only hosting \
+            --project ai-quota-e7258 \
+            --non-interactive \
+            --message "Owner-approved GitHub release $RELEASE_SHA"

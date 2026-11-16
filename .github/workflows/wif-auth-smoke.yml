@@ -1,0 +1,58 @@
+# Manual non-deploy probe. Requires approved production environment job.
+# Google WIF limits repository, main ref, and production environment.
+name: wif-auth-smoke
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: wif-auth-smoke-production
+  cancel-in-progress: false
+
+jobs:
+  authenticate:
+    name: non-deploy-short-lived-wif
+    if: >-
+      ${{ github.event_name == 'workflow_dispatch' &&
+          github.repository == 'refat247/-ai-quota-control-pwa' &&
+          github.ref == 'refs/heads/main' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    environment:
+      name: production
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Require exact previously verified WIF configuration
+        shell: bash
+        env:
+          WIF_PROVIDER: ${{ vars.GCP_WIF_PROVIDER }}
+          DEPLOYER: ${{ vars.GCP_DEPLOY_SERVICE_ACCOUNT }}
+        run: |
+          set -euo pipefail
+          test "$WIF_PROVIDER" = 'projects/1001829932563/locations/global/workloadIdentityPools/github-deploy/providers/quota-pwa-github' ||
+            { echo "::error::WIF provider mismatch"; exit 1; }
+          test "$DEPLOYER" = 'quota-pwa-deployer@ai-quota-e7258.iam.gserviceaccount.com' ||
+            { echo "::error::Dedicated service account mismatch"; exit 1; }
+          echo "PASS: expected production WIF configuration"
+
+      - name: Mint short-lived service-account access token via WIF
+        uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3, same audited pin as release workflow
+        with:
+          project_id: ai-quota-e7258
+          workload_identity_provider: ${{ vars.GCP_WIF_PROVIDER }}
+          service_account: ${{ vars.GCP_DEPLOY_SERVICE_ACCOUNT }}
+          token_format: access_token
+          access_token_lifetime: 300s
+          create_credentials_file: 'false'
+          export_environment_variables: 'false'
+
+      - name: Report authentication-only success
+        shell: bash
+        run: |
+          echo "PASS: short-lived WIF service-account token minted."
+          echo "No Hosting release, credential file or token output."
