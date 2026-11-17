@@ -115,6 +115,32 @@ def main():
                 print('PASS 390px: 6/17/6 paste, Grok5h rejection, 42% edit, same-origin reload, focus inert')
             ctx.close()
             print('PASS viewport',width)
+        # F1: a formerly valid saved dataset made invalid by a plan/provider change
+        # must enter non-destructive read-only recovery; it must not silently reset.
+        corrupted=fixture()
+        corrupted['subs'][1]['provider']='xAI'
+        assert corrupted['quotas'][1]['window']=='5h'
+        raw_corrupt=json.dumps(corrupted)
+        ctx,page,_=get_page(390,stored=raw_corrupt)
+        assert 'Read-only recovery' in page.locator('#appview').inner_text()
+        assert page.locator('[data-action="exportRaw"]').count()==1
+        assert page.evaluate('localStorage.getItem("'+STORE+'")')==raw_corrupt
+        page.locator('button[data-tab="subscriptions"]').first.click()
+        assert 'Read-only recovery' in page.locator('#appview').inner_text()
+        assert page.evaluate('localStorage.getItem("'+STORE+'")')==raw_corrupt
+        ctx.close()
+        print('PASS F1 malformed cache preserves original raw data and locks editing')
+        # F1: an edit to xAI must be rejected while a linked 5h quota exists.
+        valid=fixture()
+        ctx,page,_=get_page(390,stored=json.dumps(valid))
+        page.locator('button[data-tab="subscriptions"]').first.click()
+        page.locator('[data-edit="sub"][data-id="s1"]').first.click()
+        page.locator('input[name="provider"]').fill('xAI')
+        page.locator('#sheetSave').click()
+        assert json.loads(page.evaluate('localStorage.getItem("'+STORE+'")'))['subs'][1]['provider']=='Synthetic Provider 1'
+        assert page.locator('#sheetback').evaluate('(e)=>e.classList.contains("open")') is True
+        ctx.close()
+        print('PASS F1 invalid provider rename blocked before localStorage write')
         # Shared-origin MUST NOT accept private JSON even when file-picker event is forced.
         ctx,page,_=get_page(390,GITHUB)
         assert 'PRIVATE IMPORT HOLD' in page.locator('#saveStatus').inner_text()

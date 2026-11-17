@@ -9,7 +9,10 @@ assert.ok(html.includes("VERSION='3.0.2'"));
 assert.ok(html.startsWith('<!DOCTYPE html>')&&!html.slice(16,50).includes('<!DOCTYPE html>'));
 assert.match(html,/sharedGitHubOrigin=location\.origin==='https:\/\/refat247\.github\.io'/);
 assert.match(html,/function importDataset\(x\)/);
-assert.ok(html.includes('if(sharedGitHubOrigin){storageFailed=true;lastSaved=false;render();return;}'));
+assert.ok(html.includes('if(sharedGitHubOrigin||recoveryRequired||!validDataset(data))'));
+assert.ok(html.includes('function recoveryPage()'));
+assert.ok(html.includes('if(!commit(next))return;'));
+
 assert.ok(html.includes('function isGrokProvider(provider)'));
 assert.match(html,/function validDataset\(x\)/);
 assert.match(html,/function exportJSON\(\)/);
