@@ -151,7 +151,7 @@ const statusNames={keep:'Keep','conditional-keep':'Keep while possible','cancel-
 const tabs=[['overview','Home','home'],['quotas','Quotas','sliders'],['subscriptions','Plans','wallet'],['deadlines','Dates','calendar'],['backup','Backup','download']];
 const icons={home:'<path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z"/>',sliders:'<path d="M4 7h16M4 17h16"/><circle cx="9" cy="7" r="2" fill="currentColor" stroke="none"/><circle cx="15" cy="17" r="2" fill="currentColor" stroke="none"/>',wallet:'<rect x="3" y="6" width="18" height="15" rx="2"/><path d="M3 9V5a2 2 0 0 1 2-2h13M16 14h5"/>',calendar:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4M17 3v4M3 10h18"/>',download:'<path d="M12 3v12m-5-5 5 5 5-5M4 17v4h16v-4"/>',plus:'<path d="M12 5v14M5 12h14"/>',edit:'<path d="m4 20 4-.8L19 8.2a2 2 0 0 0-3-3L5 16z"/>',arrow:'<path d="M5 12h14m-6-6 6 6-6 6"/>'};
 const svg=k=>`<svg viewBox="0 0 24 24" aria-hidden="true">${icons[k]||''}</svg>`;
-let tab='overview',query='',category='all',provider='all',sort='default',allDeadlines=false,editor=null,restoreFocus=null,quotaOnboarding=false;
+let tab='overview',query='',category='all',provider='all',sort='default',allDeadlines=false,showAllProviders=false,editor=null,restoreFocus=null,quotaOnboarding=false;
 const BD='Asia/Dhaka',dayFmt=new Intl.DateTimeFormat('en-GB',{timeZone:BD,day:'2-digit',month:'short',year:'numeric'}),fullFmt=new Intl.DateTimeFormat('en-GB',{timeZone:BD,day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit',hour12:true});
 function inputNow(){return new Intl.DateTimeFormat('sv-SE',{timeZone:BD,year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).format(new Date()).replace(',','')}
 function today(){return inputNow().slice(0,10)}
@@ -234,7 +234,7 @@ function windowCell(sub,quotaRows,window,label){
       return `<div class="provider-multi-entry" title="${escapeHTML(q.model)}"><span class="provider-multi-name">${escapeHTML(q.model)}</span><strong>${used}</strong></div>`;
     }).join('');
     const next=rows.map(q=>nextReset(q)).filter(r=>{const p=parseBD(r.date);return p&&!p.dateOnly&&p.ms>Date.now()}).sort((a,b)=>parseBD(a.date).ms-parseBD(b.date).ms)[0];
-    const resetText=next?`Earliest reset: ${escapeHTML(difference(next.date).text)}`:'Per-model reset unknown';
+    const resetText=next?`Earliest reset: <span data-countdown-date="${escapeHTML(next.date)}">${escapeHTML(difference(next.date).text)}</span>`:'Per-model reset unknown';
     return `<div class="provider-window pool-${window}" aria-label="${escapeHTML(label)} has ${rows.length} distinct quotas">
       <div class="provider-window-title">${escapeHTML(label)} · ${rows.length} pools</div>
       <div class="provider-multi-list">${items}${rows.length>4?'<div class="provider-window-remaining">+'+(rows.length-4)+' more · expand details</div>':''}</div>
@@ -265,17 +265,19 @@ function overview(){
   const next=data.quotas.map(q=>({q,reset:nextReset(q)})).filter(o=>{const p=parseBD(o.reset.date);return p&&!p.dateOnly&&p.ms>Date.now()}).sort((a,b)=>parseBD(a.reset.date).ms-parseBD(b.reset.date).ms)[0];
   const nextPay=data.subs.filter(s=>s.status!=='cancelled').map(s=>({s,date:monthly(s.renewDay)})).filter(o=>o.date).sort((a,b)=>o.date.localeCompare(b.date))[0];
   const pending=data.quotas.filter(q=>{const r=nextReset(q),p=parseBD(r.date);return p&&!p.dateOnly&&p.ms<Date.now()}).length;
-  const groups=data.subs.slice().sort((a,b)=>(a.status==='cancelled'?1:0)-(b.status==='cancelled'?1:0));
+  const allGroups=data.subs.slice().sort((a,b)=>(a.status==='cancelled'?1:0)-(b.status==='cancelled'?1:0));
+  const groups=showAllProviders?allGroups:allGroups.slice(0,4);
   const upcoming=allEvents().filter(e=>difference(e.date).state!=='expired').slice(0,2);
   return `${pageHead('AI quota overview','Provider-wise 5h এবং weekly quota এক নজরে · all figures are manual.')}
   <div class="home-top" aria-label="Key dates and snapshot">
-    <div class="home-kpi"><small>Next tracked reset</small><strong>${next?escapeHTML(difference(next.reset.date).text):'Unknown'}</strong><em>${next?escapeHTML(next.q.model):'No timed reset'}${next?.reset.estimated?' · estimated':''}</em></div>
+    <div class="home-kpi"><small>Next tracked reset</small><strong>${next?`<span data-countdown-date="${escapeHTML(next.reset.date)}">${escapeHTML(difference(next.reset.date).text)}</span>`:'Unknown'}</strong><em>${next?escapeHTML(next.q.model):'No timed reset'}${next?.reset.estimated?' · estimated':''}</em></div>
     <div class="home-kpi"><small>Expected renewal</small><strong>${nextPay?escapeHTML(difference(nextPay.date).text):'Unknown'}</strong><em>${nextPay?escapeHTML(nextPay.s.provider):'No billing day'}</em></div>
     <div class="home-kpi"><small>Last manual edit</small><strong>${escapeHTML(data.meta.updated||'Unknown')}</strong><em>Not API-synced</em></div>
   </div>
   ${pending?`<div class="notice warn"><strong>${pending} reset date(s) past:</strong> check provider UI; an expired timestamp does not mean quota automatically refilled.</div>`:''}
-  <section aria-label="Provider quota overview"><div class="home-actions"><h2>Providers / accounts (${groups.length})</h2><button class="btn sm soft" data-tab="quotas">All quotas</button></div>
+  <section aria-label="Provider quota overview"><div class="home-actions"><h2>Providers / accounts (${allGroups.length})</h2><button class="btn sm soft" data-tab="quotas">All quotas</button></div>
     <div class="provider-list">${groups.map((s,i)=>providerRow(s,i)).join('')||'<div class="card empty">No plans yet. Create a Plan to start tracking quotas.</div>'}</div>
+    ${allGroups.length>4?`<button class="btn sm soft full" style="margin-top:8px" data-expand-providers="true">${showAllProviders?'Show fewer providers':'Show all '+allGroups.length+' providers'}</button>`:''}
   </section>
   <p class="home-footnote">Quota percentages are not combined across models or accounts. “Checked” indicates an owner-marked verification, not a live API update. Renewal day is an estimate; billing time and payment remain unconfirmed.</p>
   <section class="section-block">${section('Upcoming decisions','First two tracked events')}<div class="quicklist">${upcoming.map(eventRow).join('')||'<div class="card empty">No upcoming dated events.</div>'}</div><div style="margin-top:8px"><button class="btn sm soft" data-tab="deadlines">All dates</button></div></section>`;
@@ -357,6 +359,7 @@ $('#appview').addEventListener('click',e=>{
     if(b.dataset.delete==='sub'&&data.quotas.some(q=>q.subId===b.dataset.id)){alert('Reassign or delete this subscription’s quotas first.');return;}
     if(confirm('Delete this entry from your local dashboard?')){const next=copy(data);next[key]=next[key].filter(x=>x.id!==b.dataset.id);commit(next);}
   } else if(b.dataset.expandDates){allDeadlines=!allDeadlines;render();}
+  else if(b.dataset.expandProviders){showAllProviders=!showAllProviders;render();}
   else if(b.dataset.action)doAction(b.dataset.action);
 });
 $('#appview').addEventListener('input',e=>{if(e.target.id==='quotaSearch'){query=e.target.value;renderQuotaList()}});
