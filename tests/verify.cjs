@@ -3,8 +3,8 @@ const fs=require('node:fs'),assert=require('node:assert/strict'),cp=require('nod
 const root=path.resolve(__dirname,'..'),read=f=>fs.readFileSync(path.join(root,f),'utf8');
 const version=require('../package.json').version,html=read('index.html'),sw=read('sw.js'),m=JSON.parse(read('manifest.webmanifest'));
 assert.equal(version,'3.0.3');
-assert.ok(read('README.md').includes('**Version:** 3.0.2'));
-assert.ok(read('CHANGELOG.md').includes('## [3.0.2]'));
+assert.ok(read('README.md').includes('**Version:** 3.0.3'));
+assert.ok(read('CHANGELOG.md').includes('## [3.0.3]'));
 assert.ok(html.includes("VERSION='3.0.3'"));
 assert.ok(html.startsWith('<!DOCTYPE html>')&&!html.slice(16,50).includes('<!DOCTYPE html>'));
 assert.match(html,/sharedGitHubOrigin=location\.origin==='https:\/\/refat247\.github\.io'/);
