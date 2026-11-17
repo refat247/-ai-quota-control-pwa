@@ -1,4 +1,4 @@
-AI Quota Control PWA — v3.0.2
+AI Quota Control PWA — v3.0.3
 
 এটি mobile-first, manual AI quota tracking app। এটি provider-এর live quota API বা automatic account sync নয়।
 
