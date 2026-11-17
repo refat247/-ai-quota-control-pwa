@@ -56,6 +56,10 @@
 .home-actions{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:10px 0 5px}
 .home-actions h2{font-size:15px;margin:0}
 .home-footnote{font-size:10px;color:var(--soft);margin-top:9px;line-height:1.4}
+.provider-multi-list{display:grid;gap:3px;margin-top:4px}
+.provider-multi-entry{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:5px;align-items:center;font-size:10px;line-height:1.25}
+.provider-multi-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;color:var(--muted)}
+.provider-multi-entry strong{white-space:nowrap;font-size:10px}
 @media(min-width:780px){.provider-list{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:330px){.home-kpi{padding:7px 5px}.home-kpi strong{font-size:11px}.provider-window{padding:6px}}
 
@@ -224,7 +228,19 @@ function windowCell(sub,quotaRows,window,label){
   const rows=quotaRows.filter(q=>q.window===window);
   const notApplicable=window==='5h'&&isGrokProvider(sub.provider);
   if(!rows.length)return `<div class="provider-window pool-${window}" aria-label="${escapeHTML(label)} no quota entered"><div class="provider-window-title">${escapeHTML(label)}</div><div class="provider-window-value">${notApplicable?'N/A':'—'}</div><div class="provider-window-remaining">${notApplicable?'Not applicable':'No pool entered'}</div></div>`;
-  if(rows.length>1)return `<div class="provider-window pool-${window}" aria-label="${escapeHTML(label)} has ${rows.length} separate quotas"><div class="provider-window-title">${escapeHTML(label)}</div><div class="provider-window-value">${rows.length} pools</div><div class="provider-window-remaining">Expand for each model · no average</div></div>`;
+  if(rows.length>1){
+    const items=rows.slice(0,4).map(q=>{
+      const used=q.used===''||q.used===null?'Unknown':escapeHTML(q.used+'% used');
+      return `<div class="provider-multi-entry" title="${escapeHTML(q.model)}"><span class="provider-multi-name">${escapeHTML(q.model)}</span><strong>${used}</strong></div>`;
+    }).join('');
+    const next=rows.map(q=>nextReset(q)).filter(r=>{const p=parseBD(r.date);return p&&!p.dateOnly&&p.ms>Date.now()}).sort((a,b)=>parseBD(a.date).ms-parseBD(b.date).ms)[0];
+    const resetText=next?`Earliest reset: ${escapeHTML(difference(next.date).text)}`:'Per-model reset unknown';
+    return `<div class="provider-window pool-${window}" aria-label="${escapeHTML(label)} has ${rows.length} distinct quotas">
+      <div class="provider-window-title">${escapeHTML(label)} · ${rows.length} pools</div>
+      <div class="provider-multi-list">${items}${rows.length>4?'<div class="provider-window-remaining">+'+(rows.length-4)+' more · expand details</div>':''}</div>
+      <div class="provider-window-reset">${resetText} · no averaging</div>
+    </div>`;
+  }
   const q=rows[0],known=q.used!==''&&q.used!==null&&Number.isFinite(Number(q.used)),used=known?Number(q.used):null,reset=nextReset(q),count=reset.date?difference(reset.date).text:'Reset not entered';
   return `<div class="provider-window pool-${window}" aria-label="${escapeHTML(label)} quota for ${escapeHTML(q.model)}">
     <div class="provider-window-title">${escapeHTML(label)}<span>${q.verified?'Checked':'Manual'}</span></div>
