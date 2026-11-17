@@ -2,15 +2,17 @@
 const fs=require('node:fs'),assert=require('node:assert/strict'),cp=require('node:child_process'),path=require('node:path');
 const root=path.resolve(__dirname,'..'),read=f=>fs.readFileSync(path.join(root,f),'utf8');
 const version=require('../package.json').version,html=read('index.html'),sw=read('sw.js'),m=JSON.parse(read('manifest.webmanifest'));
-assert.equal(version,'3.0.2');
+assert.equal(version,'3.0.3');
 assert.ok(read('README.md').includes('**Version:** 3.0.2'));
 assert.ok(read('CHANGELOG.md').includes('## [3.0.2]'));
-assert.ok(html.includes("VERSION='3.0.2'"));
+assert.ok(html.includes("VERSION='3.0.3'"));
 assert.ok(html.startsWith('<!DOCTYPE html>')&&!html.slice(16,50).includes('<!DOCTYPE html>'));
 assert.match(html,/sharedGitHubOrigin=location\.origin==='https:\/\/refat247\.github\.io'/);
 assert.match(html,/function importDataset\(x\)/);
 assert.ok(html.includes('if(sharedGitHubOrigin||recoveryRequired||!validDataset(data))'));
 assert.ok(html.includes('function recoveryPage()'));
+assert.ok(html.includes('function homeRenderFailure(error)'));
+assert.ok(html.includes('view=homeRenderFailure(error)'));
 assert.ok(html.includes('if(!commit(next))return;'));
 
 assert.ok(html.includes('function isGrokProvider(provider)'));
@@ -24,7 +26,7 @@ assert.ok(html.includes('quotaOnboarding=true'));
 assert.ok(html.includes('Step 1 of 2: Create a Plan first'));
 assert.ok(html.includes('Step 2 of 2: Choose the new Plan'));
 assert.ok(!html.includes('Save + download HTML'));
-assert.ok(sw.includes('ai-quota-shell-v3-0-2'));
+assert.ok(sw.includes('ai-quota-shell-v3-0-3'));
 assert.equal(m.display,'standalone');
 for(const f of ['index.html','sw.js','manifest.webmanifest','icon-192.png','icon-512.png'])assert.ok(fs.existsSync(path.join(root,f)));
 for(const icon of m.icons)assert.ok(fs.existsSync(path.join(root,icon.src)));
