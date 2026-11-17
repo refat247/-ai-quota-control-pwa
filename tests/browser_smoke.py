@@ -99,7 +99,11 @@ def main():
                 assert page.evaluate('localStorage.getItem("'+STORE+'")')==before_bad, 'xAI 5h alias accepted'
                 # P1 Home groups by plan/account; never merges percentages from multiple model pools.
                 page.locator('button[data-tab="overview"]').first.click()
-                assert page.locator('.provider-row').count()==6, 'one provider/account row per plan'
+                assert page.locator('.provider-row').count()==4, 'compact Home should initially show four rows'
+                assert 'Show all 6 providers' in page.locator('[data-expand-providers]').inner_text()
+                page.locator('[data-expand-providers]').click()
+                assert page.locator('.provider-row').count()==6, 'show-all toggle lost provider rows'
+                assert page.locator('.home-kpi [data-countdown-date]').count()<=1, 'KPI countdown duplicated'
                 assert page.locator('.home-kpi').count()==3, 'compact Home KPIs'
                 assert page.locator('.focus-banner').count()==0, 'old oversized hero still shown'
                 assert 'N/A' in page.locator('.provider-row[data-sub-id="s5"] .pool-5h').inner_text(), 'Grok 5h must be N/A'
