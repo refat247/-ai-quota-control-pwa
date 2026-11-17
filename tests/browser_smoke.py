@@ -15,7 +15,7 @@ def fixture():
     windows=['weekly','5h','custom']
     quotas=[{'id':f'q{i}','subId':f's{i%6}','model':f'Test Pool {i}','scope':'synthetic','window':'weekly' if i%6==5 else windows[i%3], 'used':'15', 'nextReset':'','behavior':'manual','cycleHours':'','project':False,'verified':False,'note':''} for i in range(17)]
     milestones=[{'id':f'm{i}','title':f'Synthetic date {i}','date':'','kind':'test','note':''} for i in range(6)]
-    return {'meta':{'snapshot':'synthetic','version':'3.0.2','updated':''}, 'subs':subs,'quotas':quotas,'milestones':milestones}
+    return {'meta':{'snapshot':'synthetic','version':'3.0.3','updated':''}, 'subs':subs,'quotas':quotas,'milestones':milestones}
 
 def assert_page(page,expression,msg):
     assert page.evaluate(expression), msg
@@ -24,7 +24,7 @@ def main():
     with sync_playwright() as p:
         executable=os.environ.get('CHROME_PATH')
         browser=p.chromium.launch(headless=True, executable_path=executable if executable else None, args=['--no-sandbox'])
-        def get_page(width=390,host=BASE,add_init=None,stored=None):
+        def get_page(width=390,host=BASE,add_init=None,stored=None,force_home_error=False):
             # This model environment blocks even localhost navigation. Chromium DOM
             # simulation uses an explicit in-memory localStorage and test-only
             # fileMode/origin substitutions. Do not classify as real HTTPS persistence.
@@ -45,6 +45,8 @@ def main():
             if add_init: page.evaluate(add_init)
             fake=HTML.replace("const fileMode=!['http:','https:'].includes(location.protocol);","const fileMode=false;")
             fake=fake.replace("const sharedGitHubOrigin=location.origin==='https://refat247.github.io';", "const sharedGitHubOrigin=" + ("true" if host==GITHUB else "false") + ";")
+            if force_home_error:
+                fake=fake.replace('function overview(){', "function overview(){throw new TypeError('Synthetic home-only exception');",1)
             page.set_content(fake,wait_until='domcontentloaded')
             page.wait_for_selector('#appview .page-head')
             assert not errors, f'JS errors: {errors}'
@@ -173,6 +175,20 @@ def main():
         assert page.evaluate('localStorage.getItem("'+STORE+'")') is None,'shared-origin manual edit wrote storage'
         ctx.close()
         print('PASS shared github.io origin import and manual editor blocked')
+        # A85 Android blank-Home regression: a synthetic view failure must show a
+        # non-destructive recovery panel and keep original localStorage untouched.
+        original=json.dumps(fixture())
+        ctx,page,errs=get_page(390,stored=original,force_home_error=True)
+        assert 'Home temporarily unavailable' in page.locator('#appview').inner_text()
+        assert 'Diagnostic: TypeError' in page.locator('#appview').inner_text()
+        assert page.locator('#saveStatus').inner_text().strip(), 'save status blank after Home exception'
+        assert page.evaluate('localStorage.getItem("'+STORE+'")')==original, 'Home fallback changed stored data'
+        page.locator('button[data-tab="backup"]').first.click()
+        assert 'Home temporarily unavailable' not in page.locator('#appview').inner_text(), 'backup navigation failed'
+        assert page.locator('[data-action="exportJSON"]').count()>0, 'private export unavailable after Home error'
+        assert page.evaluate('localStorage.getItem("'+STORE+'")')==original, 'backup route mutated records'
+        ctx.close()
+        print('PASS A85 forced Home TypeError: visible error boundary, Backup available, storage unchanged')
         # Simulate quota-save storage failure, status must not claim saved.
         init="const real=window.localStorage.setItem.bind(window.localStorage); window.localStorage.setItem=function(k,v){if(k==='"+STORE+"')throw Error('Simulated quota storage failure');return real(k,v)};"
         ctx,page,_=get_page(390,BASE,init,stored=json.dumps(fixture()))
