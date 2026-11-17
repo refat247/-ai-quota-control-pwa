@@ -104,6 +104,8 @@ def main():
                 assert page.locator('.focus-banner').count()==0, 'old oversized hero still shown'
                 assert 'N/A' in page.locator('.provider-row[data-sub-id="s5"] .pool-5h').inner_text(), 'Grok 5h must be N/A'
                 assert '3 pools' in page.locator('.provider-row[data-sub-id="s1"] .pool-5h').inner_text(), 'distinct model pools may not be aggregated'
+                assert page.locator('.provider-row[data-sub-id="s1"] .pool-5h .provider-multi-entry').count()==3, 'per-model percentages missing'
+                assert '15% used' in page.locator('.provider-row[data-sub-id="s1"] .pool-5h').inner_text(), 'weekly/window value not visible from Home'
                 page.locator('.provider-row[data-sub-id="s1"] details summary').click()
                 assert page.locator('.provider-row[data-sub-id="s1"] .provider-model').count()==3, 'model detail expansion missing'
                 assert_page(page,'document.documentElement.scrollWidth <= window.innerWidth','compact Home overflow at 390px')
