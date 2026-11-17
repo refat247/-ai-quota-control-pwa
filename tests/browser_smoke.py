@@ -97,6 +97,23 @@ def main():
                 page.locator('#pasteJSON').fill(json.dumps(bad_alias))
                 page.locator('button[data-action="pasteImport"]').click()
                 assert page.evaluate('localStorage.getItem("'+STORE+'")')==before_bad, 'xAI 5h alias accepted'
+                # P1 Home groups by plan/account; never merges percentages from multiple model pools.
+                page.locator('button[data-tab="overview"]').first.click()
+                assert page.locator('.provider-row').count()==4, 'compact Home should initially show four rows'
+                assert 'Show all 6 providers' in page.locator('[data-expand-providers]').inner_text()
+                page.locator('[data-expand-providers]').click()
+                assert page.locator('.provider-row').count()==6, 'show-all toggle lost provider rows'
+                assert page.locator('.home-kpi [data-countdown-date]').count()<=1, 'KPI countdown duplicated'
+                assert page.locator('.home-kpi').count()==3, 'compact Home KPIs'
+                assert page.locator('.focus-banner').count()==0, 'old oversized hero still shown'
+                assert 'N/A' in page.locator('.provider-row[data-sub-id="s5"] .pool-5h').inner_text(), 'Grok 5h must be N/A'
+                assert '3 pools' in page.locator('.provider-row[data-sub-id="s1"] .pool-5h').inner_text(), 'distinct model pools may not be aggregated'
+                assert page.locator('.provider-row[data-sub-id="s1"] .pool-5h .provider-multi-entry').count()==3, 'per-model percentages missing'
+                assert '15% used' in page.locator('.provider-row[data-sub-id="s1"] .pool-5h').inner_text(), 'weekly/window value not visible from Home'
+                page.locator('.provider-row[data-sub-id="s1"] details summary').click()
+                assert page.locator('.provider-row[data-sub-id="s1"] .provider-model').count()==3, 'model detail expansion missing'
+                assert_page(page,'document.documentElement.scrollWidth <= window.innerWidth','compact Home overflow at 390px')
+                print('PASS compact Home: six provider rows, separate windows, no fake aggregation, Grok N/A')
                 page.locator('button[data-tab="quotas"]').first.click()
                 assert page.locator('#quotaList .quota-card').count()==17, 'quota cards count'
                 page.locator('[data-quick="q0"]').first.click()
