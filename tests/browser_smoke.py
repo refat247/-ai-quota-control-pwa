@@ -1,6 +1,7 @@
 """Synthetic-only Chromium smoke tests. No personal dataset or production writes."""
 import json
 import os
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from playwright.sync_api import sync_playwright, Error
 
@@ -160,6 +161,30 @@ def main():
                 print('PASS 390px: 6/17/6 paste, Grok5h rejection, 42% edit, same-origin reload, focus inert')
             ctx.close()
             print('PASS viewport',width)
+        # Batch A data-driven filter regression: timed resets and type filters.
+        # Synthetic Dhaka timestamps only; avoids user's private quota data.
+        filter_data=fixture()
+        dhaka=timezone(timedelta(hours=6))
+        now_bd=datetime.now(dhaka)
+        filter_data['quotas'][0]['nextReset']=(now_bd+timedelta(hours=3)).strftime('%Y-%m-%d %H:%M')
+        filter_data['quotas'][2]['nextReset']=(now_bd-timedelta(hours=3)).strftime('%Y-%m-%d %H:%M')
+        filter_raw=json.dumps(filter_data)
+        ctx,page,errs=get_page(390,stored=filter_raw)
+        page.locator('[data-home-filter="soon"]').click()
+        assert page.locator('#homeProviderList .provider-row').count()==1, 'soon filter should match one provider'
+        assert page.locator('#homeProviderList .provider-row').first.get_attribute('data-sub-id')=='s0', 'soon filter provider mismatch'
+        page.locator('[data-home-filter="overdue"]').click()
+        assert page.locator('#homeProviderList .provider-row').count()==1, 'overdue filter should match one provider'
+        assert page.locator('#homeProviderList .provider-row').first.get_attribute('data-sub-id')=='s2', 'overdue filter provider mismatch'
+        page.locator('[data-home-filter="weekly"]').click()
+        assert page.locator('#homeProviderList .provider-row[data-sub-id="s5"]').count()==1, 'weekly should include Grok weekly'
+        page.locator('[data-home-filter="5h"]').click()
+        assert page.locator('#homeProviderList .provider-row[data-sub-id="s1"]').count()==1, '5-hour should include matching provider'
+        assert page.locator('#homeProviderList .provider-row[data-sub-id="s5"]').count()==0, 'Grok must not acquire fake 5-hour pool'
+        assert page.evaluate('localStorage.getItem("'+STORE+'")')==filter_raw, 'Home filters modified quota JSON'
+        assert not errs, f'Home filter JS errors: {errs}'
+        ctx.close()
+        print('PASS Batch A deterministic 24h/overdue/weekly/5h filtering; quota JSON unchanged')
         # F1: a formerly valid saved dataset made invalid by a plan/provider change
         # must enter non-destructive read-only recovery; it must not silently reset.
         corrupted=fixture()
