@@ -76,6 +76,7 @@
 .paste-label{display:block;margin:12px 0 6px;font-size:13px;font-weight:700}.backup-grid textarea#pasteJSON{display:block;width:100%;min-height:120px;padding:12px;border:1px solid var(--line);border-radius:10px;color:var(--ink);background:var(--paper)}.help-note{font-size:12px;color:var(--muted)}
 
 /* v3.1.0 Batch A: responsive, data-isolated Home controls */
+[hidden]{display:none!important}
 .home-search-controls{display:flex;gap:7px;align-items:stretch;margin:9px 0 8px}
 .home-search-controls .search{min-width:0;flex:1;min-height:44px;border-radius:11px}
 .home-clear{min-height:44px;min-width:55px}
@@ -242,7 +243,7 @@ function refreshHomeResults(){
   if(!list)return;
   list.innerHTML=homeProviderMarkup(displayed);
   if(count)count.textContent=`${results.length} matching / ${data.subs.length} total`;
-  if(button){button.hidden=results.length<=4;button.textContent=showAllProviders?'Show fewer providers':`Show all ${results.length} matching providers`;}
+  if(button){button.hidden=results.length<=4;button.textContent=showAllProviders?'Show fewer providers':homeFilter==='all'&&!homeQuery?'Show all '+results.length+' providers':`Show all ${results.length} matching providers`;}
   const notice=$('#homePreferenceNotice');
   if(notice)notice.textContent=uiPrefsPersisted?'Pins and display density stay on this device; quota JSON is unchanged.':'View settings were not saved; quota JSON was not changed.';
 }
@@ -377,7 +378,7 @@ function overview(){
     <div class="home-density-controls" role="group" aria-label="Provider card density"><span>Display</span>${[['quick','Quick'],['comfortable','Comfortable']].map(([key,label])=>`<button class="density-btn ${homePrefs.density===key?'selected':''}" type="button" data-home-density="${key}" aria-pressed="${homePrefs.density===key}">${label}</button>`).join('')}</div>
     <p id="homeResultCount" class="home-results-count">${allGroups.length} matching / ${data.subs.length} total</p>
     <div class="provider-list" id="homeProviderList">${homeProviderMarkup(groups)}</div>
-    <button class="btn sm soft full" style="margin-top:8px" id="homeExpand" data-expand-providers="true" ${allGroups.length>4?'':'hidden'}>${showAllProviders?'Show fewer providers':'Show all '+allGroups.length+' matching providers'}</button>
+    <button class="btn sm soft full" style="margin-top:8px" id="homeExpand" data-expand-providers="true" ${allGroups.length>4?'':'hidden'}>${showAllProviders?'Show fewer providers':homeFilter==='all'&&!homeQuery?'Show all '+allGroups.length+' providers':'Show all '+allGroups.length+' matching providers'}</button>
     <p class="home-preference-note" id="homePreferenceNotice">${uiPrefsPersisted?'Pins and display density stay on this device; quota JSON is unchanged.':'View settings were not saved; quota JSON was not changed.'}</p>
   </section>
   <p class="home-footnote">Quota percentages are not combined across models or accounts. “Checked” indicates an owner-marked verification, not a live API update. Renewal day is an estimate; billing time and payment remain unconfirmed.</p>
