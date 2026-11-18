@@ -1,4 +1,4 @@
-AI Quota Control PWA — v3.2.0 (compact glance/legend review candidate; not merged/deployed)
+AI Quota Control PWA — v3.3.0 (compact glance/legend review candidate; not merged/deployed)
 
 এটি mobile-first, manual AI quota tracking app। এটি provider-এর live quota API বা automatic account sync নয়।
 
@@ -24,6 +24,11 @@ Batch A UI/UX (review only)
 Home-এ provider/model Search, Clear, Pinned/Reset Soon/Overdue/Weekly/5-hour filter, Pin এবং Quick/Comfortable layout প্রস্তাবিত code-এ যোগ করা হয়েছে। একাধিক model থাকলে Update models তালিকা খোলে; ভুল model নিজে বেছে নেয় না। আলাদা ai-quota-ui-preferences-v1 storage key ব্যবহৃত; মূল ai-quota-control-center-v1 JSON এবং records অপরিবর্তিত। UI preference private JSON backup-এ থাকে না। Release, Android acceptance ও private JSON independent backup এখনও HOLD।
 
 
-v3.2.0 Compact Home — DRAFT
+v3.3.0 Compact Home — DRAFT
 ---------------------------
 Quick view-তে প্রতিটি model আলাদা chip-এ used % দেখাবে। সবুজ = used 75%-এর কম, হলুদ = 75–89%, লাল = 90–100%, ধূসর = Unknown। এগুলো manual value, live API নয়। Reset timestamp পেরিয়ে গেলে provider UI যাচাই করুন; automatic refill ধরে নেবেন না। Keep = subscription decision, quota status নয়। Comfortable view আগের বিস্তারিত তথ্য বজায় রাখে। মূল quota JSON/backup/storage key অপরিবর্তিত।
+
+
+v3.3.0 Visual Cockpit (DRAFT; production নয়)
+------------------------------------------
+Home: ছোট তিনটি summary, model অনুযায়ী গোল percentage meter-সহ ২-column provider tile। Quotas: provider grid; সম্পূর্ণ quota list আলাদা detail screen-এ। Plans: ছোট status tile ও tap-to-edit detail। Dates: প্রথমে ৩টি জরুরি event, Today/Next 3/7 days/All filter। Backup, import, মূল localStorage key এবং recovery অপরিবর্তিত। লাল = 90%+ used, হলুদ = 75–89%, সবুজ = <75%, ধূসর = Unknown। 0% আলাদা। Live quota API নয়। Android পরীক্ষা ও owner approval ছাড়া release নয়।

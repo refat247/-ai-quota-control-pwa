@@ -1,6 +1,6 @@
 # AI Quota Control PWA
 
-**Version:** 3.2.0 · **Status:** compact glance/legend UI review candidate on a separate branch; v3.1.0 merged and Firebase workflow succeeded at 7351cb1. This change is NOT merged/deployed. Real Android data/persistence acceptance remains unverified. GitHub Pages private import/edit HOLD.
+**Version:** 3.3.0 · **Status:** compact glance/legend UI review candidate on a separate branch; v3.1.0 merged and Firebase workflow succeeded at 7351cb1. This change is NOT merged/deployed. Real Android data/persistence acceptance remains unverified. GitHub Pages private import/edit HOLD.
 
 A mobile-first manual AI quota tracker. Not a provider API, automatic quota update, paid subscription sync, or alert service.
 
@@ -51,6 +51,11 @@ SemVer: v3.0.1 is a compatible bugfix/UX repair to v3.0.0; original JSON schema 
 
 KOS canonical ID: `CROSS-SUBSCRIPTION-AI-ROUTING`.
 
-## v3.2.0 compact glance and color legend (DRAFT)
+## v3.3.0 compact glance and color legend (DRAFT)
 
 Quick Home shows a separate textual used-percentage chip for **each** tracked model; never average different models or accounts. Color threshold (manual used %, not API status): green less than 75%; amber 75–89%; red 90–100%; grey for Unknown. A passed reset timestamp is a reminder to verify provider UI, NOT proof of automatic refill. Subscription decision labels (Keep/Trial/Cancel) are separate. Filters use a 2-row layout, success-only storage status is compact and upcoming decision details are collapsed. Comfortable view retains the original detailed window cells, per-model details, Grok 5h N/A and quick editing. Main quota JSON key/schema, backup/import and optional separate UI preferences are unchanged.
+
+
+## v3.3.0 visual cockpit (Draft PR — not deployed)
+
+Mobile Home now shows three compact date metrics and a two-column provider grid with individual circular model-used meters, rather than six tall provider forms. Tap a provider for **every** model and quick update. Quotas starts with provider shortcuts; the original 17-card detailed list remains available only when explicitly chosen. Plans uses compact status tiles and opens original detail/edit/delete controls in a second-level dialog. Dates prioritizes the next three events, Today/Next 3/7 days/All, with all and past events accessible on demand. Backup/recovery and original quota JSON are unchanged. Colors pair with actual text: below 75% used green, 75–89% amber, 90%+ red, Unknown grey; 0 remains 0. All model percentages are independent and manual, never API-synced or averaged. Synthetic CI and Android acceptance are separate gates. No production merge or Firebase deployment is authorized by this draft.

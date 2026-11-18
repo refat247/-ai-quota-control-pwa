@@ -2,6 +2,18 @@
 
 All notable changes follow SemVer and Keep a Changelog.
 
+## [3.3.0] - 2026-11-18 (DRAFT, not merged/deployed)
+
+### Changed
+- Home visual cockpit with compact date metrics, 2×3 provider tiles, separate circular model used-percent indicators and provider detail dialog.
+- Quotas: provider shortcuts at entry, optional full original model list; retain one-tap quota update, validation and Grok 5h N/A.
+- Plans: compact status tiles with existing detail/edit/delete on tap. Dates: Today / Next 3 / 7 days / All; full event and past timestamp lists on demand.
+- Color+text semantics and compact saved status; never merge percentages across distinct models/accounts.
+
+### Evidence and limits
+- Original quota localStorage key, JSON schema, import/export, F1 recovery and origin rules unchanged. No new network calls.
+- Synthetic-browser regression checks mobile overflow, source data byte identity, new navigation and editing. Actual Android acceptance, independent source review, canonical Version Manager CLI and owner exact-SHA release approval remain pending.
+
 ## [3.2.0] - 2026-11-18 (DRAFT, not deployed)
 
 ### Changed
