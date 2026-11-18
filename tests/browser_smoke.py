@@ -102,10 +102,8 @@ def main():
                 assert page.evaluate('localStorage.getItem("'+STORE+'")')==before_bad, 'xAI 5h alias accepted'
                 # P1 Home groups by plan/account; never merges percentages from multiple model pools.
                 page.locator('button[data-tab="overview"]').first.click()
-                assert page.locator('.provider-row').count()==4, 'compact Home should initially show four rows'
-                assert 'Show all 6 providers' in page.locator('[data-expand-providers]').inner_text()
-                page.locator('[data-expand-providers]').click()
-                assert page.locator('.provider-row').count()==6, 'show-all toggle lost provider rows'
+                assert page.locator('#homeProviderList .provider-row').count()==6, 'compact Quick Home must initially show all six providers'
+                assert page.locator('[data-expand-providers]').is_hidden(), 'Show all must be hidden when every matching provider is visible'
                 assert page.locator('.home-kpi [data-countdown-date]').count()<=1, 'KPI countdown duplicated'
                 assert page.locator('.home-kpi').count()==3, 'compact Home KPIs'
                 assert page.locator('.home-usage-legend .legend-item').count()==4, 'threshold legend must be visible'
