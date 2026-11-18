@@ -1,10 +1,16 @@
 # AI Quota Control PWA
 
-**Version:** 3.0.3 · **Status:** Draft Android Home-display recovery patch. Firebase v3.0.2 release verified in GitHub Actions; owner reported blank Home on Android while Quotas remained accessible. Real Android recovery acceptance remains unverified. GitHub Pages private import/edit HOLD.
+**Version:** 3.1.0 · **Status:** Batch A mobile Home UX review candidate; root-cause Home fix v3.0.3 deployed at b40f616, Android owner acceptance and private JSON backup still unverified. This branch is not released. GitHub Pages private import/edit HOLD.
 
 A mobile-first manual AI quota tracker. Not a provider API, automatic quota update, paid subscription sync, or alert service.
 
 **First-use order:** create a Plan (subscription) before adding a quota. When none exist, Quotas → Add guides the user to create a Plan and resumes the quota form after the Plan is saved. This does not change the JSON data schema.
+
+## Batch A mobile Home UX (v3.1.0 review candidate)
+
+Home search/clear and filters (All, Pinned, Reset ≤24h, Overdue, Weekly, 5-hour); independent provider pinning and Quick/Comfortable display density; safe provider quick actions (single pool edit, multiple pool details, zero-pool Add). UI preferences use a separate optional local key `ai-quota-ui-preferences-v1`, and are **not included in private JSON backup**; no provider quota schema or main key `ai-quota-control-center-v1` changes. Browser storage can fail; preferences then apply for this session only, and the interface discloses this. No background notifications or provider API sync.
+
+Real Android/iPhone owner acceptance and verified independent JSON backup are prerequisites before any production release.
 
 ## Privacy rule
 
