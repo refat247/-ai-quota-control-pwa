@@ -2,6 +2,18 @@
 
 All notable changes follow SemVer and Keep a Changelog.
 
+## [3.0.3] - 2026-11-18 (draft, not deployed)
+
+### Fixed (review candidate)
+- Home render exceptions no longer leave the entire Home blank; a non-destructive diagnostic panel links to Quotas and Backup.
+- Browser regression injects a synthetic Home TypeError and verifies records remain unchanged and backup navigation stays accessible.
+- Bump the PWA service-worker cache identifier so a future owner-approved release updates the app shell without deleting browser localStorage.
+
+### Still open
+- Root exception in owner-private Android data is not reproduced; a fallback is not a root-cause fix.
+- Actual Android/iPhone recovery and persistence unverified. No deployment from this draft.
+
+
 ## [3.0.2] - 2026-11-14
 
 ### Fixed
