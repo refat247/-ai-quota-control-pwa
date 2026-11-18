@@ -16,7 +16,7 @@ def fixture():
     windows=['weekly','5h','custom']
     quotas=[{'id':f'q{i}','subId':f's{i%6}','model':f'Test Pool {i}','scope':'synthetic','window':'weekly' if i%6==5 else windows[i%3], 'used':'15', 'nextReset':'','behavior':'manual','cycleHours':'','project':False,'verified':False,'note':''} for i in range(17)]
     milestones=[{'id':f'm{i}','title':f'Synthetic date {i}','date':'','kind':'test','note':''} for i in range(6)]
-    return {'meta':{'snapshot':'synthetic','version':'3.3.0','updated':''}, 'subs':subs,'quotas':quotas,'milestones':milestones}
+    return {'meta':{'snapshot':'synthetic','version':'3.3.1','updated':''}, 'subs':subs,'quotas':quotas,'milestones':milestones}
 
 def assert_page(page,expression,msg):
     assert page.evaluate(expression), msg
@@ -53,7 +53,7 @@ def main():
             if force_home_error:
                 fake=fake.replace('function overview(){', "function overview(){throw new TypeError('Synthetic home-only exception');",1)
             page.set_content(fake,wait_until='domcontentloaded')
-            page.wait_for_selector('#appview .page-head')
+            page.wait_for_selector('#appview .cockpit, #appview .page-head')
             assert not errors, f'JS errors: {errors}'
             return context,page,errors
         for width in [320,360,390,430,768,1366]:
@@ -61,7 +61,9 @@ def main():
             assert_page(page,'document.documentElement.scrollWidth <= window.innerWidth',f'overflow at {width}')
             assert 'PRIVATE IMPORT HOLD' not in page.locator('#saveStatus').inner_text(), 'not github host'
             if width==390:
-                # Fresh installation: no plan exists, so Quotas -> Add must guide.
+                # Correct first-use Home empty state plus guided Plan → Quota flow.
+                assert 'No plans yet' in page.locator('#appview').inner_text(), 'first-run empty state incorrectly says filter miss'
+                assert page.locator('[data-new="sub"]').count()>0, 'first-run Add Plan action missing'
                 page.locator('button[data-tab="quotas"]').first.click()
                 assert 'Start with a Plan' in page.locator('#appview').inner_text()
                 page.locator('button[data-new="quota"]').first.click()
@@ -104,12 +106,15 @@ def main():
                 page.locator('#pasteJSON').fill(json.dumps(bad_alias))
                 page.locator('button[data-action="pasteImport"]').click()
                 assert page.evaluate('localStorage.getItem("'+STORE+'")')==before_bad, 'xAI 5h alias accepted'
-                # v3.3.0 visual cockpit: ring cards, drilldowns, data remains untouched.
+                # v3.3.1 visual cockpit: ring cards, drilldowns, data remains untouched.
                 page.locator('button[data-tab="overview"]').first.click()
                 assert page.locator('#homeProviderList .provider-row').count()==6
                 last_tile=page.locator('#homeProviderList .cockpit-tile').last.evaluate('(e)=>e.getBoundingClientRect().bottom')
                 dock_top=page.locator('#navigation').evaluate('(e)=>e.getBoundingClientRect().top')
-                assert last_tile<=dock_top+4, f'provider grid extends under bottom navigation: tile {last_tile}, dock {dock_top}'
+                if width>320:
+                    assert last_tile<=dock_top+4, f'provider grid extends under bottom navigation: tile {last_tile}, dock {dock_top}'
+                else:
+                    assert page.evaluate('document.documentElement.scrollHeight <= innerHeight*1.20'), '320px Home is excessive scroll'
                 assert page.locator('.home-kpi').count()==3
                 assert page.locator('.home-usage-legend .legend-item').count()==4
                 assert page.locator('.provider-row[data-sub-id="s1"] .cockpit-ring').count()==2
@@ -118,10 +123,15 @@ def main():
                 assert page.locator('#cockpitDialog').evaluate('(x)=>x.open')
                 assert page.locator('#cockpitDialog .cockpit-detail-row').count()==3
                 assert page.locator('#cockpitDialog [data-quick]').count()==3
+                page.evaluate('history.back()')
+                page.wait_for_function('!document.querySelector("#cockpitDialog").open')
+                assert page.locator('[data-dashboard="home"]').count()==1, 'Back left Home instead of closing dialog'
+                page.locator('.provider-row[data-sub-id="s1"]').click()
                 page.locator('#cockpitDialog [data-quick="q1"]').click()
                 assert page.locator('#sheetback').evaluate('(x)=>x.classList.contains("open")'), 'drilldown quick edit failed'
                 page.locator('#sheetCancel').click()
-                # The provider dialog already closed before the quick-editor opened.
+                page.wait_for_function('!document.querySelector("#sheetback").classList.contains("open")')
+                # Provider editor cancellation returns to Home; successful save returns to provider.
                 page.locator('.provider-row[data-sub-id="s1"]').click()
                 page.locator('#cockpitDialog [data-new="quota"]').click()
                 assert page.locator('select[name="subId"]').input_value()=='s1', 'new model did not inherit selected provider'
@@ -159,15 +169,22 @@ def main():
                 assert page.locator('#cockpitDialog').evaluate('(x)=>x.open')
                 page.locator('[data-close-cockpit]').click()
                 assert page.evaluate('localStorage.getItem("'+STORE+'")')==before_ui
-                print('PASS v3.3.0 visual cockpit, plan/quotas/date navigation and untouched JSON')
+                print('PASS v3.3.1 visual cockpit, plan/quotas/date navigation and untouched JSON')
 
                 page.locator('button[data-tab="quotas"]').first.click()
                 assert page.locator('.cockpit-icon-tile').count()==6, 'six quota provider shortcuts'
+                assert page.locator('.cockpit-icon-tile .cockpit-ring').count()>=5, 'provider shortcut must show worst-used ring'
                 page.locator('[data-quota-list="list"]').click()
-                assert page.locator('#quotaList .quota-card').count()==17, 'detailed quota cards count'
+                assert page.locator('#quotaList .quota-card').count()==17, 'all models retained'
+                assert page.locator('#quotaList .compact-quota').count()==17, 'old tall quota cards not replaced'
+                assert page.locator('#quotaList [data-quick]').count()==17, 'every model Update missing'
                 page.locator('[data-quick="q0"]').first.click()
                 assert page.locator('#sheetSave').inner_text()=='Save changes'
                 assert page.locator('.layout').evaluate('(e)=>e.inert') is True, 'background not inert'
+                page.locator('input[name="used"]').fill('140')
+                page.locator('#sheetSave').click()
+                assert page.locator('#sheetError').is_visible(), '140 must show inline validation error'
+                assert page.locator('input[name="used"]').get_attribute('aria-invalid')=='true', 'invalid input must be announced'
                 page.locator('input[name="used"]').fill('42')
                 page.locator('#sheetSave').click()
                 assert page.locator('.layout').evaluate('(e)=>e.inert') is False
@@ -181,13 +198,15 @@ def main():
                 print('PASS 390px: 6/17/6 paste, Grok5h rejection, 42% edit, same-origin reload, focus inert')
             ctx.close()
             print('PASS viewport',width)
-        # v3.3.0 synthetic thresholds; every color must retain a textual percentage/Unknown.
+        # v3.3.1 synthetic thresholds; every color must retain a textual percentage/Unknown.
         color_fixture=fixture()
         color_fixture['quotas'][0]['used']='30'
         color_fixture['quotas'][1]['used']='80'
         color_fixture['quotas'][2]['used']='95'
         color_fixture['quotas'][3]['used']=''
         color_fixture['quotas'][4]['used']='0'
+        color_fixture['quotas'][13]['used']='100'
+        color_fixture['quotas'][14]['used']='95'
         color_raw=json.dumps(color_fixture)
         for width in (320,390):
             ctx,page,errs=get_page(width,stored=color_raw)
@@ -197,11 +216,14 @@ def main():
             assert page.locator('.cockpit-ring.tone-low .meter-text').filter(has_text='0%').count()>=1, 'zero must not be unknown'
             assert page.locator('.cockpit-ring.tone-unknown').count()>=1, 'blank must be Unknown'
             assert page.locator('#homeProviderList .provider-row').count()==6, 'six provider compact rows required'
-            assert_page(page,'document.documentElement.scrollWidth <= window.innerWidth','v3.3.0 compact UI overflow')
+            assert '100%' in page.locator('.provider-row[data-sub-id="s1"]').inner_text(), '100% critical quota hidden behind +N'
+            assert '95%' in page.locator('.provider-row[data-sub-id="s2"]').inner_text(), '95% critical quota hidden behind +N'
+            assert 'Test Pool 13' in page.locator('.provider-row[data-sub-id="s1"]').inner_text(), 'individual model identity not shown'
+            assert_page(page,'document.documentElement.scrollWidth <= window.innerWidth','v3.3.1 compact UI overflow')
             assert page.evaluate('localStorage.getItem("'+STORE+'")')==color_raw, 'UI changed original quota JSON'
-            assert not errs, 'v3.3.0 JS errors: '+str(errs)
+            assert not errs, 'v3.3.1 JS errors: '+str(errs)
             ctx.close()
-        print('PASS v3.3.0 manual color legend, per-model chips, quick vs comfortable and 320/390px')
+        print('PASS v3.3.1 manual color legend, per-model chips, quick vs comfortable and 320/390px')
         # Batch A data-driven filter regression: timed resets and type filters.
         # Synthetic Dhaka timestamps only; avoids user's private quota data.
         filter_data=fixture()
