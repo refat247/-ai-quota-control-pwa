@@ -107,6 +107,9 @@ def main():
                 # v3.3.0 visual cockpit: ring cards, drilldowns, data remains untouched.
                 page.locator('button[data-tab="overview"]').first.click()
                 assert page.locator('#homeProviderList .provider-row').count()==6
+                last_tile=page.locator('#homeProviderList .cockpit-tile').last.evaluate('(e)=>e.getBoundingClientRect().bottom')
+                dock_top=page.locator('#navigation').evaluate('(e)=>e.getBoundingClientRect().top')
+                assert last_tile<=dock_top+4, f'provider grid extends under bottom navigation: tile {last_tile}, dock {dock_top}'
                 assert page.locator('.home-kpi').count()==3
                 assert page.locator('.home-usage-legend .legend-item').count()==4
                 assert page.locator('.provider-row[data-sub-id="s1"] .cockpit-ring').count()==2
@@ -115,6 +118,9 @@ def main():
                 assert page.locator('#cockpitDialog').evaluate('(x)=>x.open')
                 assert page.locator('#cockpitDialog .cockpit-detail-row').count()==3
                 assert page.locator('#cockpitDialog [data-quick]').count()==3
+                page.locator('#cockpitDialog [data-quick="q1"]').click()
+                assert page.locator('#sheetback').evaluate('(x)=>x.classList.contains("open")'), 'drilldown quick edit failed'
+                page.locator('#sheetCancel').click()
                 page.locator('[data-close-cockpit]').click()
                 page.locator('.provider-row[data-sub-id="s5"]').click()
                 assert '5-hour pool: N/A' in page.locator('#cockpitDialog').inner_text()
@@ -177,12 +183,15 @@ def main():
         color_fixture['quotas'][1]['used']='80'
         color_fixture['quotas'][2]['used']='95'
         color_fixture['quotas'][3]['used']=''
+        color_fixture['quotas'][4]['used']='0'
         color_raw=json.dumps(color_fixture)
         for width in (320,390):
             ctx,page,errs=get_page(width,stored=color_raw)
             for tone in ('low','high','critical','unknown'):
                 assert page.locator('.cockpit-ring.tone-'+tone).count()>0, 'missing semantic '+tone+' ring'
             assert page.locator('.home-usage-legend').is_visible(), 'usage legend is missing'
+            assert page.locator('.cockpit-ring.tone-low .meter-text').filter(has_text='0%').count()>=1, 'zero must not be unknown'
+            assert page.locator('.cockpit-ring.tone-unknown').count()>=1, 'blank must be Unknown'
             assert page.locator('#homeProviderList .provider-row').count()==6, 'six provider compact rows required'
             assert_page(page,'document.documentElement.scrollWidth <= window.innerWidth','v3.3.0 compact UI overflow')
             assert page.evaluate('localStorage.getItem("'+STORE+'")')==color_raw, 'UI changed original quota JSON'
