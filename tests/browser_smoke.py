@@ -16,10 +16,14 @@ def fixture():
     windows=['weekly','5h','custom']
     quotas=[{'id':f'q{i}','subId':f's{i%6}','model':f'Test Pool {i}','scope':'synthetic','window':'weekly' if i%6==5 else windows[i%3], 'used':'15', 'nextReset':'','behavior':'manual','cycleHours':'','project':False,'verified':False,'note':''} for i in range(17)]
     milestones=[{'id':f'm{i}','title':f'Synthetic date {i}','date':'','kind':'test','note':''} for i in range(6)]
-    return {'meta':{'snapshot':'synthetic','version':'3.2.0','updated':''}, 'subs':subs,'quotas':quotas,'milestones':milestones}
+    return {'meta':{'snapshot':'synthetic','version':'3.3.0','updated':''}, 'subs':subs,'quotas':quotas,'milestones':milestones}
 
 def assert_page(page,expression,msg):
     assert page.evaluate(expression), msg
+
+def open_home_filters(page):
+    if not page.locator('#cockpitFilters').evaluate('(e)=>e.open'):
+        page.locator('#cockpitFilters summary').click()
 
 def main():
     with sync_playwright() as p:
@@ -29,7 +33,7 @@ def main():
             # This model environment blocks even localhost navigation. Chromium DOM
             # simulation uses an explicit in-memory localStorage and test-only
             # fileMode/origin substitutions. Do not classify as real HTTPS persistence.
-            context=browser.new_context(viewport={'width':width,'height':780},service_workers='block')
+            context=browser.new_context(viewport={'width':width,'height':700 if width==320 else 800 if width==360 else 844 if width==390 else 932 if width==430 else 780},service_workers='block')
             page=context.new_page()
             errors=[]
             page.on('pageerror',lambda e:errors.append(str(e)))
@@ -52,7 +56,7 @@ def main():
             page.wait_for_selector('#appview .page-head')
             assert not errors, f'JS errors: {errors}'
             return context,page,errors
-        for width in [320,390,768,1366]:
+        for width in [320,360,390,430,768,1366]:
             ctx,page,errs=get_page(width)
             assert_page(page,'document.documentElement.scrollWidth <= window.innerWidth',f'overflow at {width}')
             assert 'PRIVATE IMPORT HOLD' not in page.locator('#saveStatus').inner_text(), 'not github host'
@@ -100,56 +104,67 @@ def main():
                 page.locator('#pasteJSON').fill(json.dumps(bad_alias))
                 page.locator('button[data-action="pasteImport"]').click()
                 assert page.evaluate('localStorage.getItem("'+STORE+'")')==before_bad, 'xAI 5h alias accepted'
-                # P1 Home groups by plan/account; never merges percentages from multiple model pools.
+                # v3.3.0 visual cockpit: ring cards, drilldowns, data remains untouched.
                 page.locator('button[data-tab="overview"]').first.click()
-                assert page.locator('#homeProviderList .provider-row').count()==6, 'compact Quick Home must initially show all six providers'
-                assert page.locator('[data-expand-providers]').is_hidden(), 'Show all must be hidden when every matching provider is visible'
-                assert page.locator('.home-kpi [data-countdown-date]').count()<=1, 'KPI countdown duplicated'
-                assert page.locator('.home-kpi').count()==3, 'compact Home KPIs'
-                assert page.locator('.home-usage-legend .legend-item').count()==4, 'threshold legend must be visible'
-                assert page.locator('#homeProviderList .provider-row').count()==6, 'all six providers on initial Home'
-                assert page.locator('.provider-row[data-sub-id="s1"] .home-pool-chip').count()==3, 'distinct per-model chips'
-                assert page.locator('.home-quick-pools').first.is_visible(), 'Quick chips not visible'
-                assert not page.locator('.provider-row[data-sub-id="s1"] .provider-windows').is_visible(), 'Quick should collapse full windows'
-                page.locator('[data-home-density="comfortable"]').click()
-                assert page.locator('.provider-row[data-sub-id="s1"] .provider-windows').is_visible(), 'Comfortable must preserve detail windows'
-                assert page.locator('.focus-banner').count()==0, 'old oversized hero still shown'
-                assert 'N/A' in page.locator('.provider-row[data-sub-id="s5"] .pool-5h').inner_text(), 'Grok 5h must be N/A'
-                assert '3 pools' in page.locator('.provider-row[data-sub-id="s1"] .pool-5h').inner_text(), 'distinct model pools may not be aggregated'
-                assert page.locator('.provider-row[data-sub-id="s1"] .pool-5h .provider-multi-entry').count()==3, 'per-model percentages missing'
-                assert '15% used' in page.locator('.provider-row[data-sub-id="s1"] .pool-5h').inner_text(), 'weekly/window value not visible from Home'
-                page.locator('.provider-row[data-sub-id="s1"] details summary').click()
-                assert page.locator('.provider-row[data-sub-id="s1"] .provider-model').count()==3, 'model detail expansion missing'
-                assert_page(page,'document.documentElement.scrollWidth <= window.innerWidth','compact Home overflow at 390px')
-                print('PASS compact Home: six provider rows, separate windows, no fake aggregation, Grok N/A')
-
-                # Batch A: all UI actions must leave original private-style quota JSON untouched.
+                assert page.locator('#homeProviderList .provider-row').count()==6
+                last_tile=page.locator('#homeProviderList .cockpit-tile').last.evaluate('(e)=>e.getBoundingClientRect().bottom')
+                dock_top=page.locator('#navigation').evaluate('(e)=>e.getBoundingClientRect().top')
+                assert last_tile<=dock_top+4, f'provider grid extends under bottom navigation: tile {last_tile}, dock {dock_top}'
+                assert page.locator('.home-kpi').count()==3
+                assert page.locator('.home-usage-legend .legend-item').count()==4
+                assert page.locator('.provider-row[data-sub-id="s1"] .cockpit-ring').count()==2
+                assert page.locator('.provider-row[data-sub-id="s1"] .cockpit-ring-more').count()==1
+                page.locator('.provider-row[data-sub-id="s1"]').click()
+                assert page.locator('#cockpitDialog').evaluate('(x)=>x.open')
+                assert page.locator('#cockpitDialog .cockpit-detail-row').count()==3
+                assert page.locator('#cockpitDialog [data-quick]').count()==3
+                page.locator('#cockpitDialog [data-quick="q1"]').click()
+                assert page.locator('#sheetback').evaluate('(x)=>x.classList.contains("open")'), 'drilldown quick edit failed'
+                page.locator('#sheetCancel').click()
+                # The provider dialog already closed before the quick-editor opened.
+                page.locator('.provider-row[data-sub-id="s1"]').click()
+                page.locator('#cockpitDialog [data-new="quota"]').click()
+                assert page.locator('select[name="subId"]').input_value()=='s1', 'new model did not inherit selected provider'
+                page.locator('#sheetCancel').click()
+                page.locator('.provider-row[data-sub-id="s5"]').click()
+                assert '5-hour pool: N/A' in page.locator('#cockpitDialog').inner_text()
+                page.locator('[data-close-cockpit]').click()
                 before_ui=page.evaluate('localStorage.getItem("'+STORE+'")')
+                open_home_filters(page)
                 page.locator('#homeSearch').fill('Synthetic Provider 1')
-                assert page.locator('#homeProviderList .provider-row').count()==1, 'Home search did not filter providers'
+                assert page.locator('#homeProviderList .provider-row').count()==1
                 page.locator('[data-clear-home]').click()
-                assert page.locator('#homeSearch').input_value()=='', 'clear Home search'
+                assert page.locator('#homeProviderList .provider-row').count()==6
+                page.locator('.provider-row[data-sub-id="s1"]').click()
+                page.locator('#cockpitDialog [data-pin-provider="s1"]').click()
+                open_home_filters(page)
                 page.locator('[data-home-filter="pinned"]').click()
-                assert page.locator('#homeProviderList .provider-row').count()==0, 'un-pinned empty state'
+                assert page.locator('#homeProviderList .provider-row').count()==1
+                open_home_filters(page)
                 page.locator('[data-home-filter="all"]').click()
-                page.locator('[data-pin-provider="s1"]').click()
-                assert page.locator('[data-pin-provider="s1"]').get_attribute('aria-pressed')=='true', 'pin toggle'
-                page.locator('[data-home-filter="pinned"]').click()
-                assert page.locator('#homeProviderList .provider-row').count()==1, 'pinned filter'
-                assert 'Synthetic Provider 1' in page.locator('#homeProviderList').inner_text()
+                open_home_filters(page)
                 page.locator('[data-home-density="comfortable"]').click()
-                assert page.evaluate('document.documentElement.dataset.quotaDensity')=='comfortable', 'density'
-                assert page.evaluate('localStorage.getItem("'+STORE+'")')==before_ui, 'UI prefs modified quota JSON'
-                assert page.evaluate('localStorage.getItem("ai-quota-ui-preferences-v1")') is not None, 'independent UI prefs missing'
-                page.locator('[data-home-filter="all"]').click()
-                page.locator('[data-open-models="s0"]').click()
-                assert page.locator('.provider-row[data-sub-id="s0"] details').evaluate('(x)=>x.open'), 'multi-pool action did not open details'
-                page.locator('[data-pin-provider="s1"]').click()
-                page.locator('[data-home-density="quick"]').click()
-                assert page.evaluate('localStorage.getItem("'+STORE+'")')==before_ui, 'Home UI actions mutated quota data'
-                print('PASS Batch A: search/clear, pin/filter, density and multi-quota update, quota store intact')
+                assert page.evaluate('document.documentElement.dataset.quotaDensity')=='comfortable'
+                assert page.evaluate('localStorage.getItem("'+STORE+'")')==before_ui
+                assert page.evaluate('localStorage.getItem("ai-quota-ui-preferences-v1")') is not None
+                page.locator('button[data-tab="subscriptions"]').first.click()
+                assert page.locator('.cockpit-plan-tile').count()==6
+                page.locator('[data-open-plan="s1"]').click()
+                assert page.locator('#cockpitDialog [data-edit="sub"]').count()==1
+                page.locator('[data-close-cockpit]').click()
+                page.locator('button[data-tab="deadlines"]').first.click()
+                assert page.locator('.cockpit-segments button').count()==4
+                assert page.locator('.cockpit-event-list .eventrow').count()<=3
+                page.locator('[data-open-events="all"]').click()
+                assert page.locator('#cockpitDialog').evaluate('(x)=>x.open')
+                page.locator('[data-close-cockpit]').click()
+                assert page.evaluate('localStorage.getItem("'+STORE+'")')==before_ui
+                print('PASS v3.3.0 visual cockpit, plan/quotas/date navigation and untouched JSON')
+
                 page.locator('button[data-tab="quotas"]').first.click()
-                assert page.locator('#quotaList .quota-card').count()==17, 'quota cards count'
+                assert page.locator('.cockpit-icon-tile').count()==6, 'six quota provider shortcuts'
+                page.locator('[data-quota-list="list"]').click()
+                assert page.locator('#quotaList .quota-card').count()==17, 'detailed quota cards count'
                 page.locator('[data-quick="q0"]').first.click()
                 assert page.locator('#sheetSave').inner_text()=='Save changes'
                 assert page.locator('.layout').evaluate('(e)=>e.inert') is True, 'background not inert'
@@ -166,24 +181,27 @@ def main():
                 print('PASS 390px: 6/17/6 paste, Grok5h rejection, 42% edit, same-origin reload, focus inert')
             ctx.close()
             print('PASS viewport',width)
-        # v3.2.0 synthetic thresholds; every color must retain a textual percentage/Unknown.
+        # v3.3.0 synthetic thresholds; every color must retain a textual percentage/Unknown.
         color_fixture=fixture()
         color_fixture['quotas'][0]['used']='30'
         color_fixture['quotas'][1]['used']='80'
         color_fixture['quotas'][2]['used']='95'
         color_fixture['quotas'][3]['used']=''
+        color_fixture['quotas'][4]['used']='0'
         color_raw=json.dumps(color_fixture)
         for width in (320,390):
             ctx,page,errs=get_page(width,stored=color_raw)
             for tone in ('low','high','critical','unknown'):
-                assert page.locator('.home-pool-chip.tone-'+tone).count()>0, 'missing semantic '+tone+' chip'
+                assert page.locator('.cockpit-ring.tone-'+tone).count()>0, 'missing semantic '+tone+' ring'
             assert page.locator('.home-usage-legend').is_visible(), 'usage legend is missing'
+            assert page.locator('.cockpit-ring.tone-low .meter-text').filter(has_text='0%').count()>=1, 'zero must not be unknown'
+            assert page.locator('.cockpit-ring.tone-unknown').count()>=1, 'blank must be Unknown'
             assert page.locator('#homeProviderList .provider-row').count()==6, 'six provider compact rows required'
-            assert_page(page,'document.documentElement.scrollWidth <= window.innerWidth','v3.2.0 compact UI overflow')
+            assert_page(page,'document.documentElement.scrollWidth <= window.innerWidth','v3.3.0 compact UI overflow')
             assert page.evaluate('localStorage.getItem("'+STORE+'")')==color_raw, 'UI changed original quota JSON'
-            assert not errs, 'v3.2.0 JS errors: '+str(errs)
+            assert not errs, 'v3.3.0 JS errors: '+str(errs)
             ctx.close()
-        print('PASS v3.2.0 manual color legend, per-model chips, quick vs comfortable and 320/390px')
+        print('PASS v3.3.0 manual color legend, per-model chips, quick vs comfortable and 320/390px')
         # Batch A data-driven filter regression: timed resets and type filters.
         # Synthetic Dhaka timestamps only; avoids user's private quota data.
         filter_data=fixture()
@@ -193,14 +211,18 @@ def main():
         filter_data['quotas'][2]['nextReset']=(now_bd-timedelta(hours=3)).strftime('%Y-%m-%d %H:%M')
         filter_raw=json.dumps(filter_data)
         ctx,page,errs=get_page(390,stored=filter_raw)
+        open_home_filters(page)
         page.locator('[data-home-filter="soon"]').click()
         assert page.locator('#homeProviderList .provider-row').count()==1, 'soon filter should match one provider'
         assert page.locator('#homeProviderList .provider-row').first.get_attribute('data-sub-id')=='s0', 'soon filter provider mismatch'
+        open_home_filters(page)
         page.locator('[data-home-filter="overdue"]').click()
         assert page.locator('#homeProviderList .provider-row').count()==1, 'overdue filter should match one provider'
         assert page.locator('#homeProviderList .provider-row').first.get_attribute('data-sub-id')=='s2', 'overdue filter provider mismatch'
+        open_home_filters(page)
         page.locator('[data-home-filter="weekly"]').click()
         assert page.locator('#homeProviderList .provider-row[data-sub-id="s5"]').count()==1, 'weekly should include Grok weekly'
+        open_home_filters(page)
         page.locator('[data-home-filter="5h"]').click()
         assert page.locator('#homeProviderList .provider-row[data-sub-id="s1"]').count()==1, '5-hour should include matching provider'
         assert page.locator('#homeProviderList .provider-row[data-sub-id="s5"]').count()==0, 'Grok must not acquire fake 5-hour pool'
@@ -227,7 +249,8 @@ def main():
         valid=fixture()
         ctx,page,_=get_page(390,stored=json.dumps(valid))
         page.locator('button[data-tab="subscriptions"]').first.click()
-        page.locator('[data-edit="sub"][data-id="s1"]').first.click()
+        page.locator('.cockpit-plan-tile[data-open-plan="s1"]').click()
+        page.locator('#cockpitDialog [data-edit="sub"][data-id="s1"]').click()
         page.locator('input[name="provider"]').fill('xAI')
         page.locator('#sheetSave').click()
         assert json.loads(page.evaluate('localStorage.getItem("'+STORE+'")'))['subs'][1]['provider']=='Synthetic Provider 1'
@@ -281,6 +304,7 @@ def main():
         init="const real=window.localStorage.setItem.bind(window.localStorage); window.localStorage.setItem=function(k,v){if(k==='"+STORE+"')throw Error('Simulated quota storage failure');return real(k,v)};"
         ctx,page,_=get_page(390,BASE,init,stored=json.dumps(fixture()))
         page.locator('button[data-tab="quotas"]').first.click()
+        page.locator('[data-quota-list="list"]').click()
         page.locator('[data-quick="q0"]').first.click()
         page.locator('input[name="used"]').fill('44')
         page.locator('#sheetSave').click()
@@ -307,6 +331,7 @@ def main():
                 page.locator('button[data-action="pasteImport"]').click()
                 assert len(json.loads(page.evaluate('localStorage.getItem("'+STORE+'")'))['quotas'])==17
                 page.locator('button[data-tab="quotas"]').first.click()
+                page.locator('[data-quota-list="list"]').click()
                 page.locator('[data-quick="q0"]').first.click()
                 page.locator('input[name="used"]').fill('42')
                 page.locator('#sheetSave').click()

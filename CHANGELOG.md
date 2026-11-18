@@ -2,7 +2,19 @@
 
 All notable changes follow SemVer and Keep a Changelog.
 
-## [3.2.0] - 2026-11-18 (DRAFT, not deployed)
+## [3.3.0] - 2026-11-18 (DRAFT, not merged/deployed)
+
+### Changed
+- Home visual cockpit with compact date metrics, 2×3 provider tiles, separate circular model used-percent indicators and provider detail dialog.
+- Quotas: provider shortcuts at entry, optional full original model list; retain one-tap quota update, validation and Grok 5h N/A.
+- Plans: compact status tiles with existing detail/edit/delete on tap. Dates: Today / Next 3 / 7 days / All; full event and past timestamp lists on demand.
+- Color+text semantics and compact saved status; never merge percentages across distinct models/accounts.
+
+### Evidence and limits
+- Original quota localStorage key, JSON schema, import/export, F1 recovery and origin rules unchanged. No new network calls.
+- Synthetic-browser regression checks mobile overflow, source data byte identity, new navigation and editing. Actual Android acceptance, independent source review, canonical Version Manager CLI and owner exact-SHA release approval remain pending.
+
+## [3.2.0] - 2026-11-18 (Firebase deployed; owner UX acceptance subsequently rejected)
 
 ### Changed
 - Compact Quick Home now displays each model's separate manually-entered used percentage in labeled color chips: green <75%, amber 75–89%, red >=90%, grey Unknown; no cross-model/account aggregation.
@@ -12,9 +24,9 @@ All notable changes follow SemVer and Keep a Changelog.
 ### Safety and evidence
 - Original quota JSON schema and storage key, backup/import, error/recovery behavior and separate optional UI preferences are unchanged.
 - Synthetic Playwright regression targets 320/390px, color thresholds, per-model cards and byte-identical local quota JSON.
-- Owner merge, Firebase deployment, independent review, canonical version-manager CLI, and Android acceptance NOT completed for 3.2.0.
+- Owner merge and Firebase deployment verified on 2026-11-18 (Firebase workflow #44265590988); independent PR review, canonical version-manager CLI, private backup integrity and Android persistence acceptance were not verified. Owner later rejected the scroll-heavy UX.
 
-## [3.1.0] - 2026-11-18 (DRAFT, not deployed)
+## [3.1.0] - 2026-11-18 (Firebase deployed; earlier draft notes preserved below)
 
 ### Added
 - Batch A mobile Home provider/plan/model search + clear; All/Pinned/Reset ≤24h/Overdue/Weekly/5-hour filters.
