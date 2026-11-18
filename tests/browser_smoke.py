@@ -15,7 +15,7 @@ def fixture():
     windows=['weekly','5h','custom']
     quotas=[{'id':f'q{i}','subId':f's{i%6}','model':f'Test Pool {i}','scope':'synthetic','window':'weekly' if i%6==5 else windows[i%3], 'used':'15', 'nextReset':'','behavior':'manual','cycleHours':'','project':False,'verified':False,'note':''} for i in range(17)]
     milestones=[{'id':f'm{i}','title':f'Synthetic date {i}','date':'','kind':'test','note':''} for i in range(6)]
-    return {'meta':{'snapshot':'synthetic','version':'3.0.3','updated':''}, 'subs':subs,'quotas':quotas,'milestones':milestones}
+    return {'meta':{'snapshot':'synthetic','version':'3.1.0','updated':''}, 'subs':subs,'quotas':quotas,'milestones':milestones}
 
 def assert_page(page,expression,msg):
     assert page.evaluate(expression), msg
@@ -116,6 +116,32 @@ def main():
                 assert page.locator('.provider-row[data-sub-id="s1"] .provider-model').count()==3, 'model detail expansion missing'
                 assert_page(page,'document.documentElement.scrollWidth <= window.innerWidth','compact Home overflow at 390px')
                 print('PASS compact Home: six provider rows, separate windows, no fake aggregation, Grok N/A')
+
+                # Batch A: all UI actions must leave original private-style quota JSON untouched.
+                before_ui=page.evaluate('localStorage.getItem("'+STORE+'")')
+                page.locator('#homeSearch').fill('Synthetic Provider 1')
+                assert page.locator('#homeProviderList .provider-row').count()==1, 'Home search did not filter providers'
+                page.locator('[data-clear-home]').click()
+                assert page.locator('#homeSearch').input_value()=='', 'clear Home search'
+                page.locator('[data-home-filter="pinned"]').click()
+                assert page.locator('#homeProviderList .provider-row').count()==0, 'un-pinned empty state'
+                page.locator('[data-home-filter="all"]').click()
+                page.locator('[data-pin-provider="s1"]').click()
+                assert page.locator('[data-pin-provider="s1"]').get_attribute('aria-pressed')=='true', 'pin toggle'
+                page.locator('[data-home-filter="pinned"]').click()
+                assert page.locator('#homeProviderList .provider-row').count()==1, 'pinned filter'
+                assert 'Synthetic Provider 1' in page.locator('#homeProviderList').inner_text()
+                page.locator('[data-home-density="comfortable"]').click()
+                assert page.evaluate('document.documentElement.dataset.quotaDensity')=='comfortable', 'density'
+                assert page.evaluate('localStorage.getItem("'+STORE+'")')==before_ui, 'UI prefs modified quota JSON'
+                assert page.evaluate('localStorage.getItem("ai-quota-ui-preferences-v1")') is not None, 'independent UI prefs missing'
+                page.locator('[data-home-filter="all"]').click()
+                page.locator('[data-open-models="s0"]').click()
+                assert page.locator('.provider-row[data-sub-id="s0"] details').evaluate('(x)=>x.open'), 'multi-pool action did not open details'
+                page.locator('[data-pin-provider="s1"]').click()
+                page.locator('[data-home-density="quick"]').click()
+                assert page.evaluate('localStorage.getItem("'+STORE+'")')==before_ui, 'Home UI actions mutated quota data'
+                print('PASS Batch A: search/clear, pin/filter, density and multi-quota update, quota store intact')
                 page.locator('button[data-tab="quotas"]').first.click()
                 assert page.locator('#quotaList .quota-card').count()==17, 'quota cards count'
                 page.locator('[data-quick="q0"]').first.click()
