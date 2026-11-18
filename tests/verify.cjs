@@ -39,7 +39,7 @@ assert.ok(html.includes('quotaOnboarding=true'));
 assert.ok(html.includes('Step 1 of 2: Create a Plan first'));
 assert.ok(html.includes('Step 2 of 2: Choose the new Plan'));
 assert.ok(!html.includes('Save + download HTML'));
-assert.ok(sw.includes('ai-quota-shell-v3-3-0'));
+assert.ok(sw.includes('ai-quota-shell-v3-3-1'));
 assert.equal(m.display,'standalone');
 for(const f of ['index.html','sw.js','manifest.webmanifest','icon-192.png','icon-512.png'])assert.ok(fs.existsSync(path.join(root,f)));
 for(const icon of m.icons)assert.ok(fs.existsSync(path.join(root,icon.src)));
