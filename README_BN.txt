@@ -1,4 +1,4 @@
-AI Quota Control PWA — v3.0.3
+AI Quota Control PWA — v3.1.0 (Batch A review candidate; not deployed)
 
 এটি mobile-first, manual AI quota tracking app। এটি provider-এর live quota API বা automatic account sync নয়।
 
@@ -19,3 +19,6 @@ Dedicated hostname চালু এবং independent privacy check সম্প
 Quotas → Quick Update → Save changes। পরেরবার একই HTTPS URL খুললে edited percentage থাকার কথা; physical Android Chrome-এ আলাদা acceptance test প্রয়োজন। প্রতিবার নতুন HTML download লাগবে না।
 
 সাবধান: localStorage encrypted নয় এবং cloud sync-ও নয়। Site data clear হলে data হারাতে পারে; নিয়মিত private JSON backup আলাদা জায়গায় রাখুন। Grok-এর 5-hour pool অনুমান করে ঢোকাবেন না।
+Batch A UI/UX (review only)
+-------------------------
+Home-এ provider/model Search, Clear, Pinned/Reset Soon/Overdue/Weekly/5-hour filter, Pin এবং Quick/Comfortable layout প্রস্তাবিত code-এ যোগ করা হয়েছে। একাধিক model থাকলে Update models তালিকা খোলে; ভুল model নিজে বেছে নেয় না। আলাদা ai-quota-ui-preferences-v1 storage key ব্যবহৃত; মূল ai-quota-control-center-v1 JSON এবং records অপরিবর্তিত। UI preference private JSON backup-এ থাকে না। Release, Android acceptance ও private JSON independent backup এখনও HOLD।
