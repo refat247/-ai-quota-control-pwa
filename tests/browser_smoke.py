@@ -210,11 +210,16 @@ def main():
         color_raw=json.dumps(color_fixture)
         for width in (320,390):
             ctx,page,errs=get_page(width,stored=color_raw)
-            for tone in ('low','high','critical','unknown'):
-                assert page.locator('.cockpit-ring.tone-'+tone).count()>0, 'missing semantic '+tone+' ring'
+            for tone in ('low','high','critical'):
+                assert page.locator('.cockpit-ring.tone-'+tone).count()>0, 'missing Home semantic '+tone+' ring'
             assert page.locator('.home-usage-legend').is_visible(), 'usage legend is missing'
-            assert page.locator('.cockpit-ring.tone-low .meter-text').filter(has_text='0%').count()>=1, 'zero must not be unknown'
-            assert page.locator('.cockpit-ring.tone-unknown').count()>=1, 'blank must be Unknown'
+            # Critical-first Home can hide 0% / Unknown. They MUST remain reachable,
+            # accurately distinguished in the complete model list, and never averaged.
+            page.locator('button[data-tab="quotas"]').first.click()
+            page.locator('[data-quota-list="list"]').click()
+            assert page.locator('#quotaList .cockpit-ring.tone-low .meter-text').filter(has_text='0%').count()>=1, 'zero must not be unknown'
+            assert page.locator('#quotaList .cockpit-ring.tone-unknown').count()>=1, 'blank must remain Unknown in full list'
+            page.locator('button[data-tab="overview"]').first.click()
             assert page.locator('#homeProviderList .provider-row').count()==6, 'six provider compact rows required'
             assert '100%' in page.locator('.provider-row[data-sub-id="s1"]').inner_text(), '100% critical quota hidden behind +N'
             assert '95%' in page.locator('.provider-row[data-sub-id="s2"]').inner_text(), '95% critical quota hidden behind +N'
