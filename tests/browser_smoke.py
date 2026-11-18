@@ -121,7 +121,7 @@ def main():
                 page.locator('#cockpitDialog [data-quick="q1"]').click()
                 assert page.locator('#sheetback').evaluate('(x)=>x.classList.contains("open")'), 'drilldown quick edit failed'
                 page.locator('#sheetCancel').click()
-                page.locator('[data-close-cockpit]').click()
+                # The provider dialog already closed before the quick-editor opened.
                 page.locator('.provider-row[data-sub-id="s1"]').click()
                 page.locator('#cockpitDialog [data-new="quota"]').click()
                 assert page.locator('select[name="subId"]').input_value()=='s1', 'new model did not inherit selected provider'
