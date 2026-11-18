@@ -85,6 +85,8 @@ def main():
                 print('PASS first-run: Add quota guides to Plan, resumes quota and saves')
             page.locator('button[data-tab="backup"]').first.click()
             assert page.locator('#pasteJSON').count()==1, 'missing paste UI'
+            assert 'primary' in (page.locator('[data-action="exportJSON"]').get_attribute('class') or ''), 'safe Export must be primary'
+            assert 'primary' not in (page.locator('[data-action="import"]').get_attribute('class') or ''), 'replace-all Import must not be primary'
             if width==390:
                 data=fixture()
                 page.locator('#pasteJSON').fill(json.dumps(data))
@@ -132,6 +134,13 @@ def main():
                 page.locator('#sheetCancel').click()
                 page.wait_for_function('!document.querySelector("#sheetback").classList.contains("open")')
                 # Provider editor cancellation returns to Home; successful save returns to provider.
+                page.locator('.provider-row[data-sub-id="s1"]').click()
+                page.locator('#cockpitDialog [data-quick="q1"]').click()
+                page.locator('input[name="used"]').fill('61')
+                page.locator('#sheetSave').click()
+                page.wait_for_function('document.querySelector("#cockpitDialog").open')
+                assert '61%' in page.locator('#cockpitDialog').inner_text(), 'Quick Save did not reopen same provider with updated value'
+                page.locator('[data-close-cockpit]').click()
                 page.locator('.provider-row[data-sub-id="s1"]').click()
                 page.locator('#cockpitDialog [data-new="quota"]').click()
                 assert page.locator('select[name="subId"]').input_value()=='s1', 'new model did not inherit selected provider'
