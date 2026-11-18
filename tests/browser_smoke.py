@@ -16,7 +16,7 @@ def fixture():
     windows=['weekly','5h','custom']
     quotas=[{'id':f'q{i}','subId':f's{i%6}','model':f'Test Pool {i}','scope':'synthetic','window':'weekly' if i%6==5 else windows[i%3], 'used':'15', 'nextReset':'','behavior':'manual','cycleHours':'','project':False,'verified':False,'note':''} for i in range(17)]
     milestones=[{'id':f'm{i}','title':f'Synthetic date {i}','date':'','kind':'test','note':''} for i in range(6)]
-    return {'meta':{'snapshot':'synthetic','version':'3.1.0','updated':''}, 'subs':subs,'quotas':quotas,'milestones':milestones}
+    return {'meta':{'snapshot':'synthetic','version':'3.2.0','updated':''}, 'subs':subs,'quotas':quotas,'milestones':milestones}
 
 def assert_page(page,expression,msg):
     assert page.evaluate(expression), msg
@@ -108,6 +108,13 @@ def main():
                 assert page.locator('.provider-row').count()==6, 'show-all toggle lost provider rows'
                 assert page.locator('.home-kpi [data-countdown-date]').count()<=1, 'KPI countdown duplicated'
                 assert page.locator('.home-kpi').count()==3, 'compact Home KPIs'
+                assert page.locator('.home-usage-legend .legend-item').count()==4, 'threshold legend must be visible'
+                assert page.locator('#homeProviderList .provider-row').count()==6, 'all six providers on initial Home'
+                assert page.locator('.provider-row[data-sub-id="s1"] .home-pool-chip').count()==3, 'distinct per-model chips'
+                assert page.locator('.home-quick-pools').first.is_visible(), 'Quick chips not visible'
+                assert not page.locator('.provider-row[data-sub-id="s1"] .provider-windows').is_visible(), 'Quick should collapse full windows'
+                page.locator('[data-home-density="comfortable"]').click()
+                assert page.locator('.provider-row[data-sub-id="s1"] .provider-windows').is_visible(), 'Comfortable must preserve detail windows'
                 assert page.locator('.focus-banner').count()==0, 'old oversized hero still shown'
                 assert 'N/A' in page.locator('.provider-row[data-sub-id="s5"] .pool-5h').inner_text(), 'Grok 5h must be N/A'
                 assert '3 pools' in page.locator('.provider-row[data-sub-id="s1"] .pool-5h').inner_text(), 'distinct model pools may not be aggregated'
@@ -161,6 +168,24 @@ def main():
                 print('PASS 390px: 6/17/6 paste, Grok5h rejection, 42% edit, same-origin reload, focus inert')
             ctx.close()
             print('PASS viewport',width)
+        # v3.2.0 synthetic thresholds; every color must retain a textual percentage/Unknown.
+        color_fixture=fixture()
+        color_fixture['quotas'][0]['used']='30'
+        color_fixture['quotas'][1]['used']='80'
+        color_fixture['quotas'][2]['used']='95'
+        color_fixture['quotas'][3]['used']=''
+        color_raw=json.dumps(color_fixture)
+        for width in (320,390):
+            ctx,page,errs=get_page(width,stored=color_raw)
+            for tone in ('low','high','critical','unknown'):
+                assert page.locator('.home-pool-chip.tone-'+tone).count()>0, 'missing semantic '+tone+' chip'
+            assert page.locator('.home-usage-legend').is_visible(), 'usage legend is missing'
+            assert page.locator('#homeProviderList .provider-row').count()==6, 'six provider compact rows required'
+            assert_page(page,'document.documentElement.scrollWidth <= window.innerWidth','v3.2.0 compact UI overflow')
+            assert page.evaluate('localStorage.getItem("'+STORE+'")')==color_raw, 'UI changed original quota JSON'
+            assert not errs, 'v3.2.0 JS errors: '+str(errs)
+            ctx.close()
+        print('PASS v3.2.0 manual color legend, per-model chips, quick vs comfortable and 320/390px')
         # Batch A data-driven filter regression: timed resets and type filters.
         # Synthetic Dhaka timestamps only; avoids user's private quota data.
         filter_data=fixture()
