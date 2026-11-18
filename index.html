@@ -263,7 +263,7 @@ function providerRow(sub,i){
 }
 function overview(){
   const next=data.quotas.map(q=>({q,reset:nextReset(q)})).filter(o=>{const p=parseBD(o.reset.date);return p&&!p.dateOnly&&p.ms>Date.now()}).sort((a,b)=>parseBD(a.reset.date).ms-parseBD(b.reset.date).ms)[0];
-  const nextPay=data.subs.filter(s=>s.status!=='cancelled').map(s=>({s,date:monthly(s.renewDay)})).filter(o=>o.date).sort((a,b)=>o.date.localeCompare(b.date))[0];
+  const nextPay=data.subs.filter(s=>s.status!=='cancelled').map(s=>({s,date:monthly(s.renewDay)})).filter(o=>o.date).sort((a,b)=>a.date.localeCompare(b.date))[0];
   const pending=data.quotas.filter(q=>{const r=nextReset(q),p=parseBD(r.date);return p&&!p.dateOnly&&p.ms<Date.now()}).length;
   const allGroups=data.subs.slice().sort((a,b)=>(a.status==='cancelled'?1:0)-(b.status==='cancelled'?1:0));
   const groups=showAllProviders?allGroups:allGroups.slice(0,4);
