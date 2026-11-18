@@ -1,6 +1,6 @@
 # AI Quota Control PWA
 
-**Version:** 3.1.0 · **Status:** Batch A mobile Home UX review candidate; root-cause Home fix v3.0.3 deployed at b40f616, Android owner acceptance and private JSON backup still unverified. This branch is not released. GitHub Pages private import/edit HOLD.
+**Version:** 3.2.0 · **Status:** compact glance/legend UI review candidate on a separate branch; v3.1.0 merged and Firebase workflow succeeded at 7351cb1. This change is NOT merged/deployed. Real Android data/persistence acceptance remains unverified. GitHub Pages private import/edit HOLD.
 
 A mobile-first manual AI quota tracker. Not a provider API, automatic quota update, paid subscription sync, or alert service.
 
@@ -50,3 +50,7 @@ python tests/browser_smoke.py
 SemVer: v3.0.1 is a compatible bugfix/UX repair to v3.0.0; original JSON schema and localStorage key retained. **Independent review and owner merge remain separate.**
 
 KOS canonical ID: `CROSS-SUBSCRIPTION-AI-ROUTING`.
+
+## v3.2.0 compact glance and color legend (DRAFT)
+
+Quick Home shows a separate textual used-percentage chip for **each** tracked model; never average different models or accounts. Color threshold (manual used %, not API status): green less than 75%; amber 75–89%; red 90–100%; grey for Unknown. A passed reset timestamp is a reminder to verify provider UI, NOT proof of automatic refill. Subscription decision labels (Keep/Trial/Cancel) are separate. Filters use a 2-row layout, success-only storage status is compact and upcoming decision details are collapsed. Comfortable view retains the original detailed window cells, per-model details, Grok 5h N/A and quick editing. Main quota JSON key/schema, backup/import and optional separate UI preferences are unchanged.

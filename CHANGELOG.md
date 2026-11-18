@@ -2,6 +2,18 @@
 
 All notable changes follow SemVer and Keep a Changelog.
 
+## [3.2.0] - 2026-11-18 (DRAFT, not deployed)
+
+### Changed
+- Compact Quick Home now displays each model's separate manually-entered used percentage in labeled color chips: green <75%, amber 75–89%, red >=90%, grey Unknown; no cross-model/account aggregation.
+- Visible legend, 2-row filter grid, shorter success notice and KPIs, and expandable upcoming decisions reduce scrolling. Comfortable retains detailed 5h/weekly cards and model actions.
+- Passed reset timestamps are labeled as verification reminders, not proof of quota refill. Subscription decisions are not quota health.
+
+### Safety and evidence
+- Original quota JSON schema and storage key, backup/import, error/recovery behavior and separate optional UI preferences are unchanged.
+- Synthetic Playwright regression targets 320/390px, color thresholds, per-model cards and byte-identical local quota JSON.
+- Owner merge, Firebase deployment, independent review, canonical version-manager CLI, and Android acceptance NOT completed for 3.2.0.
+
 ## [3.1.0] - 2026-11-18 (DRAFT, not deployed)
 
 ### Added

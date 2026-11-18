@@ -5,7 +5,7 @@
 <meta charset="utf-8"/><meta content="width=device-width,initial-scale=1,viewport-fit=cover" name="viewport"/>
 <meta content="#f5f7fb" name="theme-color"/>
 <meta content="Privacy-safe AI quota PWA shell. Personal data saved locally in browser after one-time import." name="description"/>
-<title>AI Quota Control · Mobile PWA v3.1.0</title>
+<title>AI Quota Control · Mobile PWA v3.2.0</title>
 <style>:root{color-scheme:light;--canvas:#f5f7fb;--paper:#fff;--paper2:#fbfcff;--ink:#14223b;--muted:#586a82;--soft:#59687d;--line:#e2e8f2;--accent:#4a5fd1;--accent-soft:#eef0ff;--mint:#116b60;--mint-soft:#e8f6f1;--amber:#9e6418;--amber-soft:#fff3df;--red:#b54852;--red-soft:#fff1f2;--radius:17px;--shadow:0 8px 32px rgba(28,50,90,.045)}
 *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;min-width:280px;background:var(--canvas);color:var(--ink);font:14px/1.5 system-ui,-apple-system,'Segoe UI','Noto Sans Bengali',sans-serif;-webkit-font-smoothing:antialiased}button,input,select,textarea{font:inherit}button{cursor:pointer}button:disabled{opacity:.48;cursor:not-allowed}button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,a:focus-visible,summary:focus-visible{outline:3px solid #8b9afa;outline-offset:2px}button,input,select,textarea{font-size:16px}a{color:var(--accent)}.hide{display:none!important}.sr-only{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap}
 .layout{max-width:1470px;margin:auto;min-height:100dvh}.main-content{min-width:0;padding:20px 15px calc(105px + env(safe-area-inset-bottom,0px));max-width:1170px;margin:0 auto}.side-nav{position:fixed;z-index:20;left:12px;right:12px;bottom:calc(8px + env(safe-area-inset-bottom,0px));display:grid;grid-template-columns:repeat(5,minmax(0,1fr));background:rgba(255,255,255,.96);backdrop-filter:blur(18px);box-shadow:0 6px 36px #182c4f2b;border:1px solid var(--line);border-radius:19px;padding:7px 4px;max-width:640px;margin:auto}.nav-brand{display:none}.navitem{color:var(--muted);min-height:54px;border:0;background:none;border-radius:12px;padding:6px 3px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:3px;font-size:10px;line-height:1.1;letter-spacing:-.01em;font-weight:680}.navitem svg{width:21px;height:21px;stroke:currentColor;stroke-width:1.9;fill:none;stroke-linejoin:round;stroke-linecap:round}.navitem.active{color:var(--accent);background:var(--accent-soft)}.nav-footer{display:none}
@@ -75,7 +75,7 @@
 @media(min-width:610px){.save-strip{grid-template-columns:minmax(0,1fr) auto}.save-strip .btn{width:auto}}
 .paste-label{display:block;margin:12px 0 6px;font-size:13px;font-weight:700}.backup-grid textarea#pasteJSON{display:block;width:100%;min-height:120px;padding:12px;border:1px solid var(--line);border-radius:10px;color:var(--ink);background:var(--paper)}.help-note{font-size:12px;color:var(--muted)}
 
-/* v3.1.0 Batch A: responsive, data-isolated Home controls */
+/* v3.2.0 Batch A: responsive, data-isolated Home controls */
 [hidden]{display:none!important}
 .home-search-controls{display:flex;gap:7px;align-items:stretch;margin:9px 0 8px}
 .home-search-controls .search{min-width:0;flex:1;min-height:44px;border-radius:11px}
@@ -99,6 +99,49 @@
 @media(max-width:360px){.provider-row-header{gap:6px}.provider-row-header .inline-tag{max-width:33%;overflow-wrap:anywhere;text-align:center}.provider-row-actions{gap:5px}.home-quick-action{max-width:66%;font-size:11px}}
 @media(prefers-reduced-motion:reduce){.home-filter-chips,.provider-row{scroll-behavior:auto;transition:none}}
 
+
+/* v3.2.0 compact Home and manual-used-color legend */
+[data-quota-view="overview"] .topbar{margin-bottom:6px}
+[data-quota-view="overview"] .save-strip[data-health="ok"]{margin-bottom:7px;padding:6px 10px;box-shadow:none}
+[data-quota-view="overview"] .save-strip[data-health="ok"] .save-message p{display:none}
+[data-quota-view="overview"] .page-head{margin-bottom:5px}
+[data-quota-view="overview"] .page-head h1{font-size:19px;margin-bottom:1px}
+[data-quota-view="overview"] .page-head p{font-size:11px}
+[data-quota-view="overview"] .home-top{margin:7px 0;gap:5px}
+[data-quota-view="overview"] .home-kpi{padding:7px 6px}
+[data-quota-view="overview"] .home-kpi strong{margin-top:2px}
+[data-quota-view="overview"] .home-actions{margin:6px 0 4px}
+[data-quota-view="overview"] .home-search-controls{margin:5px 0}
+[data-quota-view="overview"] .home-filter-chips{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;overflow:visible;padding:0 0 6px}
+[data-quota-view="overview"] .home-filter-chips .chip{white-space:normal;min-height:40px;font-size:11px;line-height:1.2;padding:6px 2px}
+[data-quota-view="overview"] .home-density-controls{margin:0 0 4px}
+[data-quota-view="overview"] .provider-list{gap:6px;margin-top:5px}
+[data-quota-view="overview"] .provider-row{padding:8px 9px}
+[data-quota-view="overview"] .provider-row-header{margin-bottom:4px}
+[data-quota-view="overview"] .provider-row-actions{margin:4px 0}
+[data-quota-view="overview"] .pin-provider-btn,[data-quota-view="overview"] .home-quick-action{min-height:36px;padding:5px 9px;font-size:11px}
+[data-quota-view="overview"][data-quota-density="quick"] .provider-windows{display:none}
+[data-quota-view="overview"][data-quota-density="comfortable"] .home-quick-pools{display:none}
+[data-quota-view="overview"] .home-quick-pools{display:flex;flex-wrap:wrap;gap:4px}
+[data-quota-view="overview"] .home-pool-chip{display:inline-flex;align-items:center;gap:5px;border:1px solid;border-radius:8px;padding:5px 6px;font-size:10px;line-height:1.2;max-width:100%;min-width:0}
+[data-quota-view="overview"] .home-pool-chip .pool-type{font-weight:800;font-size:9px}
+[data-quota-view="overview"] .home-pool-chip .pool-model{max-width:88px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+[data-quota-view="overview"] .home-pool-chip strong{white-space:nowrap;font-variant-numeric:tabular-nums}
+[data-quota-view="overview"] .tone-low{color:#12694c;background:#e4f5eb;border-color:#b4dec8}
+[data-quota-view="overview"] .tone-high{color:#88541a;background:#fff2da;border-color:#ebcb91}
+[data-quota-view="overview"] .tone-critical{color:#a52837;background:#fff0f1;border-color:#e5bbc2}
+[data-quota-view="overview"] .tone-unknown{color:#475569;background:#eff2f6;border-color:#cbd4df}
+[data-quota-view="overview"] .home-usage-legend{display:flex;flex-wrap:wrap;gap:4px 9px;align-items:center;margin:4px 0 5px;color:var(--muted);font-size:10px}
+[data-quota-view="overview"] .legend-item{display:inline-flex;align-items:center;gap:4px;white-space:nowrap}
+[data-quota-view="overview"] .legend-dot{display:inline-block;width:9px;height:9px;border-radius:3px;background:#94a3b8}
+[data-quota-view="overview"] .legend-dot.low{background:#168261}
+[data-quota-view="overview"] .legend-dot.high{background:#c68a32}
+[data-quota-view="overview"] .legend-dot.critical{background:#c54550}
+[data-quota-view="overview"] .legend-note{flex-basis:100%;line-height:1.25}
+[data-quota-view="overview"] .home-extras{margin:7px 0}
+[data-quota-view="overview"] .home-extras>summary{font-weight:760;font-size:11px;padding:8px 0;color:var(--accent);cursor:pointer}
+[data-quota-view="overview"] .home-extras .section-block{margin:4px 0}
+@media(max-width:350px){[data-quota-view="overview"] .home-pool-chip .pool-model{max-width:55px}}
 </style>
 <link href="manifest.webmanifest" rel="manifest"/><link href="icon-192.png" rel="icon" type="image/png"/></head>
 <body>
@@ -107,7 +150,7 @@
 <header class="topbar"><div class="brand-line"><span aria-hidden="true" class="brand-icon">Q</span><div><div class="brand-title">Quota Control</div><div class="eyebrow">AI usage workspace</div></div></div><div class="top-date"><strong aria-label="Dhaka local time" id="localClock">Asia/Dhaka</strong><span id="lastEdit">Offline snapshot</span></div></header>
 <section aria-live="polite" class="save-strip" id="saveStatus" role="status"></section>
 <section aria-live="off" id="appview"></section>
-<footer class="footnote">Browser-saved personal dashboard · Manual data only · No provider API or automatic cancellations <div class="footer-status" id="footerVersion">v3.1.0 · Browser storage</div></footer>
+<footer class="footnote">Browser-saved personal dashboard · Manual data only · No provider API or automatic cancellations <div class="footer-status" id="footerVersion">v3.2.0 · Browser storage</div></footer>
 </main></div>
 <div aria-hidden="true" aria-labelledby="sheetTitle" aria-modal="true" class="sheetback" id="sheetback" role="dialog"><div class="sheet"><div aria-hidden="true" class="grab"></div><div class="sheethead"><h2 id="sheetTitle">Edit quota</h2><button aria-label="Close editor" class="sheet-close" id="sheetClose" type="button">×</button></div><p class="form-hint" id="sheetHint"></p><form id="editForm"><div class="form-grid" id="sheetFields"></div><div class="form-actions"><button class="btn" id="sheetCancel" type="button">Cancel</button><button class="btn primary" id="sheetSave" type="submit">Save changes</button></div></form></div></div>
 <input accept="application/json,.json" hidden="" id="filePicker" type="file"/>
@@ -117,7 +160,7 @@
   "meta": {
     "snapshot": "Awaiting one-time private data import",
     "timezone": "Asia/Dhaka",
-    "version": "3.1.0",
+    "version": "3.2.0",
     "updated": "",
     "source": "Private local browser; not uploaded to hosting"
   },
@@ -128,7 +171,7 @@
 </script>
 <script>
 (()=>{'use strict';
-const STORE='ai-quota-control-center-v1', VERSION='3.1.0';
+const STORE='ai-quota-control-center-v1', VERSION='3.2.0';
 const original=JSON.parse(document.getElementById('bootstrap-data').textContent);
 const $=s=>document.querySelector(s), $$=s=>Array.from(document.querySelectorAll(s));
 const copy=o=>JSON.parse(JSON.stringify(o));
@@ -238,12 +281,12 @@ function homeProviderMarkup(groups){
     '<div class="card empty">No providers match this search/filter. Clear the search or choose All.</div>';
 }
 function refreshHomeResults(){
-  const results=homeMatchingProviders(),displayed=showAllProviders?results:results.slice(0,4);
+  const results=homeMatchingProviders(),displayed=showAllProviders?results:results.slice(0,6);
   const list=$('#homeProviderList'),count=$('#homeResultCount'),button=$('#homeExpand');
   if(!list)return;
   list.innerHTML=homeProviderMarkup(displayed);
   if(count)count.textContent=`${results.length} matching / ${data.subs.length} total`;
-  if(button){button.hidden=results.length<=4;button.textContent=showAllProviders?'Show fewer providers':homeFilter==='all'&&!homeQuery?'Show all '+results.length+' providers':`Show all ${results.length} matching providers`;}
+  if(button){button.hidden=results.length<=6;button.textContent=showAllProviders?'Show fewer providers':homeFilter==='all'&&!homeQuery?'Show all '+results.length+' providers':`Show all ${results.length} matching providers`;}
   const notice=$('#homePreferenceNotice');
   if(notice)notice.textContent=uiPrefsPersisted?'Pins and display density stay on this device; quota JSON is unchanged.':'View settings were not saved; quota JSON was not changed.';
 }
@@ -308,6 +351,7 @@ function updateSaveStatus(){
  const bad=storageFailed||fileMode||sharedGitHubOrigin||recoveryRequired;
  const title=recoveryRequired?'READ-ONLY RECOVERY · invalid local data':sharedGitHubOrigin?'PRIVATE IMPORT HOLD · shared GitHub host':bad?'Not saved reliably on this device':lastSaved?'Saved automatically':'Ready to save changes';
  const tip=recoveryRequired?'Stored browser data failed validation. Editing is locked. Download the raw recovery copy and do not clear website data.':sharedGitHubOrigin?'Do not enter or import private subscription information on this shared github.io origin. Migrate to a dedicated web.app hostname first.':fileMode?'Open this dashboard from its permanent HTTPS address, not as a downloaded HTML file.':storageFailed?'Browser storage is unavailable. Your edits may disappear after closing the app. Check Chrome site settings or use manual JSON backup.':'Quota edits are saved in this browser for this exact website. No new HTML download is needed. Clearing website data, incognito mode or changing devices can remove edits.';
+ el.dataset.health=bad?'warning':'ok';
  el.innerHTML=`<div class="save-message"><span class="save-indicator ${bad?'attention':''}" aria-hidden="true"></span><div><strong>${title}</strong><p>${tip}</p></div></div>`;
 }
 function changeTab(t){if(!tabs.some(x=>x[0]===t))return;tab=t;render();window.scrollTo({top:0,behavior:'instant'})}
@@ -346,6 +390,19 @@ function windowCell(sub,quotaRows,window,label){
     <div class="provider-window-reset ${reset.estimated?'estimated':''}">${reset.estimated?'Estimated':'Tracked'} reset: <span ${reset.date?'data-countdown-date="'+escapeHTML(reset.date)+'"':''}>${escapeHTML(count)}</span></div>
   </div>`;
 }
+function homeUsageTone(q){
+  if(q.used===''||q.used===null||!Number.isFinite(Number(q.used)))return 'unknown';
+  return Number(q.used)>=90?'critical':Number(q.used)>=75?'high':'low';
+}
+function homeQuickChips(rows){
+  if(!rows.length)return '<div class="home-quick-pools"><span class="home-pool-chip tone-unknown">No quota entered</span></div>';
+  return '<div class="home-quick-pools" aria-label="Separate manual model usage">'+rows.map(q=>{
+    const label=q.window==='5h'?'5h':q.window==='weekly'?'Weekly':'Custom';
+    const tone=homeUsageTone(q),used=tone==='unknown'?'Unknown':Number(q.used)+'% used';
+    const reset=nextReset(q),parsed=parseBD(reset.date),past=parsed&&!parsed.dateOnly&&parsed.ms<=Date.now();
+    return '<span class="home-pool-chip tone-'+tone+'" title="'+escapeHTML(q.model)+'" aria-label="'+escapeHTML(label+' '+q.model+' '+used)+(past?', reset time passed':'')+'"><span class="pool-type">'+label+'</span><span class="pool-model">'+escapeHTML(q.model)+'</span><strong>'+escapeHTML(used)+'</strong>'+(past?'<span>time passed*</span>':'')+'</span>';
+  }).join('')+'</div>';
+}
 function providerRow(sub,i){
   const rows=data.quotas.filter(q=>q.subId===sub.id),style=providerStyle(sub.provider),status=statusNames[sub.status]||'Unknown';
   const items=rows.map(q=>{const u=q.used===''||q.used===null?'Unknown':q.used+'% used',reset=nextReset(q),time=reset.date?difference(reset.date).text:'Reset unknown';
@@ -354,6 +411,7 @@ function providerRow(sub,i){
   return `<article class="card provider-row" data-sub-id="${escapeHTML(sub.id)}">
     <div class="provider-row-header"><div class="provider-dot ${style[0]}" aria-hidden="true">${style[1]}</div><div class="provider-row-headings"><div class="provider-row-name">${escapeHTML(sub.provider)}</div><div class="provider-row-plan">${escapeHTML(sub.plan)} · Account/plan ${i+1}</div></div><span class="inline-tag">${escapeHTML(status)}</span></div>
     <div class="provider-row-actions"><button class="pin-provider-btn" data-pin-provider="${escapeHTML(sub.id)}" type="button" aria-pressed="${isPinnedProvider(sub.id)}" aria-label="${isPinnedProvider(sub.id)?'Unpin':'Pin'} ${escapeHTML(sub.provider)} account">${isPinnedProvider(sub.id)?'★ Pinned':'☆ Pin'}</button>${rows.length===1?`<button class="tiny-btn home-quick-action" data-quick="${escapeHTML(rows[0].id)}">Update ${escapeHTML(rows[0].model)}</button>`:rows.length>1?`<button class="tiny-btn home-quick-action" data-open-models="${escapeHTML(sub.id)}">Update models · ${rows.length}</button>`:`<button class="tiny-btn home-quick-action" data-new="quota">Add quota</button>`}</div>
+    ${homeQuickChips(rows)}
     <div class="provider-windows">${windowCell(sub,rows,'5h','5-hour')}${windowCell(sub,rows,'weekly','Weekly')}</div>
     <details><summary>Model details · ${rows.length} pool${rows.length===1?'':'s'}${rows.some(q=>q.window==='custom')?' incl. custom':''}</summary><div class="provider-detail-list">${items||'<div class="micro">No quota pools yet; add one from Quotas.</div>'}</div></details>
   </article>`;
@@ -363,26 +421,26 @@ function overview(){
   const nextPay=data.subs.filter(s=>s.status!=='cancelled').map(s=>({s,date:monthly(s.renewDay)})).filter(o=>o.date).sort((a,b)=>a.date.localeCompare(b.date))[0];
   const pending=data.quotas.filter(q=>{const r=nextReset(q),p=parseBD(r.date);return p&&!p.dateOnly&&p.ms<Date.now()}).length;
   const allGroups=homeMatchingProviders();
-  const groups=showAllProviders?allGroups:allGroups.slice(0,4);
+  const groups=showAllProviders?allGroups:allGroups.slice(0,6);
   const upcoming=allEvents().filter(e=>difference(e.date).state!=='expired').slice(0,2);
   return `${pageHead('AI quota overview','Provider-wise 5h এবং weekly quota এক নজরে · all figures are manual.')}
   <div class="home-top" aria-label="Key dates and snapshot">
     <div class="home-kpi"><small>Next tracked reset</small><strong>${next?`<span data-countdown-date="${escapeHTML(next.reset.date)}">${escapeHTML(difference(next.reset.date).text)}</span>`:'Unknown'}</strong><em>${next?escapeHTML(next.q.model):'No timed reset'}${next?.reset.estimated?' · estimated':''}</em></div>
     <div class="home-kpi"><small>Expected renewal</small><strong>${nextPay?escapeHTML(difference(nextPay.date).text):'Unknown'}</strong><em>${nextPay?escapeHTML(nextPay.s.provider):'No billing day'}</em></div>
-    <div class="home-kpi"><small>Last manual edit</small><strong>${escapeHTML(data.meta.updated||'Unknown')}</strong><em>Not API-synced</em></div>
+    <div class="home-kpi"><small>Past reset times</small><strong>${pending}</strong><em>Verify provider; not auto-refilled</em></div>
   </div>
-  ${pending?`<div class="notice warn"><strong>${pending} reset date(s) past:</strong> check provider UI; an expired timestamp does not mean quota automatically refilled.</div>`:''}
   <section aria-label="Provider quota overview"><div class="home-actions"><h2>Providers / accounts (${data.subs.length})</h2><button class="btn sm soft" data-tab="quotas">All quotas</button></div>
     <div class="home-search-controls"><label class="sr-only" for="homeSearch">Search provider, plan or model</label><input class="search" id="homeSearch" type="search" autocomplete="off" maxlength="160" placeholder="Search provider, plan or model…" value="${escapeHTML(homeQuery)}"><button class="btn sm soft home-clear" data-clear-home="true" type="button" aria-label="Clear Home search">Clear</button></div>
     <div class="home-filter-chips" role="group" aria-label="Filter Home providers">${[['all','All'],['pinned','Pinned'],['soon','Reset ≤24h'],['overdue','Overdue'],['weekly','Weekly'],['5h','5-hour']].map(([key,label])=>`<button class="chip ${homeFilter===key?'selected':''}" type="button" data-home-filter="${key}" aria-pressed="${homeFilter===key}">${label}</button>`).join('')}</div>
     <div class="home-density-controls" role="group" aria-label="Provider card density"><span>Display</span>${[['quick','Quick'],['comfortable','Comfortable']].map(([key,label])=>`<button class="density-btn ${homePrefs.density===key?'selected':''}" type="button" data-home-density="${key}" aria-pressed="${homePrefs.density===key}">${label}</button>`).join('')}</div>
+    <div class="home-usage-legend" role="note" aria-label="Manual used percentage legend"><b>Used %</b><span class="legend-item"><i class="legend-dot low" aria-hidden="true"></i>&lt;75%</span><span class="legend-item"><i class="legend-dot high" aria-hidden="true"></i>75–89%</span><span class="legend-item"><i class="legend-dot critical" aria-hidden="true"></i>90%+</span><span class="legend-item"><i class="legend-dot" aria-hidden="true"></i>Unknown</span><span class="legend-note">Manual values · not API-synced. * Past reset time needs provider check. Keep = subscription decision.</span></div>
     <p id="homeResultCount" class="home-results-count">${allGroups.length} matching / ${data.subs.length} total</p>
     <div class="provider-list" id="homeProviderList">${homeProviderMarkup(groups)}</div>
-    <button class="btn sm soft full" style="margin-top:8px" id="homeExpand" data-expand-providers="true" ${allGroups.length>4?'':'hidden'}>${showAllProviders?'Show fewer providers':homeFilter==='all'&&!homeQuery?'Show all '+allGroups.length+' providers':'Show all '+allGroups.length+' matching providers'}</button>
+    <button class="btn sm soft full" style="margin-top:8px" id="homeExpand" data-expand-providers="true" ${allGroups.length>6?'':'hidden'}>${showAllProviders?'Show fewer providers':homeFilter==='all'&&!homeQuery?'Show all '+allGroups.length+' providers':'Show all '+allGroups.length+' matching providers'}</button>
     <p class="home-preference-note" id="homePreferenceNotice">${uiPrefsPersisted?'Pins and display density stay on this device; quota JSON is unchanged.':'View settings were not saved; quota JSON was not changed.'}</p>
   </section>
   <p class="home-footnote">Quota percentages are not combined across models or accounts. “Checked” indicates an owner-marked verification, not a live API update. Renewal day is an estimate; billing time and payment remain unconfirmed.</p>
-  <section class="section-block">${section('Upcoming decisions','First two tracked events')}<div class="quicklist">${upcoming.map(eventRow).join('')||'<div class="card empty">No upcoming dated events.</div>'}</div><div style="margin-top:8px"><button class="btn sm soft" data-tab="deadlines">All dates</button></div></section>`;
+  <details class="home-extras"><summary>Upcoming decisions · tap for details</summary><section class="section-block">${section('Upcoming decisions','First two tracked events')}<div class="quicklist">${upcoming.map(eventRow).join('')||'<div class="card empty">No upcoming dated events.</div>'}</div><div style="margin-top:8px"><button class="btn sm soft" data-tab="deadlines">All dates</button></div></section></details>`;
 }
 function filtered(){let arr=data.quotas.filter(q=>(category==='all'||q.window===category)&&(provider==='all'||subFor(q).provider===provider)&&(!query||[q.model,q.scope,q.note,subFor(q).plan,subFor(q).emails].join(' ').toLowerCase().includes(query.toLowerCase())));if(sort==='used')arr=arr.slice().sort((a,b)=>(b.used===''?-1:Number(b.used))-(a.used===''?-1:Number(a.used)));if(sort==='reset')arr=arr.slice().sort((a,b)=>(parseBD(nextReset(a).date)?.ms??Infinity)-(parseBD(nextReset(b).date)?.ms??Infinity));return arr}
 function quotas(){return `${pageHead('Model quotas','5-hour, weekly এবং custom limit আলাদা। One-tap Update দিয়ে দ্রুত বদলান।')}<div class="page-actions"><div class="section-label"><h2>All quota pools</h2><small>${data.quotas.length} total</small></div><button class="btn primary sm" data-new="quota">${svg('plus')} Add</button></div><div class="toolbar"><input class="search" id="quotaSearch" type="search" autocomplete="off" aria-label="Search quotas" placeholder="Search model, plan or email…" value="${escapeHTML(query)}"><div class="count" id="filterCount"></div></div><div class="filter-chips" role="group" aria-label="Quota type filter">${[['all','All'],['weekly','Weekly'],['5h','5-hour'],['custom','Custom / Bot']].map(([key,label])=>`<button class="chip ${category===key?'selected':''}" data-category="${key}" aria-pressed="${category===key}">${label}</button>`).join('')}</div><div class="filters-lower" style="margin:8px 0 14px"><select class="form-select" id="providerFilter" aria-label="Filter by provider"><option value="all">All providers</option>${[...new Set(data.subs.map(s=>s.provider))].map(x=>`<option ${provider===x?'selected':''} value="${escapeHTML(x)}">${escapeHTML(x)}</option>`).join('')}</select><select class="form-select" id="sortFilter" aria-label="Sort quotas"><option value="default" ${sort==='default'?'selected':''}>Original order</option><option value="used" ${sort==='used'?'selected':''}>Highest usage</option><option value="reset" ${sort==='reset'?'selected':''}>Soonest tracked reset</option></select></div>${data.subs.length?'':'<div class="notice warn"><strong>Start with a Plan:</strong> Quota entries need a subscription. Tap Add to create your first Plan; the quota form opens automatically after saving.</div>'}<div class="quota-grid" id="quotaList"></div>`}
@@ -408,6 +466,7 @@ function render(){
     // Non-destructive exception boundary; never reset, save, or rewrite storage.
     view=homeRenderFailure(error);
   }
+  document.documentElement.dataset.quotaView=tab;
   $('#appview').innerHTML=view;
   if(tab==='quotas')renderQuotaList();
   $('#footerVersion').textContent=`v${VERSION} · single URL · local browser data`+(storageFailed?' · STORAGE WARNING':'');
