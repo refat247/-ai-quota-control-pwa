@@ -5,7 +5,7 @@
 <meta charset="utf-8"/><meta content="width=device-width,initial-scale=1,viewport-fit=cover" name="viewport"/>
 <meta content="#f5f7fb" name="theme-color"/>
 <meta content="Privacy-safe AI quota PWA shell. Personal data saved locally in browser after one-time import." name="description"/>
-<title>AI Quota Control · Mobile PWA v3.0.3</title>
+<title>AI Quota Control · Mobile PWA v3.1.0</title>
 <style>:root{color-scheme:light;--canvas:#f5f7fb;--paper:#fff;--paper2:#fbfcff;--ink:#14223b;--muted:#586a82;--soft:#59687d;--line:#e2e8f2;--accent:#4a5fd1;--accent-soft:#eef0ff;--mint:#116b60;--mint-soft:#e8f6f1;--amber:#9e6418;--amber-soft:#fff3df;--red:#b54852;--red-soft:#fff1f2;--radius:17px;--shadow:0 8px 32px rgba(28,50,90,.045)}
 *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;min-width:280px;background:var(--canvas);color:var(--ink);font:14px/1.5 system-ui,-apple-system,'Segoe UI','Noto Sans Bengali',sans-serif;-webkit-font-smoothing:antialiased}button,input,select,textarea{font:inherit}button{cursor:pointer}button:disabled{opacity:.48;cursor:not-allowed}button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,a:focus-visible,summary:focus-visible{outline:3px solid #8b9afa;outline-offset:2px}button,input,select,textarea{font-size:16px}a{color:var(--accent)}.hide{display:none!important}.sr-only{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap}
 .layout{max-width:1470px;margin:auto;min-height:100dvh}.main-content{min-width:0;padding:20px 15px calc(105px + env(safe-area-inset-bottom,0px));max-width:1170px;margin:0 auto}.side-nav{position:fixed;z-index:20;left:12px;right:12px;bottom:calc(8px + env(safe-area-inset-bottom,0px));display:grid;grid-template-columns:repeat(5,minmax(0,1fr));background:rgba(255,255,255,.96);backdrop-filter:blur(18px);box-shadow:0 6px 36px #182c4f2b;border:1px solid var(--line);border-radius:19px;padding:7px 4px;max-width:640px;margin:auto}.nav-brand{display:none}.navitem{color:var(--muted);min-height:54px;border:0;background:none;border-radius:12px;padding:6px 3px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:3px;font-size:10px;line-height:1.1;letter-spacing:-.01em;font-weight:680}.navitem svg{width:21px;height:21px;stroke:currentColor;stroke-width:1.9;fill:none;stroke-linejoin:round;stroke-linecap:round}.navitem.active{color:var(--accent);background:var(--accent-soft)}.nav-footer{display:none}
@@ -74,6 +74,31 @@
 .save-strip .storage-note{color:#a04848}
 @media(min-width:610px){.save-strip{grid-template-columns:minmax(0,1fr) auto}.save-strip .btn{width:auto}}
 .paste-label{display:block;margin:12px 0 6px;font-size:13px;font-weight:700}.backup-grid textarea#pasteJSON{display:block;width:100%;min-height:120px;padding:12px;border:1px solid var(--line);border-radius:10px;color:var(--ink);background:var(--paper)}.help-note{font-size:12px;color:var(--muted)}
+
+/* v3.1.0 Batch A: responsive, data-isolated Home controls */
+[hidden]{display:none!important}
+.home-search-controls{display:flex;gap:7px;align-items:stretch;margin:9px 0 8px}
+.home-search-controls .search{min-width:0;flex:1;min-height:44px;border-radius:11px}
+.home-clear{min-height:44px;min-width:55px}
+.home-filter-chips{display:flex;gap:6px;overflow-x:auto;scrollbar-width:thin;padding:1px 0 8px}
+.home-filter-chips .chip{min-height:44px;padding:9px 11px}
+.home-density-controls{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin:0 0 8px;color:var(--muted);font-size:11px}
+.density-btn{border:1px solid var(--line);background:var(--paper);padding:7px 12px;border-radius:12px;min-height:40px;color:var(--muted);font-weight:700}
+.density-btn.selected{border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}
+.home-results-count,.home-preference-note{color:var(--muted);font-size:11px;margin:4px 0 6px}
+.provider-row-actions{display:flex;gap:8px;justify-content:space-between;align-items:center;margin:-1px 0 9px}
+.pin-provider-btn{background:var(--paper);color:var(--accent);border:1px solid var(--line);border-radius:10px;padding:8px 12px;min-height:44px;font-size:12px;font-weight:700}
+.pin-provider-btn[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent)}
+.home-quick-action{min-height:44px;max-width:72%;overflow:hidden;text-overflow:ellipsis}
+.home-filter-chips .chip:focus-visible,.density-btn:focus-visible,.pin-provider-btn:focus-visible{outline:3px solid #8b9afa;outline-offset:2px}
+[data-quota-density="comfortable"] .provider-row{padding:17px 16px}
+[data-quota-density="comfortable"] .provider-row-name{font-size:16px}
+[data-quota-density="comfortable"] .provider-window{padding:12px}
+[data-quota-density="comfortable"] .provider-model{padding:10px 0}
+[data-quota-density="comfortable"] .provider-window-value{font-size:16px}
+@media(max-width:360px){.provider-row-header{gap:6px}.provider-row-header .inline-tag{max-width:33%;overflow-wrap:anywhere;text-align:center}.provider-row-actions{gap:5px}.home-quick-action{max-width:66%;font-size:11px}}
+@media(prefers-reduced-motion:reduce){.home-filter-chips,.provider-row{scroll-behavior:auto;transition:none}}
+
 </style>
 <link href="manifest.webmanifest" rel="manifest"/><link href="icon-192.png" rel="icon" type="image/png"/></head>
 <body>
@@ -82,7 +107,7 @@
 <header class="topbar"><div class="brand-line"><span aria-hidden="true" class="brand-icon">Q</span><div><div class="brand-title">Quota Control</div><div class="eyebrow">AI usage workspace</div></div></div><div class="top-date"><strong aria-label="Dhaka local time" id="localClock">Asia/Dhaka</strong><span id="lastEdit">Offline snapshot</span></div></header>
 <section aria-live="polite" class="save-strip" id="saveStatus" role="status"></section>
 <section aria-live="off" id="appview"></section>
-<footer class="footnote">Browser-saved personal dashboard · Manual data only · No provider API or automatic cancellations <div class="footer-status" id="footerVersion">v3.0.3 · Browser storage</div></footer>
+<footer class="footnote">Browser-saved personal dashboard · Manual data only · No provider API or automatic cancellations <div class="footer-status" id="footerVersion">v3.1.0 · Browser storage</div></footer>
 </main></div>
 <div aria-hidden="true" aria-labelledby="sheetTitle" aria-modal="true" class="sheetback" id="sheetback" role="dialog"><div class="sheet"><div aria-hidden="true" class="grab"></div><div class="sheethead"><h2 id="sheetTitle">Edit quota</h2><button aria-label="Close editor" class="sheet-close" id="sheetClose" type="button">×</button></div><p class="form-hint" id="sheetHint"></p><form id="editForm"><div class="form-grid" id="sheetFields"></div><div class="form-actions"><button class="btn" id="sheetCancel" type="button">Cancel</button><button class="btn primary" id="sheetSave" type="submit">Save changes</button></div></form></div></div>
 <input accept="application/json,.json" hidden="" id="filePicker" type="file"/>
@@ -92,7 +117,7 @@
   "meta": {
     "snapshot": "Awaiting one-time private data import",
     "timezone": "Asia/Dhaka",
-    "version": "3.0.3",
+    "version": "3.1.0",
     "updated": "",
     "source": "Private local browser; not uploaded to hosting"
   },
@@ -103,7 +128,7 @@
 </script>
 <script>
 (()=>{'use strict';
-const STORE='ai-quota-control-center-v1', VERSION='3.0.3';
+const STORE='ai-quota-control-center-v1', VERSION='3.1.0';
 const original=JSON.parse(document.getElementById('bootstrap-data').textContent);
 const $=s=>document.querySelector(s), $$=s=>Array.from(document.querySelectorAll(s));
 const copy=o=>JSON.parse(JSON.stringify(o));
@@ -152,6 +177,77 @@ const tabs=[['overview','Home','home'],['quotas','Quotas','sliders'],['subscript
 const icons={home:'<path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z"/>',sliders:'<path d="M4 7h16M4 17h16"/><circle cx="9" cy="7" r="2" fill="currentColor" stroke="none"/><circle cx="15" cy="17" r="2" fill="currentColor" stroke="none"/>',wallet:'<rect x="3" y="6" width="18" height="15" rx="2"/><path d="M3 9V5a2 2 0 0 1 2-2h13M16 14h5"/>',calendar:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4M17 3v4M3 10h18"/>',download:'<path d="M12 3v12m-5-5 5 5 5-5M4 17v4h16v-4"/>',plus:'<path d="M12 5v14M5 12h14"/>',edit:'<path d="m4 20 4-.8L19 8.2a2 2 0 0 0-3-3L5 16z"/>',arrow:'<path d="M5 12h14m-6-6 6 6-6 6"/>'};
 const svg=k=>`<svg viewBox="0 0 24 24" aria-hidden="true">${icons[k]||''}</svg>`;
 let tab='overview',query='',category='all',provider='all',sort='default',allDeadlines=false,showAllProviders=false,editor=null,restoreFocus=null,quotaOnboarding=false;
+
+const HOME_PREF_STORE='ai-quota-ui-preferences-v1';
+let homeQuery='',homeFilter='all',uiPrefsPersisted=true;
+function loadHomePreferences(){
+  try {
+    if(sharedGitHubOrigin || fileMode) return {pins:[],density:'quick'};
+    const value=JSON.parse(localStorage.getItem(HOME_PREF_STORE)||'null');
+    if(!value||typeof value!=='object'||Array.isArray(value))return {pins:[],density:'quick'};
+    const pins=Array.isArray(value.pins)?value.pins.filter(x=>typeof x==='string'&&x.length<=128).slice(0,60):[];
+    return {pins:[...new Set(pins)],density:value.density==='comfortable'?'comfortable':'quick'};
+  } catch(_) {uiPrefsPersisted=false;return {pins:[],density:'quick'};}
+}
+let homePrefs=loadHomePreferences();
+function saveHomePreferences(){
+  if(sharedGitHubOrigin||fileMode){uiPrefsPersisted=false;return false}
+  try {
+    const str=JSON.stringify({pins:homePrefs.pins,density:homePrefs.density});
+    localStorage.setItem(HOME_PREF_STORE,str);
+    uiPrefsPersisted=localStorage.getItem(HOME_PREF_STORE)===str;
+    return uiPrefsPersisted;
+  }catch(_){uiPrefsPersisted=false;return false}
+}
+function setHomeDensity(value){
+  homePrefs.density=value==='comfortable'?'comfortable':'quick';
+  document.documentElement.dataset.quotaDensity=homePrefs.density;
+  saveHomePreferences();
+}
+document.documentElement.dataset.quotaDensity=homePrefs.density;
+function isPinnedProvider(id){return homePrefs.pins.includes(id)}
+function homeHasWindow(sub,windowName){return data.quotas.some(q=>q.subId===sub.id&&q.window===windowName)}
+function homeResetTime(q){const r=nextReset(q),p=parseBD(r.date);return p&&!p.dateOnly?p.ms:null}
+function homeMatchesFilter(sub){
+  if(homeFilter==='all')return true;
+  if(homeFilter==='pinned')return isPinnedProvider(sub.id);
+  if(homeFilter==='weekly'||homeFilter==='5h')return homeHasWindow(sub,homeFilter);
+  const now=Date.now(),day=86400000;
+  return data.quotas.some(q=>{
+    if(q.subId!==sub.id)return false;
+    const t=homeResetTime(q);
+    return t!==null&&(homeFilter==='soon'?(t>now&&t<=now+day):homeFilter==='overdue'&&t<=now);
+  });
+}
+function homeMatchingProviders(){
+  const term=homeQuery.trim().toLowerCase();
+  return data.subs.map((s,i)=>({s,i})).filter(({s})=>{
+    if(!homeMatchesFilter(s))return false;
+    if(!term)return true;
+    const related=data.quotas.filter(q=>q.subId===s.id);
+    return [s.provider,s.plan,s.emails,...related.flatMap(q=>[q.model,q.scope])]
+      .some(v=>String(v??'').toLowerCase().includes(term));
+  }).sort((a,b)=>
+    Number(isPinnedProvider(b.s.id))-Number(isPinnedProvider(a.s.id)) ||
+    Number(a.s.status==='cancelled')-Number(b.s.status==='cancelled') ||
+    a.i-b.i
+  );
+}
+function homeProviderMarkup(groups){
+  return groups.map(({s,i})=>providerRow(s,i)).join('')||
+    '<div class="card empty">No providers match this search/filter. Clear the search or choose All.</div>';
+}
+function refreshHomeResults(){
+  const results=homeMatchingProviders(),displayed=showAllProviders?results:results.slice(0,4);
+  const list=$('#homeProviderList'),count=$('#homeResultCount'),button=$('#homeExpand');
+  if(!list)return;
+  list.innerHTML=homeProviderMarkup(displayed);
+  if(count)count.textContent=`${results.length} matching / ${data.subs.length} total`;
+  if(button){button.hidden=results.length<=4;button.textContent=showAllProviders?'Show fewer providers':homeFilter==='all'&&!homeQuery?'Show all '+results.length+' providers':`Show all ${results.length} matching providers`;}
+  const notice=$('#homePreferenceNotice');
+  if(notice)notice.textContent=uiPrefsPersisted?'Pins and display density stay on this device; quota JSON is unchanged.':'View settings were not saved; quota JSON was not changed.';
+}
+
 const BD='Asia/Dhaka',dayFmt=new Intl.DateTimeFormat('en-GB',{timeZone:BD,day:'2-digit',month:'short',year:'numeric'}),fullFmt=new Intl.DateTimeFormat('en-GB',{timeZone:BD,day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit',hour12:true});
 function inputNow(){return new Intl.DateTimeFormat('sv-SE',{timeZone:BD,year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).format(new Date()).replace(',','')}
 function today(){return inputNow().slice(0,10)}
@@ -257,6 +353,7 @@ function providerRow(sub,i){
   }).join('');
   return `<article class="card provider-row" data-sub-id="${escapeHTML(sub.id)}">
     <div class="provider-row-header"><div class="provider-dot ${style[0]}" aria-hidden="true">${style[1]}</div><div class="provider-row-headings"><div class="provider-row-name">${escapeHTML(sub.provider)}</div><div class="provider-row-plan">${escapeHTML(sub.plan)} · Account/plan ${i+1}</div></div><span class="inline-tag">${escapeHTML(status)}</span></div>
+    <div class="provider-row-actions"><button class="pin-provider-btn" data-pin-provider="${escapeHTML(sub.id)}" type="button" aria-pressed="${isPinnedProvider(sub.id)}" aria-label="${isPinnedProvider(sub.id)?'Unpin':'Pin'} ${escapeHTML(sub.provider)} account">${isPinnedProvider(sub.id)?'★ Pinned':'☆ Pin'}</button>${rows.length===1?`<button class="tiny-btn home-quick-action" data-quick="${escapeHTML(rows[0].id)}">Update ${escapeHTML(rows[0].model)}</button>`:rows.length>1?`<button class="tiny-btn home-quick-action" data-open-models="${escapeHTML(sub.id)}">Update models · ${rows.length}</button>`:`<button class="tiny-btn home-quick-action" data-new="quota">Add quota</button>`}</div>
     <div class="provider-windows">${windowCell(sub,rows,'5h','5-hour')}${windowCell(sub,rows,'weekly','Weekly')}</div>
     <details><summary>Model details · ${rows.length} pool${rows.length===1?'':'s'}${rows.some(q=>q.window==='custom')?' incl. custom':''}</summary><div class="provider-detail-list">${items||'<div class="micro">No quota pools yet; add one from Quotas.</div>'}</div></details>
   </article>`;
@@ -265,7 +362,7 @@ function overview(){
   const next=data.quotas.map(q=>({q,reset:nextReset(q)})).filter(o=>{const p=parseBD(o.reset.date);return p&&!p.dateOnly&&p.ms>Date.now()}).sort((a,b)=>parseBD(a.reset.date).ms-parseBD(b.reset.date).ms)[0];
   const nextPay=data.subs.filter(s=>s.status!=='cancelled').map(s=>({s,date:monthly(s.renewDay)})).filter(o=>o.date).sort((a,b)=>a.date.localeCompare(b.date))[0];
   const pending=data.quotas.filter(q=>{const r=nextReset(q),p=parseBD(r.date);return p&&!p.dateOnly&&p.ms<Date.now()}).length;
-  const allGroups=data.subs.slice().sort((a,b)=>(a.status==='cancelled'?1:0)-(b.status==='cancelled'?1:0));
+  const allGroups=homeMatchingProviders();
   const groups=showAllProviders?allGroups:allGroups.slice(0,4);
   const upcoming=allEvents().filter(e=>difference(e.date).state!=='expired').slice(0,2);
   return `${pageHead('AI quota overview','Provider-wise 5h এবং weekly quota এক নজরে · all figures are manual.')}
@@ -275,9 +372,14 @@ function overview(){
     <div class="home-kpi"><small>Last manual edit</small><strong>${escapeHTML(data.meta.updated||'Unknown')}</strong><em>Not API-synced</em></div>
   </div>
   ${pending?`<div class="notice warn"><strong>${pending} reset date(s) past:</strong> check provider UI; an expired timestamp does not mean quota automatically refilled.</div>`:''}
-  <section aria-label="Provider quota overview"><div class="home-actions"><h2>Providers / accounts (${allGroups.length})</h2><button class="btn sm soft" data-tab="quotas">All quotas</button></div>
-    <div class="provider-list">${groups.map((s,i)=>providerRow(s,i)).join('')||'<div class="card empty">No plans yet. Create a Plan to start tracking quotas.</div>'}</div>
-    ${allGroups.length>4?`<button class="btn sm soft full" style="margin-top:8px" data-expand-providers="true">${showAllProviders?'Show fewer providers':'Show all '+allGroups.length+' providers'}</button>`:''}
+  <section aria-label="Provider quota overview"><div class="home-actions"><h2>Providers / accounts (${data.subs.length})</h2><button class="btn sm soft" data-tab="quotas">All quotas</button></div>
+    <div class="home-search-controls"><label class="sr-only" for="homeSearch">Search provider, plan or model</label><input class="search" id="homeSearch" type="search" autocomplete="off" maxlength="160" placeholder="Search provider, plan or model…" value="${escapeHTML(homeQuery)}"><button class="btn sm soft home-clear" data-clear-home="true" type="button" aria-label="Clear Home search">Clear</button></div>
+    <div class="home-filter-chips" role="group" aria-label="Filter Home providers">${[['all','All'],['pinned','Pinned'],['soon','Reset ≤24h'],['overdue','Overdue'],['weekly','Weekly'],['5h','5-hour']].map(([key,label])=>`<button class="chip ${homeFilter===key?'selected':''}" type="button" data-home-filter="${key}" aria-pressed="${homeFilter===key}">${label}</button>`).join('')}</div>
+    <div class="home-density-controls" role="group" aria-label="Provider card density"><span>Display</span>${[['quick','Quick'],['comfortable','Comfortable']].map(([key,label])=>`<button class="density-btn ${homePrefs.density===key?'selected':''}" type="button" data-home-density="${key}" aria-pressed="${homePrefs.density===key}">${label}</button>`).join('')}</div>
+    <p id="homeResultCount" class="home-results-count">${allGroups.length} matching / ${data.subs.length} total</p>
+    <div class="provider-list" id="homeProviderList">${homeProviderMarkup(groups)}</div>
+    <button class="btn sm soft full" style="margin-top:8px" id="homeExpand" data-expand-providers="true" ${allGroups.length>4?'':'hidden'}>${showAllProviders?'Show fewer providers':homeFilter==='all'&&!homeQuery?'Show all '+allGroups.length+' providers':'Show all '+allGroups.length+' matching providers'}</button>
+    <p class="home-preference-note" id="homePreferenceNotice">${uiPrefsPersisted?'Pins and display density stay on this device; quota JSON is unchanged.':'View settings were not saved; quota JSON was not changed.'}</p>
   </section>
   <p class="home-footnote">Quota percentages are not combined across models or accounts. “Checked” indicates an owner-marked verification, not a live API update. Renewal day is an estimate; billing time and payment remain unconfirmed.</p>
   <section class="section-block">${section('Upcoming decisions','First two tracked events')}<div class="quicklist">${upcoming.map(eventRow).join('')||'<div class="card empty">No upcoming dated events.</div>'}</div><div style="margin-top:8px"><button class="btn sm soft" data-tab="deadlines">All dates</button></div></section>`;
@@ -367,6 +469,19 @@ $('#navigation').addEventListener('click',e=>{const b=e.target.closest('button[d
 $('#appview').addEventListener('click',e=>{
   const b=e.target.closest('button');if(!b)return;
   if(b.dataset.tab)changeTab(b.dataset.tab);
+  else if(b.dataset.clearHome){homeQuery='';showAllProviders=false;const input=$('#homeSearch');if(input){input.value='';input.focus();}refreshHomeResults();}
+  else if(b.dataset.homeFilter){homeFilter=b.dataset.homeFilter;showAllProviders=false;render();}
+  else if(b.dataset.homeDensity){setHomeDensity(b.dataset.homeDensity);render();}
+  else if(b.dataset.pinProvider){
+    const id=b.dataset.pinProvider;
+    if(!data.subs.some(s=>s.id===id))return;
+    homePrefs.pins=isPinnedProvider(id)?homePrefs.pins.filter(x=>x!==id):[...homePrefs.pins,id].slice(-60);
+    saveHomePreferences();refreshHomeResults();
+  }
+  else if(b.dataset.openModels){
+    const article=b.closest('.provider-row'),details=article?.querySelector('details');
+    if(details){details.open=true;details.querySelector('summary')?.focus();}
+  }
   else if(b.dataset.category){category=b.dataset.category;render();}
   else if(b.dataset.quick)edit('quota',b.dataset.quick,true);
   else if(b.dataset.edit)edit(b.dataset.edit,b.dataset.id);
@@ -384,7 +499,7 @@ $('#appview').addEventListener('click',e=>{
   else if(b.dataset.expandProviders){showAllProviders=!showAllProviders;render();}
   else if(b.dataset.action)doAction(b.dataset.action);
 });
-$('#appview').addEventListener('input',e=>{if(e.target.id==='quotaSearch'){query=e.target.value;renderQuotaList()}});
+$('#appview').addEventListener('input',e=>{if(e.target.id==='quotaSearch'){query=e.target.value;renderQuotaList()}else if(e.target.id==='homeSearch'){homeQuery=e.target.value;showAllProviders=false;refreshHomeResults()}});
 $('#appview').addEventListener('change',e=>{if(e.target.id==='providerFilter'){provider=e.target.value;renderQuotaList()}else if(e.target.id==='sortFilter'){sort=e.target.value;renderQuotaList()}});
 $('#sheetClose').addEventListener('click',closeSheet);$('#sheetCancel').addEventListener('click',closeSheet);$('#sheetback').addEventListener('click',e=>{if(e.target.id==='sheetback')closeSheet()});$('#editForm').addEventListener('submit',submitEditor);
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&editor)closeSheet();if(e.key==='Tab'&&editor){const focusables=$$('#sheetback input:not([disabled]),#sheetback select:not([disabled]),#sheetback textarea:not([disabled]),#sheetback button:not([disabled])');if(!focusables.length)return;const first=focusables[0],last=focusables[focusables.length-1];if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus()}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus()}}});

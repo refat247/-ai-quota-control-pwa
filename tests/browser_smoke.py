@@ -1,6 +1,7 @@
 """Synthetic-only Chromium smoke tests. No personal dataset or production writes."""
 import json
 import os
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from playwright.sync_api import sync_playwright, Error
 
@@ -15,7 +16,7 @@ def fixture():
     windows=['weekly','5h','custom']
     quotas=[{'id':f'q{i}','subId':f's{i%6}','model':f'Test Pool {i}','scope':'synthetic','window':'weekly' if i%6==5 else windows[i%3], 'used':'15', 'nextReset':'','behavior':'manual','cycleHours':'','project':False,'verified':False,'note':''} for i in range(17)]
     milestones=[{'id':f'm{i}','title':f'Synthetic date {i}','date':'','kind':'test','note':''} for i in range(6)]
-    return {'meta':{'snapshot':'synthetic','version':'3.0.3','updated':''}, 'subs':subs,'quotas':quotas,'milestones':milestones}
+    return {'meta':{'snapshot':'synthetic','version':'3.1.0','updated':''}, 'subs':subs,'quotas':quotas,'milestones':milestones}
 
 def assert_page(page,expression,msg):
     assert page.evaluate(expression), msg
@@ -116,6 +117,32 @@ def main():
                 assert page.locator('.provider-row[data-sub-id="s1"] .provider-model').count()==3, 'model detail expansion missing'
                 assert_page(page,'document.documentElement.scrollWidth <= window.innerWidth','compact Home overflow at 390px')
                 print('PASS compact Home: six provider rows, separate windows, no fake aggregation, Grok N/A')
+
+                # Batch A: all UI actions must leave original private-style quota JSON untouched.
+                before_ui=page.evaluate('localStorage.getItem("'+STORE+'")')
+                page.locator('#homeSearch').fill('Synthetic Provider 1')
+                assert page.locator('#homeProviderList .provider-row').count()==1, 'Home search did not filter providers'
+                page.locator('[data-clear-home]').click()
+                assert page.locator('#homeSearch').input_value()=='', 'clear Home search'
+                page.locator('[data-home-filter="pinned"]').click()
+                assert page.locator('#homeProviderList .provider-row').count()==0, 'un-pinned empty state'
+                page.locator('[data-home-filter="all"]').click()
+                page.locator('[data-pin-provider="s1"]').click()
+                assert page.locator('[data-pin-provider="s1"]').get_attribute('aria-pressed')=='true', 'pin toggle'
+                page.locator('[data-home-filter="pinned"]').click()
+                assert page.locator('#homeProviderList .provider-row').count()==1, 'pinned filter'
+                assert 'Synthetic Provider 1' in page.locator('#homeProviderList').inner_text()
+                page.locator('[data-home-density="comfortable"]').click()
+                assert page.evaluate('document.documentElement.dataset.quotaDensity')=='comfortable', 'density'
+                assert page.evaluate('localStorage.getItem("'+STORE+'")')==before_ui, 'UI prefs modified quota JSON'
+                assert page.evaluate('localStorage.getItem("ai-quota-ui-preferences-v1")') is not None, 'independent UI prefs missing'
+                page.locator('[data-home-filter="all"]').click()
+                page.locator('[data-open-models="s0"]').click()
+                assert page.locator('.provider-row[data-sub-id="s0"] details').evaluate('(x)=>x.open'), 'multi-pool action did not open details'
+                page.locator('[data-pin-provider="s1"]').click()
+                page.locator('[data-home-density="quick"]').click()
+                assert page.evaluate('localStorage.getItem("'+STORE+'")')==before_ui, 'Home UI actions mutated quota data'
+                print('PASS Batch A: search/clear, pin/filter, density and multi-quota update, quota store intact')
                 page.locator('button[data-tab="quotas"]').first.click()
                 assert page.locator('#quotaList .quota-card').count()==17, 'quota cards count'
                 page.locator('[data-quick="q0"]').first.click()
@@ -134,6 +161,30 @@ def main():
                 print('PASS 390px: 6/17/6 paste, Grok5h rejection, 42% edit, same-origin reload, focus inert')
             ctx.close()
             print('PASS viewport',width)
+        # Batch A data-driven filter regression: timed resets and type filters.
+        # Synthetic Dhaka timestamps only; avoids user's private quota data.
+        filter_data=fixture()
+        dhaka=timezone(timedelta(hours=6))
+        now_bd=datetime.now(dhaka)
+        filter_data['quotas'][0]['nextReset']=(now_bd+timedelta(hours=3)).strftime('%Y-%m-%d %H:%M')
+        filter_data['quotas'][2]['nextReset']=(now_bd-timedelta(hours=3)).strftime('%Y-%m-%d %H:%M')
+        filter_raw=json.dumps(filter_data)
+        ctx,page,errs=get_page(390,stored=filter_raw)
+        page.locator('[data-home-filter="soon"]').click()
+        assert page.locator('#homeProviderList .provider-row').count()==1, 'soon filter should match one provider'
+        assert page.locator('#homeProviderList .provider-row').first.get_attribute('data-sub-id')=='s0', 'soon filter provider mismatch'
+        page.locator('[data-home-filter="overdue"]').click()
+        assert page.locator('#homeProviderList .provider-row').count()==1, 'overdue filter should match one provider'
+        assert page.locator('#homeProviderList .provider-row').first.get_attribute('data-sub-id')=='s2', 'overdue filter provider mismatch'
+        page.locator('[data-home-filter="weekly"]').click()
+        assert page.locator('#homeProviderList .provider-row[data-sub-id="s5"]').count()==1, 'weekly should include Grok weekly'
+        page.locator('[data-home-filter="5h"]').click()
+        assert page.locator('#homeProviderList .provider-row[data-sub-id="s1"]').count()==1, '5-hour should include matching provider'
+        assert page.locator('#homeProviderList .provider-row[data-sub-id="s5"]').count()==0, 'Grok must not acquire fake 5-hour pool'
+        assert page.evaluate('localStorage.getItem("'+STORE+'")')==filter_raw, 'Home filters modified quota JSON'
+        assert not errs, f'Home filter JS errors: {errs}'
+        ctx.close()
+        print('PASS Batch A deterministic 24h/overdue/weekly/5h filtering; quota JSON unchanged')
         # F1: a formerly valid saved dataset made invalid by a plan/provider change
         # must enter non-destructive read-only recovery; it must not silently reset.
         corrupted=fixture()

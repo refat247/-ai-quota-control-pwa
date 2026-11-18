@@ -2,6 +2,19 @@
 
 All notable changes follow SemVer and Keep a Changelog.
 
+## [3.1.0] - 2026-11-18 (DRAFT, not deployed)
+
+### Added
+- Batch A mobile Home provider/plan/model search + clear; All/Pinned/Reset ≤24h/Overdue/Weekly/5-hour filters.
+- Per-account pinning and Quick/Comfortable display density; these preferences use a separate non-sensitive UI key and never rewrite the existing quota dataset.
+- Provider-level quick actions: single model edit, multiple model details, or Add quota for an empty plan.
+- Focus-visible UI and 44px touch targets with small-screen layouts. Synthetic Playwright regression verifies no quota localStorage mutation.
+
+### Safety / pending acceptance
+- No quota schema migration, provider API, AI usage history, remote sync or background alerts.
+- Owner private JSON export and Android actual-data acceptance remain unverified. Draft branch must not deploy automatically.
+
+
 ## [3.0.3] - 2026-11-18 (draft, not deployed)
 
 ### Fixed (review candidate)
