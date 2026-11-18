@@ -2,6 +2,14 @@
 
 All notable changes follow SemVer and Keep a Changelog.
 
+## [3.3.1] - 2026-11-18 (A109 bounded repair DRAFT; not deployed)
+
+### Fixed
+- Critical-first model usage rings, model identity, hidden max and mobile readability.
+- Compact quotas list, provider worst-value preview, export-first Backup, correct empty state.
+- Provider return after Quick Save, dialog/editor back handling, inline validation and date shortcuts.
+- Preserve storage schema and original model order; synthetic/browser regression required.
+
 ## [3.3.0] - 2026-11-18 (DRAFT, not merged/deployed)
 
 ### Changed
