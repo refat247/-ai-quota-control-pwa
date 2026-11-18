@@ -9,8 +9,13 @@ All notable changes follow SemVer and Keep a Changelog.
 - Browser regression injects a synthetic Home TypeError and verifies records remain unchanged and backup navigation stays accessible.
 - Bump the PWA service-worker cache identifier so a future owner-approved release updates the app shell without deleting browser localStorage.
 
+### Root-cause repair (2026-11-18, review candidate)
+- Fixed the Home “Expected renewal” sort comparator: `o.date.localeCompare(b.date)` referenced undefined variable `o` when comparing two or more monthly renewal dates. Changed to comparator argument `a`.
+- Added deterministic two-renewal Chromium regression verifying nonblank Home, earliest expected renewal and unchanged browser records. This reproduces the original JavaScript ReferenceError using synthetic data only.
+- No schema change. Version stays 3.0.3 because the previous merged v3.0.3 Firebase release is awaiting Production approval.
+
 ### Still open
-- Root exception in owner-private Android data is not reproduced; a fallback is not a root-cause fix.
+- Exact owner-device console stack was not collected, but the source's ReferenceError and blank Home condition are independently reproduced. Android acceptance remains pending.
 - Actual Android/iPhone recovery and persistence unverified. No deployment from this draft.
 
 
