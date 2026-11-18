@@ -1,4 +1,4 @@
-AI Quota Control PWA — v3.3.0 (Visual Cockpit, Draft PR #18; main/Firebase-এ এখনো release নয়)
+AI Quota Control PWA — v3.3.1 (Claude A109 visual repair; এখনো merge/deploy নয়)
 
 এটি mobile-first, manual AI quota tracking app। এটি provider-এর live quota API বা automatic account sync নয়।
 
@@ -32,3 +32,8 @@ Quick view-তে প্রতিটি model আলাদা chip-এ used % �
 v3.3.0 Visual Cockpit (DRAFT; production নয়)
 ------------------------------------------
 Home: ছোট তিনটি summary, model অনুযায়ী গোল percentage meter-সহ ২-column provider tile। Quotas: provider grid; সম্পূর্ণ quota list আলাদা detail screen-এ। Plans: ছোট status tile ও tap-to-edit detail। Dates: প্রথমে ৩টি জরুরি event, Today/Next 3/7 days/All filter। Backup, import, মূল localStorage key এবং recovery অপরিবর্তিত। লাল = 90%+ used, হলুদ = 75–89%, সবুজ = <75%, ধূসর = Unknown। 0% আলাদা। Live quota API নয়। Android পরীক্ষা ও owner approval ছাড়া release নয়।
+
+
+v3.3.1 A109 UI repair
+--------------------
+সবচেয়ে বেশি Used % model আগে; ring-এ model নাম, hidden max ও readable font। Quotas compact list, Backup Export primary, Import overwrite warning, first-run guidance। Quick Save শেষে provider detail, Back দিয়ে dialog বন্ধ, inline error, date quick chips। Original JSON key/schema/recovery ও production data অপরিবর্তিত। Audit 70/100 verdict-এর repair; device acceptance আলাদা।

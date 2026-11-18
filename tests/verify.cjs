@@ -2,10 +2,10 @@
 const fs=require('node:fs'),assert=require('node:assert/strict'),cp=require('node:child_process'),path=require('node:path');
 const root=path.resolve(__dirname,'..'),read=f=>fs.readFileSync(path.join(root,f),'utf8');
 const version=require('../package.json').version,html=read('index.html'),sw=read('sw.js'),m=JSON.parse(read('manifest.webmanifest'));
-assert.equal(version,'3.3.0');
-assert.ok(read('README.md').includes('**Version:** 3.3.0'));
-assert.ok(read('CHANGELOG.md').includes('## [3.3.0]'));
-assert.ok(html.includes("VERSION='3.3.0'"));
+assert.equal(version,'3.3.1');
+assert.ok(read('README.md').includes('**Version:** 3.3.1'));
+assert.ok(read('CHANGELOG.md').includes('## [3.3.1]'));
+assert.ok(html.includes("VERSION='3.3.1'"));
 assert.ok(html.startsWith('<!DOCTYPE html>')&&!html.slice(16,50).includes('<!DOCTYPE html>'));
 assert.match(html,/sharedGitHubOrigin=location\.origin==='https:\/\/refat247\.github\.io'/);
 assert.match(html,/function importDataset\(x\)/);
@@ -56,3 +56,5 @@ assert.equal(fb.hosting.public,'dist');
 const rootRule=fb.hosting.headers.find(r=>r.source==='/');
 assert.ok(rootRule?.headers.some(h=>h.key==='Cache-Control'&&h.value==='no-cache'),'Firebase root must revalidate');
 console.log('PASS: versions, privacy smoke, valid asset references, JS syntax, Firebase deployment boundary');
+// A109 repair source invariants. Chromium covers rendered UX separately.
+for(const phrase of ['function rankedQuotas(', 'function compactQuotaCard(', 'data-date-shift', 'id="sheetError"', 'maxHiddenUsed('])assert.ok(html.includes(phrase),'A109 missing '+phrase);

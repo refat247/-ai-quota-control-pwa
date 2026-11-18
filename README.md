@@ -1,6 +1,6 @@
 # AI Quota Control PWA
 
-**Version:** 3.3.0 · **Status:** single Draft PR #18, protected-main merge and Firebase deployment NOT authorized. Last verified production: v3.2.0 Firebase release (GitHub Actions #44265590988, SHA a740aa2c). v3.3.0 source CI succeeded on the prior reviewed HEAD; exact final commit requires fresh CI. Android private-data persistence and external backup integrity remain unverified. GitHub Pages private import/edit HOLD.
+**Version:** 3.3.1 · **Status:** Claude A109 visual repair branch, not merged/deployed. Firebase live remains v3.3.0 (run #44277881446, SHA 67afe49a). Owner Android data acceptance and independent backup still unverified. Shared GitHub Pages import/edit HOLD.
 
 A mobile-first manual AI quota tracker. Not a provider API, automatic quota update, paid subscription sync, or alert service.
 
@@ -59,3 +59,8 @@ Quick Home shows a separate textual used-percentage chip for **each** tracked mo
 ## v3.3.0 visual cockpit (Draft PR — not deployed)
 
 Mobile Home now shows three compact date metrics and a two-column provider grid with individual circular model-used meters, rather than six tall provider forms. Tap a provider for **every** model and quick update. Quotas starts with provider shortcuts; the original 17-card detailed list remains available only when explicitly chosen. Plans uses compact status tiles and opens original detail/edit/delete controls in a second-level dialog. Dates prioritizes the next three events, Today/Next 3/7 days/All, with all and past events accessible on demand. Backup/recovery and original quota JSON are unchanged. Colors pair with actual text: below 75% used green, 75–89% amber, 90%+ red, Unknown grey; 0 remains 0. All model percentages are independent and manual, never API-synced or averaged. Synthetic CI and Android acceptance are separate gates. No production merge or Firebase deployment is authorized by this draft.
+
+
+## v3.3.1 — A109 independent UI/UX audit repair candidate
+
+Claude Opus 5.5's v3.3.0 visual review verdict: ACCEPT_WITH_FIXES, 70/100. UI repairs: highest-used per-model rings first (never average, never mutate stored order), named model rings, hidden max, readable circular indicators and compact header; Quotas worst-meter provider shortcuts and compact searchable full rows; Backup Export as primary, Import as replace-all secondary, first-run guidance; browser back closes overlays, Quick Save restores provider context; inline form validation and +5h/+1d/+7d reset shortcuts. Existing original JSON schema, localStorage key, reset semantics, F1 recovery and 5-file Hosting allowlist unchanged. All development review and real Android acceptance are separate. Do not merge or deploy without scoped owner authorizations.
