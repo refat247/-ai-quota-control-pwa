@@ -217,7 +217,7 @@ def main():
         color_fixture['quotas'][13]['used']='100'
         color_fixture['quotas'][14]['used']='95'
         color_raw=json.dumps(color_fixture)
-        for width in (320,390):
+        for width in (320,360,390,430):
             ctx,page,errs=get_page(width,stored=color_raw)
             for tone in ('low','high','critical'):
                 assert page.locator('.cockpit-ring.tone-'+tone).count()>0, 'missing Home semantic '+tone+' ring'
@@ -230,6 +230,44 @@ def main():
             assert page.locator('#quotaList .cockpit-ring.tone-unknown').count()>=1, 'blank must remain Unknown in full list'
             page.locator('button[data-tab="overview"]').first.click()
             assert page.locator('#homeProviderList .provider-row').count()==6, 'six provider compact rows required'
+
+            # A112: measure actual DOM geometry, not just element counts.
+            metrics=page.evaluate("""() => {
+              const tiles=[...document.querySelectorAll('#homeProviderList .cockpit-tile')];
+              let overlap=0,outside=0,clippedWidth=0;
+              for(const tile of tiles){
+                const box=tile.getBoundingClientRect();
+                const labels=[...tile.querySelectorAll('.cockpit-ring-label')];
+                const rects=labels.map(l=>l.getBoundingClientRect());
+                for(let i=0;i<rects.length;i++){
+                  const r=rects[i];
+                  if(r.left<box.left-.5||r.right>box.right+.5)outside++;
+                  if(labels[i].scrollWidth>labels[i].clientWidth+.5)clippedWidth++;
+                  for(let j=i+1;j<rects.length;j++){
+                    const x=Math.min(r.right,rects[j].right)-Math.max(r.left,rects[j].left);
+                    const y=Math.min(r.bottom,rects[j].bottom)-Math.max(r.top,rects[j].top);
+                    if(x>.5&&y>.5)overlap++;
+                  }
+                }
+              }
+              return {overlap,outside,clippedWidth,doc:document.documentElement.scrollHeight,
+                      viewport:innerHeight,last:tiles.at(-1)?.getBoundingClientRect().bottom,
+                      nav:document.querySelector('#navigation')?.getBoundingClientRect().top};
+            }""")
+            assert metrics['overlap']==0, f'A112 N1 label boxes overlap at {width}: {metrics}'
+            assert metrics['outside']==0, f'A112 N1 labels leave provider tile at {width}: {metrics}'
+            if width==320:
+                assert metrics['doc'] <= 1.15*metrics['viewport']+1, f'A112 320px fold >1.15: {metrics}'
+            print('A112 measured geometry',width,metrics)
+            page.locator('button[data-tab="quotas"]').first.click()
+            centering=page.locator('.cockpit-icon-tile .cockpit-ring').first.evaluate("""r=>{
+              const outer=r.getBoundingClientRect(),t=r.querySelector('.meter-text').getBoundingClientRect();
+              return {dx:Math.abs((outer.left+outer.right-t.left-t.right)/2),
+                      dy:Math.abs((outer.top+outer.bottom-t.top-t.bottom)/2)};
+            }""")
+            assert centering['dx']<=1.5 and centering['dy']<=1.5, f'A112 N2 ring text off-center {width}: {centering}'
+            page.locator('button[data-tab="overview"]').first.click()
+
             assert '100%' in page.locator('.provider-row[data-sub-id="s1"]').inner_text(), '100% critical quota hidden behind +N'
             assert '95%' in page.locator('.provider-row[data-sub-id="s2"]').inner_text(), '95% critical quota hidden behind +N'
             assert 'Test Pool 13' in page.locator('.provider-row[data-sub-id="s1"]').inner_text(), 'individual model identity not shown'
