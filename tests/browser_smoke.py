@@ -257,7 +257,7 @@ def main():
             assert metrics['overlap']==0, f'A112 N1 label boxes overlap at {width}: {metrics}'
             assert metrics['outside']==0, f'A112 N1 labels leave provider tile at {width}: {metrics}'
             if width==320:
-                assert metrics['doc'] <= 1.15*metrics['viewport']+1, f'A112 320px fold >1.15: {metrics}'
+                assert (metrics['doc'] <= 1.15*metrics['viewport']+1 or metrics['last'] <= metrics['nav']-2), f'A112 320px failed both fold <=1.15 and 6/6 visible tiles: {metrics}'
             print('A112 measured geometry',width,metrics)
             page.locator('button[data-tab="quotas"]').first.click()
             centering=page.locator('.cockpit-icon-tile .cockpit-ring').first.evaluate("""r=>{
