@@ -175,6 +175,20 @@ def main():
         assert page.evaluate('localStorage.getItem("'+STORE+'")') is None,'shared-origin manual edit wrote storage'
         ctx.close()
         print('PASS shared github.io origin import and manual editor blocked')
+        # A86 root cause: multiple monthly renewal dates previously hit
+        # ReferenceError because comparator referenced undefined 'o' not 'a'.
+        # Tests use synthetic data only; never inspect owner localStorage.
+        renewals=fixture()
+        renewals['subs'][0]['renewDay']='24'
+        renewals['subs'][1]['renewDay']='25'
+        original_renewals=json.dumps(renewals)
+        ctx,page,errs=get_page(390,stored=original_renewals)
+        assert page.locator('#appview .home-kpi').count()==3, 'Home failed with two renewal dates'
+        assert 'Home temporarily unavailable' not in page.locator('#appview').inner_text(), 'root bug still triggers the fallback'
+        assert 'Synthetic Provider 0' in page.locator('.home-kpi').nth(1).inner_text(), 'incorrect earliest expected renewal'
+        assert page.evaluate('localStorage.getItem("'+STORE+'")')==original_renewals, 'Home changed stored synthetic data'
+        ctx.close()
+        print('PASS A86 two monthly renewals: Home renders and selects earliest without storage change')
         # A85 Android blank-Home regression: a synthetic view failure must show a
         # non-destructive recovery panel and keep original localStorage untouched.
         original=json.dumps(fixture())
