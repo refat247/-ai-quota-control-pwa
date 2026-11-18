@@ -5,7 +5,7 @@
 <meta charset="utf-8"/><meta content="width=device-width,initial-scale=1,viewport-fit=cover" name="viewport"/>
 <meta content="#f5f7fb" name="theme-color"/>
 <meta content="Privacy-safe AI quota PWA shell. Personal data saved locally in browser after one-time import." name="description"/>
-<title>AI Quota Control · Mobile PWA v3.2.0</title>
+<title>AI Quota Control · Mobile PWA v3.3.0</title>
 <style>:root{color-scheme:light;--canvas:#f5f7fb;--paper:#fff;--paper2:#fbfcff;--ink:#14223b;--muted:#586a82;--soft:#59687d;--line:#e2e8f2;--accent:#4a5fd1;--accent-soft:#eef0ff;--mint:#116b60;--mint-soft:#e8f6f1;--amber:#9e6418;--amber-soft:#fff3df;--red:#b54852;--red-soft:#fff1f2;--radius:17px;--shadow:0 8px 32px rgba(28,50,90,.045)}
 *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;min-width:280px;background:var(--canvas);color:var(--ink);font:14px/1.5 system-ui,-apple-system,'Segoe UI','Noto Sans Bengali',sans-serif;-webkit-font-smoothing:antialiased}button,input,select,textarea{font:inherit}button{cursor:pointer}button:disabled{opacity:.48;cursor:not-allowed}button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,a:focus-visible,summary:focus-visible{outline:3px solid #8b9afa;outline-offset:2px}button,input,select,textarea{font-size:16px}a{color:var(--accent)}.hide{display:none!important}.sr-only{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap}
 .layout{max-width:1470px;margin:auto;min-height:100dvh}.main-content{min-width:0;padding:20px 15px calc(105px + env(safe-area-inset-bottom,0px));max-width:1170px;margin:0 auto}.side-nav{position:fixed;z-index:20;left:12px;right:12px;bottom:calc(8px + env(safe-area-inset-bottom,0px));display:grid;grid-template-columns:repeat(5,minmax(0,1fr));background:rgba(255,255,255,.96);backdrop-filter:blur(18px);box-shadow:0 6px 36px #182c4f2b;border:1px solid var(--line);border-radius:19px;padding:7px 4px;max-width:640px;margin:auto}.nav-brand{display:none}.navitem{color:var(--muted);min-height:54px;border:0;background:none;border-radius:12px;padding:6px 3px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:3px;font-size:10px;line-height:1.1;letter-spacing:-.01em;font-weight:680}.navitem svg{width:21px;height:21px;stroke:currentColor;stroke-width:1.9;fill:none;stroke-linejoin:round;stroke-linecap:round}.navitem.active{color:var(--accent);background:var(--accent-soft)}.nav-footer{display:none}
@@ -75,7 +75,7 @@
 @media(min-width:610px){.save-strip{grid-template-columns:minmax(0,1fr) auto}.save-strip .btn{width:auto}}
 .paste-label{display:block;margin:12px 0 6px;font-size:13px;font-weight:700}.backup-grid textarea#pasteJSON{display:block;width:100%;min-height:120px;padding:12px;border:1px solid var(--line);border-radius:10px;color:var(--ink);background:var(--paper)}.help-note{font-size:12px;color:var(--muted)}
 
-/* v3.2.0 Batch A: responsive, data-isolated Home controls */
+/* v3.3.0 Batch A: responsive, data-isolated Home controls */
 [hidden]{display:none!important}
 .home-search-controls{display:flex;gap:7px;align-items:stretch;margin:9px 0 8px}
 .home-search-controls .search{min-width:0;flex:1;min-height:44px;border-radius:11px}
@@ -100,7 +100,7 @@
 @media(prefers-reduced-motion:reduce){.home-filter-chips,.provider-row{scroll-behavior:auto;transition:none}}
 
 
-/* v3.2.0 compact Home and manual-used-color legend */
+/* v3.3.0 compact Home and manual-used-color legend */
 [data-quota-view="overview"] .topbar{margin-bottom:6px}
 [data-quota-view="overview"] .save-strip[data-health="ok"]{margin-bottom:7px;padding:6px 10px;box-shadow:none}
 [data-quota-view="overview"] .save-strip[data-health="ok"] .save-message p{display:none}
@@ -249,8 +249,9 @@ dialog.cockpit-dialog::backdrop{background:#081532a8}
 <header class="topbar"><div class="brand-line"><span aria-hidden="true" class="brand-icon">Q</span><div><div class="brand-title">Quota Control</div><div class="eyebrow">AI usage workspace</div></div></div><div class="top-date"><strong aria-label="Dhaka local time" id="localClock">Asia/Dhaka</strong><span id="lastEdit">Offline snapshot</span></div></header>
 <section aria-live="polite" class="save-strip" id="saveStatus" role="status"></section>
 <section aria-live="off" id="appview"></section>
-<footer class="footnote">Browser-saved personal dashboard · Manual data only · No provider API or automatic cancellations <div class="footer-status" id="footerVersion">v3.2.0 · Browser storage</div></footer>
+<footer class="footnote">Browser-saved personal dashboard · Manual data only · No provider API or automatic cancellations <div class="footer-status" id="footerVersion">v3.3.0 · Browser storage</div></footer>
 </main></div>
+<dialog id="cockpitDialog" class="cockpit-dialog" aria-label="Provider details"></dialog>
 <div aria-hidden="true" aria-labelledby="sheetTitle" aria-modal="true" class="sheetback" id="sheetback" role="dialog"><div class="sheet"><div aria-hidden="true" class="grab"></div><div class="sheethead"><h2 id="sheetTitle">Edit quota</h2><button aria-label="Close editor" class="sheet-close" id="sheetClose" type="button">×</button></div><p class="form-hint" id="sheetHint"></p><form id="editForm"><div class="form-grid" id="sheetFields"></div><div class="form-actions"><button class="btn" id="sheetCancel" type="button">Cancel</button><button class="btn primary" id="sheetSave" type="submit">Save changes</button></div></form></div></div>
 <input accept="application/json,.json" hidden="" id="filePicker" type="file"/>
 <noscript><div class="noscript">JavaScript is required to edit and view this offline dashboard.</div></noscript>
@@ -259,7 +260,7 @@ dialog.cockpit-dialog::backdrop{background:#081532a8}
   "meta": {
     "snapshot": "Awaiting one-time private data import",
     "timezone": "Asia/Dhaka",
-    "version": "3.2.0",
+    "version": "3.3.0",
     "updated": "",
     "source": "Private local browser; not uploaded to hosting"
   },
@@ -270,7 +271,7 @@ dialog.cockpit-dialog::backdrop{background:#081532a8}
 </script>
 <script>
 (()=>{'use strict';
-const STORE='ai-quota-control-center-v1', VERSION='3.2.0';
+const STORE='ai-quota-control-center-v1', VERSION='3.3.0';
 const original=JSON.parse(document.getElementById('bootstrap-data').textContent);
 const $=s=>document.querySelector(s), $$=s=>Array.from(document.querySelectorAll(s));
 const copy=o=>JSON.parse(JSON.stringify(o));
@@ -375,10 +376,7 @@ function homeMatchingProviders(){
     a.i-b.i
   );
 }
-function homeProviderMarkup(groups){
-  return groups.map(({s,i})=>providerRow(s,i)).join('')||
-    '<div class="card empty">No providers match this search/filter. Clear the search or choose All.</div>';
-}
+function homeProviderMarkup(groups){return groups.map(({s})=>visualTile(s)).join('')||'<div class="cockpit-tiles-empty">No providers match. Open Search & filter to clear.</div>'}
 function refreshHomeResults(){
   const results=homeMatchingProviders(),displayed=showAllProviders?results:results.slice(0,6);
   const list=$('#homeProviderList'),count=$('#homeResultCount'),button=$('#homeExpand');
@@ -515,7 +513,7 @@ function providerRow(sub,i){
     <details><summary>Model details · ${rows.length} pool${rows.length===1?'':'s'}${rows.some(q=>q.window==='custom')?' incl. custom':''}</summary><div class="provider-detail-list">${items||'<div class="micro">No quota pools yet; add one from Quotas.</div>'}</div></details>
   </article>`;
 }
-function overview(){
+function legacyOverview(){
   const next=data.quotas.map(q=>({q,reset:nextReset(q)})).filter(o=>{const p=parseBD(o.reset.date);return p&&!p.dateOnly&&p.ms>Date.now()}).sort((a,b)=>parseBD(a.reset.date).ms-parseBD(b.reset.date).ms)[0];
   const nextPay=data.subs.filter(s=>s.status!=='cancelled').map(s=>({s,date:monthly(s.renewDay)})).filter(o=>o.date).sort((a,b)=>a.date.localeCompare(b.date))[0];
   const pending=data.quotas.filter(q=>{const r=nextReset(q),p=parseBD(r.date);return p&&!p.dateOnly&&p.ms<Date.now()}).length;
@@ -541,11 +539,77 @@ function overview(){
   <p class="home-footnote">Quota percentages are not combined across models or accounts. “Checked” indicates an owner-marked verification, not a live API update. Renewal day is an estimate; billing time and payment remain unconfirmed.</p>
   <details class="home-extras"><summary>Upcoming decisions · tap for details</summary><section class="section-block">${section('Upcoming decisions','First two tracked events')}<div class="quicklist">${upcoming.map(eventRow).join('')||'<div class="card empty">No upcoming dated events.</div>'}</div><div style="margin-top:8px"><button class="btn sm soft" data-tab="deadlines">All dates</button></div></section></details>`;
 }
+let cockpitQuotaMode='grid',cockpitDateMode='soon';
+function visualMeter(q){
+ const known=q.used!==''&&q.used!==null&&Number.isFinite(Number(q.used)),p=known?Number(q.used):0;
+ const tone=!known?'unknown':p>=90?'critical':p>=75?'high':'low';
+ const color={low:'#148767',high:'#c8892f',critical:'#c3495b',unknown:'#8b98a9'}[tone];
+ const dash=(p*1.13097).toFixed(2);
+ return `<span class="cockpit-ring tone-${tone}" role="img" aria-label="${escapeHTML(q.model+' '+q.window+': '+(known?p+' percent used':'Unknown'))}" style="--meter:${color}"><svg aria-hidden="true" viewBox="0 0 43 43"><circle class="meter-track" cx="21.5" cy="21.5" r="18"/><circle class="meter-used" cx="21.5" cy="21.5" r="18" stroke-dasharray="${dash} 113.1"/></svg><span class="meter-text">${known?p+'%':'—'}</span></span>`;
+}
+function visualTile(s){
+ const [cl,av]=providerStyle(s.provider),qs=data.quotas.filter(q=>q.subId===s.id);
+ const rings=qs.slice(0,2).map(q=>`<span class="cockpit-ring-item">${visualMeter(q)}<span class="cockpit-ring-label">${escapeHTML(q.window==='5h'?'5h':q.window==='weekly'?'Weekly':'Custom')}</span></span>`).join('');
+ return `<button class="cockpit-tile provider-row" data-sub-id="${escapeHTML(s.id)}" data-open-provider="${escapeHTML(s.id)}" type="button" aria-label="Open ${escapeHTML(s.provider+' '+s.plan)} and ${qs.length} individual quotas"><span class="cockpit-tile-top"><span class="cockpit-avatar ${cl}">${av}</span><span class="cockpit-tile-name"><b>${escapeHTML(s.provider)}</b><small>${escapeHTML(s.plan)} · ${qs.length} pools${isPinnedProvider(s.id)?' · pinned':''}</small></span><span class="cockpit-tile-chevron">›</span></span><span class="cockpit-ring-line">${rings}${qs.length>2?`<span class="cockpit-ring-item"><span class="cockpit-ring-more">+${qs.length-2}</span><span class="cockpit-ring-label">more</span></span>`:''}${qs.length===0?'<small>No model quotas yet</small>':''}</span></button>`;
+}
+function visualHome(){
+ const reset=data.quotas.map(q=>({q,r:nextReset(q)})).filter(o=>{const p=parseBD(o.r.date);return p&&!p.dateOnly&&p.ms>Date.now()}).sort((a,b)=>parseBD(a.r.date).ms-parseBD(b.r.date).ms)[0];
+ const pay=data.subs.filter(s=>s.status!=='cancelled').map(s=>({s,date:monthly(s.renewDay)})).filter(x=>x.date).sort((a,b)=>a.date.localeCompare(b.date))[0];
+ const passed=data.quotas.filter(q=>{const p=parseBD(nextReset(q).date);return p&&!p.dateOnly&&p.ms<Date.now()}).length;
+ const groups=homeMatchingProviders(),list=showAllProviders?groups:groups.slice(0,6);
+ return `<div class="cockpit" data-dashboard="home"><div class="page-head"><h1>At a glance</h1><p>Manual model quotas · not API-synced</p></div>
+ <div class="cockpit-hero"><span><strong>Quota cockpit</strong><small>${data.subs.length} plans · ${data.quotas.length} separate model pools</small></span><span class="cockpit-hero-tag">Private · local</span></div>
+ <div class="cockpit-glance">
+ <div class="cockpit-metric home-kpi"><span class="cockpit-metric-circle">${reset?`<span data-countdown-date="${escapeHTML(reset.r.date)}">${escapeHTML(difference(reset.r.date).text)}</span>`:'—'}</span><b>Next reset</b><small>${reset?escapeHTML(reset.q.model):'Not tracked'}</small></div>
+ <div class="cockpit-metric home-kpi"><span class="cockpit-metric-circle warn">${pay?escapeHTML(difference(pay.date).text):'—'}</span><b>Expected renewal</b><small>${pay?escapeHTML(pay.s.provider):'Unknown'}</small></div>
+ <div class="cockpit-metric home-kpi"><span class="cockpit-metric-circle ${passed?'alert':''}">${passed}</span><b>Times passed</b><small>Check provider UI</small></div></div>
+ <div class="cockpit-title-line"><h2>Providers · ${data.subs.length}</h2><button type="button" class="cockpit-tiny-button" data-tab="quotas">All models ›</button></div>
+ <div class="cockpit-provider-grid" id="homeProviderList">${homeProviderMarkup(list)}</div>
+ <button class="cockpit-panel-action" data-expand-providers="true" id="homeExpand" ${groups.length>6?'':'hidden'}>${showAllProviders?'Show fewer':'See all providers'}</button>
+ <div class="home-usage-legend cockpit-legend" aria-label="Used percent color legend"><span class="legend-item"><i class="dot good"></i>&lt;75%</span><span class="legend-item"><i class="dot warn"></i>75–89%</span><span class="legend-item"><i class="dot danger"></i>90%+</span><span class="legend-item"><i class="dot unknown"></i>Unknown</span></div>
+ <details class="cockpit-disclosure" id="cockpitFilters"><summary>Search & filter providers</summary><div class="home-search-controls"><input id="homeSearch" class="search" type="search" placeholder="Provider, plan, model" aria-label="Search provider, plan or model" value="${escapeHTML(homeQuery)}"><button class="btn sm" data-clear-home="true">Clear</button></div>
+ <div class="home-filter-chips">${[['all','All'],['pinned','Pinned'],['soon','Reset ≤24h'],['overdue','Overdue'],['weekly','Weekly'],['5h','5-hour']].map(([k,v])=>`<button class="chip ${homeFilter===k?'selected':''}" data-home-filter="${k}" aria-pressed="${homeFilter===k}">${v}</button>`).join('')}</div>
+ <div class="home-density-controls">Display ${[['quick','Quick'],['comfortable','Comfortable']].map(([k,v])=>`<button class="density-btn ${homePrefs.density===k?'selected':''}" data-home-density="${k}" aria-pressed="${homePrefs.density===k}">${v}</button>`).join('')}</div>
+ <p id="homeResultCount" class="cockpit-subtle">${groups.length} matching / ${data.subs.length} total</p><p id="homePreferenceNotice" class="cockpit-subtle"></p></details>
+ <p class="cockpit-subtle">Used % is manual. Past reset timestamp ≠ automatic refill. Tap a provider for full model details.</p></div>`;
+}
+function visualQuotas(){
+ if(cockpitQuotaMode==='list')return `<div class="cockpit"><button class="cockpit-panel-action" data-quota-list="grid">‹ Provider overview</button></div>${legacyQuotas()}`;
+ return `<div class="cockpit" data-dashboard="quotas"><div class="page-head"><h1>Model quotas</h1><p>${data.quotas.length} separate pools · select a provider</p></div><div class="cockpit-title-line"><h2>Provider shortcuts</h2><button class="cockpit-tiny-button" data-new="quota">+ Add quota</button></div><div class="cockpit-icon-grid">${data.subs.map(s=>{const [cl,av]=providerStyle(s.provider),n=data.quotas.filter(q=>q.subId===s.id).length;return `<button class="cockpit-icon-tile" data-open-provider="${escapeHTML(s.id)}"><span class="cockpit-avatar ${cl}">${av}</span><strong>${escapeHTML(s.provider)}</strong><small>${n} model pools</small></button>`}).join('')}</div>${!data.subs.length?'<div class="notice warn">Start with a Plan: tap Add quota to create a Plan first.</div>':''}<div class="cockpit-title-line"><h2>All models</h2></div><button class="cockpit-panel-action" data-quota-list="list">Open detailed list · ${data.quotas.length} models ›</button><p class="cockpit-subtle">Grok has no 5-hour quota. Blank usage is Unknown, not 0%.</p></div>`;
+}
+function visualPlans(){
+ return `<div class="cockpit" data-dashboard="plans"><div class="page-head"><h1>Subscriptions</h1><p>${data.subs.length} plans · open a tile to edit details</p></div><div class="cockpit-title-line"><h2>My plans</h2><button class="cockpit-tiny-button" data-new="sub">+ Add plan</button></div><div class="cockpit-plan-grid">${data.subs.map(s=>{const [cl,av]=providerStyle(s.provider),d=monthly(s.renewDay),status=statusNames[s.status]||'Unknown';return `<button class="cockpit-plan-tile" data-open-plan="${escapeHTML(s.id)}"><span class="cockpit-avatar ${cl}">${av}</span><strong>${escapeHTML(s.plan)}</strong><small>${escapeHTML(s.provider)} · ${d?escapeHTML(difference(d).text):'Unknown renewal'}</small><span class="inline-tag ${s.status==='keep'?'good':s.status==='cancel-planned'?'warn':''}">${escapeHTML(status)}</span></button>`}).join('')}</div><p class="cockpit-subtle">Cancel planned ≠ cancelled. Renewal day is not access expiry. Details and delete are second-level actions.</p></div>`;
+}
+function visualDates(){
+ const all=allEvents(),future=all.filter(e=>difference(e.date).state!=='expired'),past=all.filter(e=>difference(e.date).state==='expired'),v=cockpitDateMode;
+ let selected=v==='all'?future:v==='today'?future.filter(e=>parseBD(e.date)?.ymd===today()):v==='week'?future.filter(e=>parseBD(e.date)?.ms<=Date.now()+7*86400000):future.slice(0,3);
+ if(v!=='all')selected=selected.slice(0,3);
+ return `<div class="cockpit" data-dashboard="dates"><div class="page-head"><h1>Dates & deadlines</h1><p>${future.length} upcoming · ${past.length} past timestamps</p></div><div class="cockpit-title-line"><h2>What needs attention?</h2><button class="cockpit-tiny-button" data-new="milestone">+ Add date</button></div>
+ <div class="cockpit-segments">${[['today','Today'],['soon','Next 3'],['week','7 days'],['all','All']].map(([k,t])=>`<button data-date-mode="${k}" class="${v===k?'selected':''}" aria-pressed="${v===k}">${t}</button>`).join('')}</div>
+ <div class="cockpit-event-list">${selected.map(eventRow).join('')||'<div class="cockpit-tiles-empty">No events in this period</div>'}</div>
+ <div class="cockpit-title-line"><h2>More dates</h2></div>
+ <button class="cockpit-panel-action" data-open-events="all">All events · ${all.length} ›</button> <button class="cockpit-panel-action" data-open-events="past">Past · ${past.length} ›</button>
+ <div style="margin-top:7px"><button class="cockpit-panel-action" data-open-milestones="true">Manage use-before targets · ${data.milestones.length} ›</button></div><p class="cockpit-subtle">Past timestamps require provider verification; no automatic refill.</p></div>`;
+}
+function visualDialog(kind,id){
+ const d=$('#cockpitDialog');if(!d)return;let title='',sub='',body='',cl='',av='Q';
+ if(kind==='provider'){const s=data.subs.find(x=>x.id===id);if(!s)return;[cl,av]=providerStyle(s.provider);title=s.provider;const rows=data.quotas.filter(q=>q.subId===s.id);sub=s.plan+' · '+rows.length+' model quotas';
+ body=`<div class="button-row"><button class="btn sm" data-pin-provider="${escapeHTML(s.id)}">${isPinnedProvider(s.id)?'★ Pinned':'☆ Pin'}</button><button class="btn sm" data-edit="sub" data-id="${escapeHTML(s.id)}">Edit plan</button><button class="btn sm" data-new="quota">+ Add model</button></div>`+rows.map(q=>`<div class="cockpit-detail-row">${visualMeter(q)}<div class="cockpit-detail-text"><strong>${escapeHTML(q.model)}</strong><small>${escapeHTML(q.window)} · ${q.used===''||q.used===null?'Unknown':escapeHTML(q.used+'% used')}</small><small>${escapeHTML(difference(nextReset(q).date).text)} · verify provider UI</small></div><button class="tiny-btn" data-quick="${escapeHTML(q.id)}">Update</button></div>`).join('');
+ if(isGrokProvider(s.provider))body+='<p class="cockpit-subtle">5-hour pool: N/A for Grok.</p>';
+ }else if(kind==='plan'){const s=data.subs.find(x=>x.id===id);if(!s)return;[cl,av]=providerStyle(s.provider);title=s.provider;sub=s.plan;body=planCard(s);}
+ else if(kind==='events'){title=id==='past'?'Past timestamps':'All tracked dates';const items=allEvents().filter(e=>id==='past'?difference(e.date).state==='expired':true);sub=items.length+' events';body=`<div class="cockpit-event-list">${items.map(eventRow).join('')||'<div class="cockpit-tiles-empty">Nothing tracked</div>'}</div>`;}
+ else if(kind==='milestones'){title='Custom milestones';sub=data.milestones.length+' entries';body=`<button class="btn primary" data-new="milestone">+ Add milestone</button>`+data.milestones.map(m=>`<div class="cockpit-detail-row"><div class="cockpit-detail-text"><strong>${escapeHTML(m.title)}</strong><small>${escapeHTML(fmtDate(m.date))} · ${escapeHTML(m.note)}</small></div><button class="tiny-btn" data-edit="milestone" data-id="${escapeHTML(m.id)}">Edit</button></div>`).join('');}
+ d.innerHTML=`<div class="cockpit-dialog-inner"><div class="cockpit-dialog-grab"></div><div class="cockpit-dialog-head"><span class="cockpit-avatar ${cl}">${av}</span><div style="min-width:0;flex:1"><h2>${escapeHTML(title)}</h2><small>${escapeHTML(sub)}</small></div><button class="cockpit-dialog-close" data-close-cockpit="true" aria-label="Close details">×</button></div>${body}<p class="cockpit-nav-note">Manual, browser-local data. No provider API sync.</p></div>`;d.showModal();d.querySelector('[data-close-cockpit]').focus();
+}
+function overview(){return visualHome()}
+function quotas(){return visualQuotas()}
+function plans(){return visualPlans()}
+function deadlines(){return visualDates()}
 function filtered(){let arr=data.quotas.filter(q=>(category==='all'||q.window===category)&&(provider==='all'||subFor(q).provider===provider)&&(!query||[q.model,q.scope,q.note,subFor(q).plan,subFor(q).emails].join(' ').toLowerCase().includes(query.toLowerCase())));if(sort==='used')arr=arr.slice().sort((a,b)=>(b.used===''?-1:Number(b.used))-(a.used===''?-1:Number(a.used)));if(sort==='reset')arr=arr.slice().sort((a,b)=>(parseBD(nextReset(a).date)?.ms??Infinity)-(parseBD(nextReset(b).date)?.ms??Infinity));return arr}
-function quotas(){return `${pageHead('Model quotas','5-hour, weekly এবং custom limit আলাদা। One-tap Update দিয়ে দ্রুত বদলান।')}<div class="page-actions"><div class="section-label"><h2>All quota pools</h2><small>${data.quotas.length} total</small></div><button class="btn primary sm" data-new="quota">${svg('plus')} Add</button></div><div class="toolbar"><input class="search" id="quotaSearch" type="search" autocomplete="off" aria-label="Search quotas" placeholder="Search model, plan or email…" value="${escapeHTML(query)}"><div class="count" id="filterCount"></div></div><div class="filter-chips" role="group" aria-label="Quota type filter">${[['all','All'],['weekly','Weekly'],['5h','5-hour'],['custom','Custom / Bot']].map(([key,label])=>`<button class="chip ${category===key?'selected':''}" data-category="${key}" aria-pressed="${category===key}">${label}</button>`).join('')}</div><div class="filters-lower" style="margin:8px 0 14px"><select class="form-select" id="providerFilter" aria-label="Filter by provider"><option value="all">All providers</option>${[...new Set(data.subs.map(s=>s.provider))].map(x=>`<option ${provider===x?'selected':''} value="${escapeHTML(x)}">${escapeHTML(x)}</option>`).join('')}</select><select class="form-select" id="sortFilter" aria-label="Sort quotas"><option value="default" ${sort==='default'?'selected':''}>Original order</option><option value="used" ${sort==='used'?'selected':''}>Highest usage</option><option value="reset" ${sort==='reset'?'selected':''}>Soonest tracked reset</option></select></div>${data.subs.length?'':'<div class="notice warn"><strong>Start with a Plan:</strong> Quota entries need a subscription. Tap Add to create your first Plan; the quota form opens automatically after saving.</div>'}<div class="quota-grid" id="quotaList"></div>`}
+function legacyQuotas(){return `${pageHead('Model quotas','5-hour, weekly এবং custom limit আলাদা। One-tap Update দিয়ে দ্রুত বদলান।')}<div class="page-actions"><div class="section-label"><h2>All quota pools</h2><small>${data.quotas.length} total</small></div><button class="btn primary sm" data-new="quota">${svg('plus')} Add</button></div><div class="toolbar"><input class="search" id="quotaSearch" type="search" autocomplete="off" aria-label="Search quotas" placeholder="Search model, plan or email…" value="${escapeHTML(query)}"><div class="count" id="filterCount"></div></div><div class="filter-chips" role="group" aria-label="Quota type filter">${[['all','All'],['weekly','Weekly'],['5h','5-hour'],['custom','Custom / Bot']].map(([key,label])=>`<button class="chip ${category===key?'selected':''}" data-category="${key}" aria-pressed="${category===key}">${label}</button>`).join('')}</div><div class="filters-lower" style="margin:8px 0 14px"><select class="form-select" id="providerFilter" aria-label="Filter by provider"><option value="all">All providers</option>${[...new Set(data.subs.map(s=>s.provider))].map(x=>`<option ${provider===x?'selected':''} value="${escapeHTML(x)}">${escapeHTML(x)}</option>`).join('')}</select><select class="form-select" id="sortFilter" aria-label="Sort quotas"><option value="default" ${sort==='default'?'selected':''}>Original order</option><option value="used" ${sort==='used'?'selected':''}>Highest usage</option><option value="reset" ${sort==='reset'?'selected':''}>Soonest tracked reset</option></select></div>${data.subs.length?'':'<div class="notice warn"><strong>Start with a Plan:</strong> Quota entries need a subscription. Tap Add to create your first Plan; the quota form opens automatically after saving.</div>'}<div class="quota-grid" id="quotaList"></div>`}
 function planCard(s){const cl=s.status==='keep'||s.status==='conditional-keep'?'good':s.status==='cancel-planned'?'warn':'',target=s.cancelDate||s.endDate,rel=target?difference(target).text:'';return `<article class="card plan"><div class="plan-top"><h3>${escapeHTML(s.plan)}</h3><span class="inline-tag ${cl} status">${escapeHTML(statusNames[s.status]||s.status)}</span></div><div class="account">${escapeHTML(s.emails)}</div><div class="facts"><div class="fact"><small>Monthly renewal</small><b>${s.renewDay?'Day '+escapeHTML(s.renewDay):'Not specified'}</b></div><div class="fact"><small>${s.cancelDate?'Cancel target':s.endDate?'Trial/access end':'Next decision'}</small><b>${target?escapeHTML(fmtDate(target)):'Not specified'}</b>${target?`<small>${escapeHTML(rel)}</small>`:''}</div></div>${s.credit?`<p class="detail"><strong>Credit note:</strong> ${escapeHTML(s.credit)}</p>`:''}<p class="detail">${escapeHTML(s.memo||'')}</p><div class="plan-actions"><button class="btn sm" data-edit="sub" data-id="${escapeHTML(s.id)}">Edit plan</button><button class="btn sm danger" data-delete="sub" data-id="${escapeHTML(s.id)}">Delete</button></div></article>`}
-function plans(){return `${pageHead('Subscriptions','কোনটা রাখবেন, কখন renew বা cancel করবেন—সব এক জায়গায়।')}<div class="page-actions"><div class="section-label"><h2>Plan inventory</h2><small>${data.subs.length} plans</small></div><button class="btn primary sm" data-new="sub">${svg('plus')} Add</button></div><div class="notice warn"><strong>Reminder:</strong> Cancel planned ≠ cancelled. Renewal date ≠ access expiry. এই HTML কোনো subscription cancel করে না।</div><div class="plans">${data.subs.map(planCard).join('')}</div>`}
-function deadlines(){const rows=allEvents(),future=rows.filter(e=>difference(e.date).state!=='expired'),past=rows.filter(e=>difference(e.date).state==='expired');return `${pageHead('Dates & deadlines','Use-before targets, quota resets, renewals এবং cancellation plans।')}<div class="page-actions"><div class="section-label"><h2>Upcoming</h2><small>${future.length} items</small></div><button class="btn sm primary" data-new="milestone">${svg('plus')} Add</button></div><div class="deadline-rows">${(allDeadlines?future:future.slice(0,12)).map(eventRow).join('')||'<div class="empty card">No upcoming dates</div>'}</div>${future.length>12?`<button class="btn full soft" style="margin-top:10px" data-expand-dates="true">${allDeadlines?'Show fewer':'See all '+future.length+' upcoming dates'}</button>`:''}<section class="section-block">${section('Past · needs verification',past.length+' entries')}<div class="deadline-rows">${past.slice(0,allDeadlines?1000:5).map(eventRow).join('')||'<div class="card empty">Nothing to review</div>'}</div>${past.length>5&&!allDeadlines?'<button class="btn full soft" data-expand-dates="true" style="margin-top:9px">Show all past dates</button>':''}</section><section class="section-block">${section('Editable use-before targets','Custom milestones')}<div class="deadline-notes">${data.milestones.map(m=>`<div class="card"><strong>${escapeHTML(m.title)}</strong><div class="muted">${escapeHTML(fmtDate(m.date))} · ${escapeHTML(m.kind)}</div><div class="muted">${escapeHTML(m.note)}</div><div class="button-row"><button class="btn sm" data-edit="milestone" data-id="${escapeHTML(m.id)}">Edit</button><button class="btn sm danger" data-delete="milestone" data-id="${escapeHTML(m.id)}">Delete</button></div></div>`).join('')}</div></section>`}
+function legacyPlans(){return `${pageHead('Subscriptions','কোনটা রাখবেন, কখন renew বা cancel করবেন—সব এক জায়গায়।')}<div class="page-actions"><div class="section-label"><h2>Plan inventory</h2><small>${data.subs.length} plans</small></div><button class="btn primary sm" data-new="sub">${svg('plus')} Add</button></div><div class="notice warn"><strong>Reminder:</strong> Cancel planned ≠ cancelled. Renewal date ≠ access expiry. এই HTML কোনো subscription cancel করে না।</div><div class="plans">${data.subs.map(planCard).join('')}</div>`}
+function legacyDeadlines(){const rows=allEvents(),future=rows.filter(e=>difference(e.date).state!=='expired'),past=rows.filter(e=>difference(e.date).state==='expired');return `${pageHead('Dates & deadlines','Use-before targets, quota resets, renewals এবং cancellation plans।')}<div class="page-actions"><div class="section-label"><h2>Upcoming</h2><small>${future.length} items</small></div><button class="btn sm primary" data-new="milestone">${svg('plus')} Add</button></div><div class="deadline-rows">${(allDeadlines?future:future.slice(0,12)).map(eventRow).join('')||'<div class="empty card">No upcoming dates</div>'}</div>${future.length>12?`<button class="btn full soft" style="margin-top:10px" data-expand-dates="true">${allDeadlines?'Show fewer':'See all '+future.length+' upcoming dates'}</button>`:''}<section class="section-block">${section('Past · needs verification',past.length+' entries')}<div class="deadline-rows">${past.slice(0,allDeadlines?1000:5).map(eventRow).join('')||'<div class="card empty">Nothing to review</div>'}</div>${past.length>5&&!allDeadlines?'<button class="btn full soft" data-expand-dates="true" style="margin-top:9px">Show all past dates</button>':''}</section><section class="section-block">${section('Editable use-before targets','Custom milestones')}<div class="deadline-notes">${data.milestones.map(m=>`<div class="card"><strong>${escapeHTML(m.title)}</strong><div class="muted">${escapeHTML(fmtDate(m.date))} · ${escapeHTML(m.kind)}</div><div class="muted">${escapeHTML(m.note)}</div><div class="button-row"><button class="btn sm" data-edit="milestone" data-id="${escapeHTML(m.id)}">Edit</button><button class="btn sm danger" data-delete="milestone" data-id="${escapeHTML(m.id)}">Delete</button></div></div>`).join('')}</div></section>`}
 function backup(){return `${pageHead('Backup & settings','Import private data only after hosting on a dedicated origin.')}<div class="notice"><strong>${sharedGitHubOrigin?'PRIVATE IMPORT ON HOLD — shared GitHub origin':'One-time setup — isolated hostname required'}:</strong> ${sharedGitHubOrigin?'This github.io address shares its storage origin with other projects. No private account data should be imported here. Use a dedicated Firebase web.app site first.':'Before importing sensitive details, confirm this site has its own hostname and no untrusted scripts. Save remains browser-local; no per-edit HTML downloads.'}</div><div class="backup-grid"><div class="card help"><h3>Private data / one-time import</h3><p>Use file import or paste JSON. Both use the same validation. <strong>Existing records will be replaced.</strong> Export a JSON backup before replacing anything. Do not put private JSON in GitHub, Firebase assets or public logs.</p><div class="button-row"><button class="btn primary" data-action="import" ${sharedGitHubOrigin?'disabled title="Blocked on shared GitHub Pages origin"':''}>Import JSON file</button><button class="btn" data-action="exportJSON">Export private JSON backup</button></div><label for="pasteJSON" class="paste-label">Alternatively, paste JSON privately in this browser:</label><textarea id="pasteJSON" rows="5" maxlength="5000000" placeholder="Paste a JSON backup here (not on the shared GitHub origin)" autocomplete="off" autocapitalize="off" spellcheck="false" ${sharedGitHubOrigin?'disabled':''}></textarea><button class="btn primary" data-action="pasteImport" ${sharedGitHubOrigin?'disabled title="Blocked on shared GitHub Pages origin"':''}>Validate & import pasted JSON</button><p class="help-note">Paste will be cleared after processing. Clipboard history may retain copied text; prefer file import when available.</p></div><div class="card help"><h3>Storage & recovery</h3><p>Chrome must allow site storage. Use the same exact website address and avoid incognito. Do not clear this site's data. An occasional JSON backup is recommended before browser reset, phone replacement or SSD migration.</p><p>Last edit: ${escapeHTML(data.meta.updated||'Not yet edited')} · Version ${VERSION}</p><button class="btn danger" data-action="reset">Reset all personal data</button></div><div class="card help"><h3>Quota tracking rules</h3><details open><summary>ChatGPT / Claude</summary><p>5-hour window tracked as usage-triggered per your convention, not auto-advanced.</p></details><details><summary>Gemini</summary><p>5-hour estimated rolling projection applies only when enabled; not a live provider guarantee.</p></details><details><summary>Grok</summary><p>Weekly and Bot custom limits only; no 5-hour limit added.</p></details></div><div class="card help"><h3>Privacy and limitations</h3><p>The hosted app code is publicly accessible, but no personal quota data is included in it. Browser storage is device/browser-specific, not cloud sync. It can be lost if site data is cleared or Chrome is reset.</p><p>There is no automatic provider quota API and this app cannot cancel subscriptions or send background notifications.</p></div></div>`}
 function renderQuotaList(){if(!$('#quotaList'))return;const arr=filtered();$('#quotaList').innerHTML=arr.map(quotaCard).join('')||'<div class="card empty">No matching pool. Clear filters or add a new entry.</div>';$('#filterCount').textContent=`${arr.length} of ${data.quotas.length} pools`}
 function homeRenderFailure(error){
@@ -566,6 +630,7 @@ function render(){
     view=homeRenderFailure(error);
   }
   document.documentElement.dataset.quotaView=tab;
+   document.documentElement.dataset.quotaVnext='yes';
   $('#appview').innerHTML=view;
   if(tab==='quotas')renderQuotaList();
   $('#footerVersion').textContent=`v${VERSION} · single URL · local browser data`+(storageFailed?' · STORAGE WARNING':'');
@@ -626,7 +691,13 @@ function doAction(which){
 $('#navigation').addEventListener('click',e=>{const b=e.target.closest('button[data-tab]');if(b)changeTab(b.dataset.tab)});
 $('#appview').addEventListener('click',e=>{
   const b=e.target.closest('button');if(!b)return;
-  if(b.dataset.tab)changeTab(b.dataset.tab);
+  if(b.dataset.openProvider)visualDialog('provider',b.dataset.openProvider);
+   else if(b.dataset.openPlan)visualDialog('plan',b.dataset.openPlan);
+   else if(b.dataset.quotaList){cockpitQuotaMode=b.dataset.quotaList;render()}
+   else if(b.dataset.dateMode){cockpitDateMode=b.dataset.dateMode;render()}
+   else if(b.dataset.openEvents)visualDialog('events',b.dataset.openEvents);
+   else if(b.dataset.openMilestones)visualDialog('milestones','all');
+   else if(b.dataset.tab)changeTab(b.dataset.tab);
   else if(b.dataset.clearHome){homeQuery='';showAllProviders=false;const input=$('#homeSearch');if(input){input.value='';input.focus();}refreshHomeResults();}
   else if(b.dataset.homeFilter){homeFilter=b.dataset.homeFilter;showAllProviders=false;render();}
   else if(b.dataset.homeDensity){setHomeDensity(b.dataset.homeDensity);render();}
@@ -659,7 +730,17 @@ $('#appview').addEventListener('click',e=>{
 });
 $('#appview').addEventListener('input',e=>{if(e.target.id==='quotaSearch'){query=e.target.value;renderQuotaList()}else if(e.target.id==='homeSearch'){homeQuery=e.target.value;showAllProviders=false;refreshHomeResults()}});
 $('#appview').addEventListener('change',e=>{if(e.target.id==='providerFilter'){provider=e.target.value;renderQuotaList()}else if(e.target.id==='sortFilter'){sort=e.target.value;renderQuotaList()}});
-$('#sheetClose').addEventListener('click',closeSheet);$('#sheetCancel').addEventListener('click',closeSheet);$('#sheetback').addEventListener('click',e=>{if(e.target.id==='sheetback')closeSheet()});$('#editForm').addEventListener('submit',submitEditor);
+const cockpitDialog=$('#cockpitDialog');
+ cockpitDialog.addEventListener('click',e=>{
+   const b=e.target.closest('button');if(!b){if(e.target===cockpitDialog)cockpitDialog.close();return}
+   if(b.dataset.closeCockpit){cockpitDialog.close();return}
+   if(b.dataset.pinProvider){const id=b.dataset.pinProvider;homePrefs.pins=isPinnedProvider(id)?homePrefs.pins.filter(x=>x!==id):[...homePrefs.pins,id].slice(-60);saveHomePreferences();cockpitDialog.close();render();return}
+   if(b.dataset.quick){const id=b.dataset.quick;cockpitDialog.close();edit('quota',id,true);return}
+   if(b.dataset.edit){const kind=b.dataset.edit,id=b.dataset.id;cockpitDialog.close();edit(kind,id);return}
+   if(b.dataset.new){const kind=b.dataset.new;cockpitDialog.close();edit(kind);return}
+   if(b.dataset.delete){const kind=b.dataset.delete,id=b.dataset.id,key=kind==='sub'?'subs':kind==='quota'?'quotas':'milestones';if(kind==='sub'&&data.quotas.some(q=>q.subId===id)){alert('Reassign linked quotas first.');return}if(confirm('Delete this local record?')){const next=copy(data);next[key]=next[key].filter(x=>x.id!==id);cockpitDialog.close();commit(next)}}
+ });
+ $('#sheetClose').addEventListener('click',closeSheet);$('#sheetCancel').addEventListener('click',closeSheet);$('#sheetback').addEventListener('click',e=>{if(e.target.id==='sheetback')closeSheet()});$('#editForm').addEventListener('submit',submitEditor);
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&editor)closeSheet();if(e.key==='Tab'&&editor){const focusables=$$('#sheetback input:not([disabled]),#sheetback select:not([disabled]),#sheetback textarea:not([disabled]),#sheetback button:not([disabled])');if(!focusables.length)return;const first=focusables[0],last=focusables[focusables.length-1];if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus()}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus()}}});
 $('#filePicker').addEventListener('change',async e=>{const file=e.target.files[0];if(!file)return;try{if(file.size>5e6)throw new Error('Backup file exceeds 5 MB.');const x=JSON.parse(await file.text());importDataset(x)}catch(err){alert('Import failed: '+err.message)}finally{e.target.value=''}});
 render();setInterval(refreshLive,30000);
