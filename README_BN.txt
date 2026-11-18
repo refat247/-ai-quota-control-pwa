@@ -1,4 +1,4 @@
-AI Quota Control PWA — v3.3.0 (compact glance/legend review candidate; not merged/deployed)
+AI Quota Control PWA — v3.3.0 (Visual Cockpit, Draft PR #18; main/Firebase-এ এখনো release নয়)
 
 এটি mobile-first, manual AI quota tracking app। এটি provider-এর live quota API বা automatic account sync নয়।
 
@@ -8,7 +8,7 @@ AI Quota Control PWA — v3.3.0 (compact glance/legend review candidate; not mer
 
 Firebase Hosting (Spark)
 ------------------------
-শুধু এই app-এর জন্য আলাদা Firebase project তৈরি করুন। Firebase Hosting ব্যবহার করুন; Firebase App Hosting নয়। Firebase-এর free Spark plan দিয়ে আলাদা SITE_ID.web.app address পাওয়া যায়; project/site ID নিজের account-এ যাচাই করতে হবে। App-এর public source ছাড়া Private JSON Firebase/GitHub-এ upload করবেন না।
+আগেই Firebase project `ai-quota-e7258`-এ v3.2.0 deploy করা হয়েছে। Live URL: https://ai-quota-e7258.web.app/ । নতুন project তৈরির প্রয়োজন নেই। Firebase Hosting public code দেয়, private localStorage data cloud-এ যায় না। App-এর public source ছাড়া Private JSON Firebase/GitHub-এ upload করবেন না।
 
 Owner-approved code থেকে npm run build:hosting চালালে dist/ folder-এ মাত্র ৫টি public asset থাকবে। তারপর Firebase CLI/Cloud Shell দিয়ে firebase deploy --only hosting --project YOUR_PROJECT_ID চালানো যাবে। Placeholder project ID বদলাতে হবে।
 
@@ -19,12 +19,12 @@ Dedicated hostname চালু এবং independent privacy check সম্প
 Quotas → Quick Update → Save changes। পরেরবার একই HTTPS URL খুললে edited percentage থাকার কথা; physical Android Chrome-এ আলাদা acceptance test প্রয়োজন। প্রতিবার নতুন HTML download লাগবে না।
 
 সাবধান: localStorage encrypted নয় এবং cloud sync-ও নয়। Site data clear হলে data হারাতে পারে; নিয়মিত private JSON backup আলাদা জায়গায় রাখুন। Grok-এর 5-hour pool অনুমান করে ঢোকাবেন না।
-Batch A UI/UX (review only)
+Batch A v3.1/v3.2 UI/UX (আগে release হওয়া version)
 -------------------------
-Home-এ provider/model Search, Clear, Pinned/Reset Soon/Overdue/Weekly/5-hour filter, Pin এবং Quick/Comfortable layout প্রস্তাবিত code-এ যোগ করা হয়েছে। একাধিক model থাকলে Update models তালিকা খোলে; ভুল model নিজে বেছে নেয় না। আলাদা ai-quota-ui-preferences-v1 storage key ব্যবহৃত; মূল ai-quota-control-center-v1 JSON এবং records অপরিবর্তিত। UI preference private JSON backup-এ থাকে না। Release, Android acceptance ও private JSON independent backup এখনও HOLD।
+Home-এ provider/model Search, Clear, Pinned/Reset Soon/Overdue/Weekly/5-hour filter, Pin এবং Quick/Comfortable layout প্রস্তাবিত code-এ যোগ করা হয়েছে। একাধিক model থাকলে Update models তালিকা খোলে; ভুল model নিজে বেছে নেয় না। আলাদা ai-quota-ui-preferences-v1 storage key ব্যবহৃত; মূল ai-quota-control-center-v1 JSON এবং records অপরিবর্তিত। UI preference private JSON backup-এ থাকে না। v3.1 ও v3.2 Firebase-এ release হয়েছে; কিন্তু Android persistence ও private JSON independent backup এখনো আলাদাভাবে verify করা হয়নি।
 
 
-v3.3.0 Compact Home — DRAFT
+v3.2.0 Compact Home — পূর্বের released UI
 ---------------------------
 Quick view-তে প্রতিটি model আলাদা chip-এ used % দেখাবে। সবুজ = used 75%-এর কম, হলুদ = 75–89%, লাল = 90–100%, ধূসর = Unknown। এগুলো manual value, live API নয়। Reset timestamp পেরিয়ে গেলে provider UI যাচাই করুন; automatic refill ধরে নেবেন না। Keep = subscription decision, quota status নয়। Comfortable view আগের বিস্তারিত তথ্য বজায় রাখে। মূল quota JSON/backup/storage key অপরিবর্তিত।
 
