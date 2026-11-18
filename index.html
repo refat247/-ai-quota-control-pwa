@@ -451,7 +451,7 @@ function updateSaveStatus(){
  el.dataset.health=bad?'warning':'ok';
  el.innerHTML=`<div class="save-message"><span class="save-indicator ${bad?'attention':''}" aria-hidden="true"></span><div><strong>${title}</strong><p>${tip}</p></div></div>`;
 }
-function changeTab(t){if(!tabs.some(x=>x[0]===t))return;tab=t;render();window.scrollTo({top:0,behavior:'instant'})}
+function changeTab(t){if(!tabs.some(x=>x[0]===t))return;if(t==='quotas'&&tab!=='quotas')cockpitQuotaMode='grid';tab=t;render();window.scrollTo({top:0,behavior:'instant'})}
 function section(title,small){return `<div class="page-actions"><div class="section-label"><h2>${title}</h2>${small?`<small>${small}</small>`:''}</div></div>`}
 function pageHead(h,p){return `<div class="page-head"><h1>${h}</h1><p>${p}</p></div>`}
 function stat(label,num,detail,isWarn=false){return `<div class="card stat"><div class="label">${escapeHTML(label)}</div><div class="number ${isWarn?'warn':''}">${escapeHTML(num)}</div><div class="detail">${escapeHTML(detail)}</div></div>`}
@@ -594,7 +594,7 @@ function visualDates(){
 function visualDialog(kind,id){
  const d=$('#cockpitDialog');if(!d)return;let title='',sub='',body='',cl='',av='Q';
  if(kind==='provider'){const s=data.subs.find(x=>x.id===id);if(!s)return;[cl,av]=providerStyle(s.provider);title=s.provider;const rows=data.quotas.filter(q=>q.subId===s.id);sub=s.plan+' · '+rows.length+' model quotas';
- body=`<div class="button-row"><button class="btn sm" data-pin-provider="${escapeHTML(s.id)}">${isPinnedProvider(s.id)?'★ Pinned':'☆ Pin'}</button><button class="btn sm" data-edit="sub" data-id="${escapeHTML(s.id)}">Edit plan</button><button class="btn sm" data-new="quota">+ Add model</button></div>`+rows.map(q=>`<div class="cockpit-detail-row">${visualMeter(q)}<div class="cockpit-detail-text"><strong>${escapeHTML(q.model)}</strong><small>${escapeHTML(q.window)} · ${q.used===''||q.used===null?'Unknown':escapeHTML(q.used+'% used')}</small><small>${escapeHTML(difference(nextReset(q).date).text)} · verify provider UI</small></div><button class="tiny-btn" data-quick="${escapeHTML(q.id)}">Update</button></div>`).join('');
+ body=`<div class="button-row"><button class="btn sm" data-pin-provider="${escapeHTML(s.id)}">${isPinnedProvider(s.id)?'★ Pinned':'☆ Pin'}</button><button class="btn sm" data-edit="sub" data-id="${escapeHTML(s.id)}">Edit plan</button><button class="btn sm" data-new="quota" data-sub-id="${escapeHTML(s.id)}">+ Add model</button></div>`+rows.map(q=>`<div class="cockpit-detail-row">${visualMeter(q)}<div class="cockpit-detail-text"><strong>${escapeHTML(q.model)}</strong><small>${escapeHTML(q.window)} · ${q.used===''||q.used===null?'Unknown':escapeHTML(q.used+'% used')}</small><small>${escapeHTML(difference(nextReset(q).date).text)} · verify provider UI</small></div><button class="tiny-btn" data-quick="${escapeHTML(q.id)}">Update</button></div>`).join('');
  if(isGrokProvider(s.provider))body+='<p class="cockpit-subtle">5-hour pool: N/A for Grok.</p>';
  }else if(kind==='plan'){const s=data.subs.find(x=>x.id===id);if(!s)return;[cl,av]=providerStyle(s.provider);title=s.provider;sub=s.plan;body=planCard(s);}
  else if(kind==='events'){title=id==='past'?'Past timestamps':'All tracked dates';const items=allEvents().filter(e=>id==='past'?difference(e.date).state==='expired':true);sub=items.length+' events';body=`<div class="cockpit-event-list">${items.map(eventRow).join('')||'<div class="cockpit-tiles-empty">Nothing tracked</div>'}</div>`;}
@@ -737,7 +737,7 @@ const cockpitDialog=$('#cockpitDialog');
    if(b.dataset.pinProvider){const id=b.dataset.pinProvider;homePrefs.pins=isPinnedProvider(id)?homePrefs.pins.filter(x=>x!==id):[...homePrefs.pins,id].slice(-60);saveHomePreferences();cockpitDialog.close();render();return}
    if(b.dataset.quick){const id=b.dataset.quick;cockpitDialog.close();edit('quota',id,true);return}
    if(b.dataset.edit){const kind=b.dataset.edit,id=b.dataset.id;cockpitDialog.close();edit(kind,id);return}
-   if(b.dataset.new){const kind=b.dataset.new;cockpitDialog.close();edit(kind);return}
+   if(b.dataset.new){const kind=b.dataset.new,subId=b.dataset.subId;cockpitDialog.close();edit(kind);if(kind==='quota'&&subId){const select=$('#sheetFields select[name="subId"]');if(select&&Array.from(select.options).some(o=>o.value===subId))select.value=subId}return}
    if(b.dataset.delete){const kind=b.dataset.delete,id=b.dataset.id,key=kind==='sub'?'subs':kind==='quota'?'quotas':'milestones';if(kind==='sub'&&data.quotas.some(q=>q.subId===id)){alert('Reassign linked quotas first.');return}if(confirm('Delete this local record?')){const next=copy(data);next[key]=next[key].filter(x=>x.id!==id);cockpitDialog.close();commit(next)}}
  });
  $('#sheetClose').addEventListener('click',closeSheet);$('#sheetCancel').addEventListener('click',closeSheet);$('#sheetback').addEventListener('click',e=>{if(e.target.id==='sheetback')closeSheet()});$('#editForm').addEventListener('submit',submitEditor);
