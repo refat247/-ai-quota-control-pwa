@@ -337,6 +337,11 @@ html[data-quota-vnext="yes"] .sheethead h2{
 }
 
 .lab-layout,.lab-main{display:grid;gap:14px;align-items:start}
+.lab-cohort{display:grid;gap:9px}
+.lab-cohort h3{margin:0;font-size:15px}
+.lab-cohort p{margin:0;color:var(--muted);font-size:13px}
+.lab-cohort .formlabel{margin:0}
+.lab-cohort .lab-actions{margin:0}
 .lab-picker p,.lab-step p,.lab-summary p,.lab-summary li{color:var(--muted)}
 .lab-picker p{margin:10px 0}
 .lab-links{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:13px;font-weight:700}
@@ -749,6 +754,7 @@ function legacyPlans(){return `${pageHead('Subscriptions','কোনটা র�
 function legacyDeadlines(){const rows=allEvents(),future=rows.filter(e=>difference(e.date).state!=='expired'),past=rows.filter(e=>difference(e.date).state==='expired');return `${pageHead('Dates & deadlines','Use-before targets, quota resets, renewals এবং cancellation plans।')}<div class="page-actions"><div class="section-label"><h2>Upcoming</h2><small>${future.length} items</small></div><button class="btn sm primary" data-new="milestone">${svg('plus')} Add</button></div><div class="deadline-rows">${(allDeadlines?future:future.slice(0,12)).map(eventRow).join('')||'<div class="empty card">No upcoming dates</div>'}</div>${future.length>12?`<button class="btn full soft" style="margin-top:10px" data-expand-dates="true">${allDeadlines?'Show fewer':'See all '+future.length+' upcoming dates'}</button>`:''}<section class="section-block">${section('Past · needs verification',past.length+' entries')}<div class="deadline-rows">${past.slice(0,allDeadlines?1000:5).map(eventRow).join('')||'<div class="card empty">Nothing to review</div>'}</div>${past.length>5&&!allDeadlines?'<button class="btn full soft" data-expand-dates="true" style="margin-top:9px">Show all past dates</button>':''}</section><section class="section-block">${section('Editable use-before targets','Custom milestones')}<div class="deadline-notes">${data.milestones.map(m=>`<div class="card"><strong>${escapeHTML(m.title)}</strong><div class="muted">${escapeHTML(fmtDate(m.date))} · ${escapeHTML(m.kind)}</div><div class="muted">${escapeHTML(m.note)}</div><div class="button-row"><button class="btn sm" data-edit="milestone" data-id="${escapeHTML(m.id)}">Edit</button><button class="btn sm danger" data-delete="milestone" data-id="${escapeHTML(m.id)}">Delete</button></div></div>`).join('')}</div></section>`}
 // Provider Lab drafts use their own storage. The workbook remains the execution ledger.
 const LAB_STORE='ai-provider-lab-v1:';
+const LAB_COHORT_STORE=LAB_STORE+'cohort';
 const LAB_WORKBOOK='https://docs.google.com/spreadsheets/d/1p7Q1uHsi6-J4jlG4PXf0pDG9iwO0e4XfmB9_os1nVJ8/edit';
 const LAB_PROTOCOL='https://app.notion.com/p/419b9b7bab6e81569742f59f092e32cc';
 const LAB_PROVIDERS=[
@@ -787,17 +793,19 @@ const LAB_SMOKE=[
   ['plain','R-PLAIN · Response and exact served model'],
   ['stream','R-STREAM · Complete stream and clean close'],
   ['json','R-JSON · Fixed JSON schema passes'],
-  ['tool','R-TOOL · Local mock arguments, ID and final result']
+  ['tool','R-TOOL · Local mock arguments, ID and final result'],
+  ['agent','R-AGENT · Two-step local mock agent loop (≤3 model turns)']
 ];
 const LAB_GATE_OPTIONS=[['','Unknown / not checked'],['pass','Pass'],['hold','Hold / failed']];
 const LAB_SOURCE_OPTIONS=[['','Unknown'],['requests','Requests'],['tokens','Tokens'],['neurons','Neurons']];
 const LAB_ID_PATTERN='[A-Za-z0-9][A-Za-z0-9._-]{0,63}';
 const LAB_MODEL_PATTERN='@?[A-Za-z0-9][A-Za-z0-9._:/+-]{0,118}';
 const LAB_FIELDS={
-  run:{pattern:LAB_ID_PATTERN}, model:{pattern:LAB_MODEL_PATTERN}, route:{pattern:LAB_MODEL_PATTERN},
-  effort:{pattern:LAB_ID_PATTERN}, preflightRef:{pattern:LAB_ID_PATTERN}, smokeRef:{pattern:LAB_ID_PATTERN},
+  run:{pattern:LAB_ID_PATTERN}, requestedModel:{pattern:LAB_MODEL_PATTERN}, model:{pattern:LAB_MODEL_PATTERN},
+  route:{pattern:LAB_MODEL_PATTERN}, effort:{pattern:LAB_ID_PATTERN},
+  preflightRef:{pattern:LAB_ID_PATTERN}, smokeRef:{pattern:LAB_ID_PATTERN},
+  agentTurns:{max:3,integer:true}, agentRef:{pattern:LAB_ID_PATTERN}, budgetRef:{pattern:LAB_ID_PATTERN},
   smokeCalls:{max:6,integer:true}, repeatCalls:{max:6,integer:true},
-  cohort:{options:[['','Not selected / unknown'],['yes','Selected among the top three']]},
   reliability:{options:LAB_GATE_OPTIONS},
   cash:{max:1e9}, credit:{max:1e9}, quotaUnits:{max:1e12}, quotaType:{options:LAB_SOURCE_OPTIONS},
   seconds:{max:1e9}, reviewRef:{pattern:LAB_ID_PATTERN}
@@ -813,26 +821,42 @@ const looksLikeLabSecret=value=>/^(?:bearer|sk[-_]|AIza|ghp_|github_pat_|gsk_|hf
 function labValueValid(key,value){
   if(typeof value!=='string')return false;
   if(value==='')return true;
+  if(key==='effort'&&value==='N/A')return true;
   const spec=LAB_FIELDS[key];
   if(spec.options)return spec.options.some(([option])=>option===value);
   if(spec.pattern)return new RegExp('^(?:'+spec.pattern+')$').test(value)&&!looksLikeLabSecret(value);
   return /^\d+(?:\.\d+)?$/.test(value)&&Number(value)<=spec.max&&(!spec.integer||Number.isInteger(Number(value)));
 }
 function labRoutePinned(draft){
-  const pinned=['run','model','route','effort'].every(key=>draft[key]&&!/^(?:unknown|unverified|auto)$/i.test(draft[key]));
-  const routed=['model','route'].some(key=>/^(?:openrouter\/(?:free|auto))$/i.test(draft[key]));
+  const pinned=['run','requestedModel','model','route','effort'].every(key=>draft[key]&&!/^(?:unknown|unverified|auto)$/i.test(draft[key]));
+  const routed=['requestedModel','model','route'].some(key=>/^(?:openrouter\/(?:free|auto))$/i.test(draft[key]));
   return pinned&&!routed;
 }
-function providerLabDecision(provider,draft){
+function emptyLabCohort(){return {providerIds:[],evidenceRef:''};}
+function labCohortValid(cohort){
+  return Boolean(cohort&&Array.isArray(cohort.providerIds)&&cohort.providerIds.length<=3&&
+    new Set(cohort.providerIds).size===cohort.providerIds.length&&
+    cohort.providerIds.every(id=>LAB_PROVIDERS.some(provider=>provider.id===id&&!provider.smokeOnly))&&
+    (cohort.evidenceRef===''||labValueValid('run',cohort.evidenceRef))&&
+    (!cohort.providerIds.length||labValueValid('run',cohort.evidenceRef)));
+}
+function providerLabDecision(provider,draft,cohort=emptyLabCohort()){
   const preflight=LAB_PREFLIGHT.every(([key])=>draft[key]==='pass')&&Boolean(draft.preflightRef)&&labRoutePinned(draft);
   const cap=provider.smokeOnly?5:6;
   const smokeCalls=Number(draft.smokeCalls);
-  const smoke=LAB_SMOKE.every(([key])=>draft[key]==='pass')&&Boolean(draft.smokeRef)&&smokeCalls>=5&&smokeCalls<=cap;
+  const agentTurns=Number(draft.agentTurns);
+  const agentReady=draft.agent==='pass'&&Boolean(draft.agentRef)&&agentTurns>=1&&agentTurns<=3;
+  const smoke=LAB_SMOKE.every(([key])=>draft[key]==='pass')&&Boolean(draft.smokeRef)&&agentReady&&smokeCalls>=1&&smokeCalls<=cap;
+  const budgetResolved=Boolean(draft.budgetRef);
   const cashKnown=draft.cash!=='';
   const unsafe=cashKnown&&Number(draft.cash)>0;
+  const cashZero=cashKnown&&!unsafe;
   const hasCaseBudget=smokeCalls+LAB_CASES.length<=15;
-  const qualityReady=preflight&&smoke&&hasCaseBudget&&!unsafe&&!provider.smokeOnly&&draft.cohort==='yes';
-  let accepted=0, scored=0, critical=0;
+  const cohortSelected=labCohortValid(cohort)&&cohort.providerIds.includes(provider.id)&&Boolean(cohort.evidenceRef);
+  const canJoinCohort=preflight&&smoke&&budgetResolved&&hasCaseBudget&&cashZero&&!provider.smokeOnly&&
+    labCohortValid(cohort)&&!cohortSelected&&cohort.providerIds.length<3;
+  const qualityReady=preflight&&smoke&&budgetResolved&&hasCaseBudget&&cashZero&&!provider.smokeOnly&&cohortSelected;
+  let accepted=0,scored=0,critical=0;
   for(const {id} of LAB_CASES){
     const scores=LAB_RUBRIC.map(([key])=>draft[id+key]);
     const outcome=draft[id+'critical'];
@@ -843,33 +867,47 @@ function providerLabDecision(provider,draft){
   }
   const measured=['cash','credit','quotaUnits','quotaType','seconds','reviewRef'].every(key=>draft[key]!=='');
   const reasons=[];
-  if(!preflight)reasons.push('Clear account, quota, privacy and payment checks with a pinned route and evidence reference.');
+  if(!preflight)reasons.push('Clear account, quota, privacy and payment checks with separate requested/served model IDs and pinned route evidence.');
   if(unsafe)reasons.push('Cash charge recorded. Stop the run and reconcile billing.');
+  if(!smoke)reasons.push('Record all five smoke checks, R-AGENT evidence (1–3 model turns), and the actual aggregate smoke-call count.');
+  if(!budgetResolved)reasons.push('HOLD: frozen protocol test definitions may exceed the six-call smoke ceiling. Do not run until an approved protocol budget-reconciliation reference is recorded.');
   if(smokeCalls>cap)reasons.push('Smoke call budget exceeded.');
-  if(!smoke)reasons.push('Record all four smoke results and the actual smoke call count.');
-  if(provider.smokeOnly)reasons.push('AIHubMix is smoke-only for this pilot.');
+  if(!hasCaseBudget)reasons.push('A six-call smoke run leaves fewer than ten requests in the initial 15-call budget; P01–P10 requires at most five smoke calls.');
+  if(provider.smokeOnly)reasons.push('AIHubMix is smoke-only for this pilot and cannot enter P01–P10.');
   else {
-    if(draft.cohort!=='yes')reasons.push('Select the eligible benchmark cohort after smoke review.');
-    if(!hasCaseBudget)reasons.push('A six-call smoke run leaves fewer than ten requests in the initial 15-call budget.');
+    if(!cohortSelected)reasons.push('Add this provider to the shared, evidence-referenced top-three cohort before P01–P10.');
     if(critical)reasons.push('Critical failure recorded.');
     if(scored<LAB_CASES.length||accepted<8)reasons.push('Score all ten cases. At least eight must be accepted.');
     if(draft.reliability!=='pass'||Number(draft.repeatCalls)!==6)reasons.push('Record six bounded reliability repeats across the protocol’s separate days.');
     if(!measured)reasons.push('Record actual cash, credit, quota units, elapsed time and the review evidence reference.');
   }
-  const status=Object.values(draft).every(value=>value==='')?'NOT RUN':reasons.length?'HOLD':'PASS';
-  return {status,reasons,scored,accepted,critical,qualityReady};
+  const untouched=Object.values(draft).every(value=>value==='')&&cohort.providerIds.length===0;
+  const status=untouched?'NOT RUN':reasons.length?'HOLD':'MANUAL PASS — REVIEW PENDING';
+  return {status,reasons,scored,accepted,critical,preflight,smoke,budgetResolved,hasCaseBudget,cohortSelected,canJoinCohort,qualityReady};
 }
 function providerLabPrompt({id,task}){
-  return `You are being evaluated on a fictional or public-source task. Use ONLY the given FIXTURE as factual evidence. Do not invent references, page numbers, approvals, clinical facts or source URLs. Do not browse, execute code, edit Notion/GitHub, upload data or contact external services. Where evidence is absent write NOT_IN_SOURCE or UNVERIFIED. Respond in Bengali with English technical terms kept intact.
-CASE ID: ${id}
+  return \`You are being evaluated on a fictional or public-source task. Use ONLY the given FIXTURE as factual evidence. Do not invent references, page numbers, approvals, clinical facts or source URLs. Do not browse, execute code, edit Notion/GitHub, upload data or contact external services. Where evidence is absent write NOT_IN_SOURCE or UNVERIFIED. Respond in Bengali with English technical terms kept intact.
+CASE ID: \${id}
 FIXTURE: Toy catalogue dated 2026-11-01: Alpha model medium, API input $2/M tokens and output $10/M tokens; toy older document 2024-06-01 says $1/$4. Beta model is listed but effort and Bangladesh eligibility omitted. All prices invented for testing, not real offers.
-TASK: ${task}
+TASK: \${task}
 OUTPUT:
 Verdict:
 Exact evidence / section:
 Unknown / limitations:
 Safety or authorization gate:
-Final answer:`;
+Final answer:\`;
+}
+let labCohortRaw=null,labCohortReadError=false;
+function readLabCohort(){
+  labCohortRaw=null;labCohortReadError=false;
+  if(fileMode||sharedGitHubOrigin)return emptyLabCohort();
+  try{
+    labCohortRaw=localStorage.getItem(LAB_COHORT_STORE);
+    if(labCohortRaw===null)return emptyLabCohort();
+    const cohort=JSON.parse(labCohortRaw);
+    if(!labCohortValid(cohort))throw Error('Invalid cohort registry');
+    return cohort;
+  }catch(_){labCohortReadError=true;return emptyLabCohort();}
 }
 let labProvider=LAB_PROVIDERS[0], labRaw=null, labReadError=false;
 const emptyLabDraft=()=>Object.fromEntries(Object.keys(LAB_FIELDS).map(key=>[key,'']));
@@ -903,87 +941,107 @@ function labControl(key,label,draft){
 function labDecisionHTML(draft,decision){
   const {status,reasons,scored,accepted,critical}=decision;
   const rate=key=>draft[key]===''||accepted===0?'—':(Number(draft[key])/accepted).toLocaleString('en',{maximumSignificantDigits:8});
-  return `<div class="lab-decision"><h2>Saved decision</h2><strong class="inline-tag ${status==='PASS'?'good':status==='HOLD'?'warn':''}" id="lab-decision-status">${status}</strong></div>
-  <p>${accepted}/10 accepted · ${scored}/10 scored · ${critical} critical</p>
-  ${status==='HOLD'?`<ul>${reasons.map(reason=>`<li>${reason}</li>`).join('')}</ul>`:''}
+  return \`<div class="lab-decision"><h2>Manual status · independent review pending</h2><strong class="inline-tag \${status.startsWith('MANUAL PASS')?'good':status==='HOLD'?'warn':''}" id="lab-decision-status">\${status}</strong></div>
+  <p>\${accepted}/10 accepted · \${scored}/10 scored · \${critical} critical</p>
+  \${status!=='MANUAL PASS — REVIEW PENDING'&&status!=='NOT RUN'?\`<ul>\${reasons.map(reason=>\`<li>\${reason}</li>\`).join('')}</ul>\`:''}
   <dl class="lab-metrics">
-    <div><dt>Cash USD / accepted</dt><dd>${rate('cash')}</dd></div>
-    <div><dt>Credit USD / accepted</dt><dd>${rate('credit')}</dd></div>
-    <div><dt>Quota / accepted</dt><dd>${draft.quotaType&&draft.quotaUnits!==''&&accepted?rate('quotaUnits')+' '+draft.quotaType:'—'}</dd></div>
-  </dl>`;
+    <div><dt>Cash USD / accepted</dt><dd>\${rate('cash')}</dd></div>
+    <div><dt>Credit USD / accepted</dt><dd>\${rate('credit')}</dd></div>
+    <div><dt>Quota / accepted</dt><dd>\${draft.quotaType&&draft.quotaUnits!==''&&accepted?rate('quotaUnits')+' '+draft.quotaType:'—'}</dd></div>
+  </dl>\`;
+}
+function labCohortPanelHTML(cohort,decision,blocked){
+  const selected=cohort.providerIds.includes(labProvider.id);
+  const names=cohort.providerIds.map(id=>LAB_PROVIDERS.find(provider=>provider.id===id)?.name||id);
+  return \`<div class="card pad lab-cohort" id="lab-cohort-panel">
+    <h3>Top-three P01–P10 cohort · maximum 3</h3>
+    <p lang="bn">শুধু preflight ও smoke checks পাস করা সর্বোচ্চ তিনটি provider নির্বাচন করুন। Selection evidence ID canonical Google Sheet-এ লিখুন। এই registry শুধু একই browser origin-এ কাজ করে; device sync করে না।</p>
+    <p><strong>Selected (\${cohort.providerIds.length}/3):</strong> \${names.length?names.map(escapeHTML).join(' · '):'None yet'}</p>
+    <label class="formlabel">Canonical Sheet cohort-selection evidence ID
+      <input id="lab-cohort-ref" value="\${escapeHTML(cohort.evidenceRef)}" maxlength="64" autocomplete="off" autocapitalize="off" spellcheck="false">
+    </label>
+    <div class="lab-actions">
+      <button type="button" class="btn primary" id="lab-cohort-add" \${blocked||!decision.canJoinCohort||selected||cohort.providerIds.length>=3?'disabled':''}>Add current provider</button>
+      <button type="button" class="btn" id="lab-cohort-remove" \${blocked||!selected?'disabled':''}>Remove current provider</button>
+    </div>
+    <p id="lab-cohort-message" role="status"></p>
+  </div>\`;
 }
 function providerLab(){
-  const draft=readLabDraft(), decision=providerLabDecision(labProvider,draft);
-  const blocked=fileMode||sharedGitHubOrigin||labReadError;
+  const draft=readLabDraft(),cohort=readLabCohort(),decision=providerLabDecision(labProvider,draft,cohort);
+  const blocked=fileMode||sharedGitHubOrigin||labReadError||labCohortReadError;
   const control=(key,label)=>labControl(key,label,draft);
-  return `${pageHead('Provider Qualification Lab','Record observed results for the Bangladesh provider pilot. This lab stores a local draft and makes no provider calls.')}
+  return \`\${pageHead('Provider Qualification Lab','বাংলাদেশি account eligibility, quota, privacy এবং synthetic runtime evidence manually record করুন।')}
   <div class="lab-layout">
     <div class="lab-main">
       <div class="card pad lab-picker">
         <label class="formlabel">Provider
-          <select id="lab-provider">${LAB_PROVIDERS.map(p=>`<option value="${p.id}" ${p.id===labProvider.id?'selected':''}>${p.name}</option>`).join('')}</select>
+          <select id="lab-provider">\${LAB_PROVIDERS.map(p=>\`<option value="\${p.id}" \${p.id===labProvider.id?'selected':''}>\${p.name}</option>\`).join('')}</select>
         </label>
-        <p>${labProvider.note}</p>
-        <div class="lab-links"><a href="${LAB_WORKBOOK}" target="_blank" rel="noopener noreferrer">Canonical Sheet ↗</a><a href="${LAB_PROTOCOL}" target="_blank" rel="noopener noreferrer">Frozen P01–P10 protocol ↗</a></div>
+        <p>\${labProvider.note}</p>
+        <div class="lab-links"><a href="\${LAB_WORKBOOK}" target="_blank" rel="noopener noreferrer">Canonical Sheet ↗</a><a href="\${LAB_PROTOCOL}" target="_blank" rel="noopener noreferrer">Frozen P01–P10 protocol ↗</a></div>
       </div>
-      <p class="notice" id="lab-privacy">Use synthetic prompts and opaque IDs for redacted evidence. Keep raw responses with the reviewer. Never enter credentials, account identifiers or confidential data. Transcribe reviewed evidence into the Sheet’s Execution Log.</p>
-      ${blocked?`<p class="notice warn" role="status">${labReadError?'This local Lab draft could not be read. Saving is disabled to protect the stored copy.':'Draft storage requires an isolated HTTP(S) origin. Open the app on its dedicated host.'}</p>`:''}
+      \${labCohortPanelHTML(cohort,decision,blocked)}
+      <p class="notice" id="lab-privacy" lang="bn">এই Lab শুধু manually observed evidence সংরক্ষণ করে—কোনো provider API call করে না, credential রাখে না, billing action নেয় না। Synthetic prompt ব্যবহার করুন; raw response আলাদা reviewer-এর কাছে রাখুন। Redacted evidence ID ছাড়া ব্যক্তিগত account information দেবেন না।</p>
+      <p class="notice">Technical terms retained in English: API, RPM, RPD, TPM, TTFT, Streaming, Tool Calling, R-AGENT and P01–P10.</p>
+      \${blocked?\`<p class="notice warn" role="status">\${labReadError||labCohortReadError?'A saved Lab draft or cohort registry could not be read. Saving is disabled to protect the stored copy.':'Draft storage requires an isolated HTTP(S) origin. Open the app on its dedicated host.'}</p>\`:''}
       <form id="lab-form" autocomplete="off" aria-describedby="lab-privacy" novalidate>
-        <fieldset class="lab-fieldset" ${blocked?'disabled':''}>
+        <fieldset class="lab-fieldset" \${blocked?'disabled':''}>
           <details class="card lab-step" open>
             <summary>S0 · Account, quota and privacy</summary>
             <div class="lab-fields">
-              ${control('run','Run ID')}${control('model','Exact served model ID')}${control('route','Exact route / provider ID')}${control('effort','Effort or N/A')}
-              ${LAB_PREFLIGHT.map(([key,label])=>control(key,label)).join('')}
-              ${control('preflightRef','Redacted preflight evidence ID')}
+              \${control('run','Run ID')}\${control('requestedModel','Exact requested model ID')}\${control('model','Exact served model ID')}\${control('route','Exact route / provider ID')}\${control('effort','Effort or N/A')}
+              \${LAB_PREFLIGHT.map(([key,label])=>control(key,label)).join('')}
+              \${control('preflightRef','Redacted preflight evidence ID')}
             </div>
           </details>
           <details class="card lab-step">
             <summary>S1–S2 · Smoke and local tool checks</summary>
-            <p>Run externally only after S0 clears. Use the canonical Sheet’s fixed synthetic smoke checks and local mock tools. Up to ${labProvider.smokeOnly?'5 total smoke calls':'6 smoke calls, within the initial 15-call pilot budget'}. Stop on unexpected charges, unclear terms or exhausted quota.</p>
+            <p>Manual evidence capture only. The app never calls a provider. Aggregate ceiling: \${labProvider.smokeOnly?'5':'6'} model requests; P01–P10 leaves room for at most five smoke requests. R-AGENT is capped at three model turns. The frozen protocol’s test definitions need an approved budget-reconciliation reference before any external run; do not guess how calls overlap.</p>
             <div class="lab-fields">
-              ${LAB_SMOKE.map(([key,label])=>control(key,label)).join('')}
-              ${control('smokeCalls','Actual smoke calls used')}${control('smokeRef','Redacted smoke evidence ID')}
-              ${labProvider.smokeOnly?'':control('cohort','Benchmark cohort after smoke review')}
+              \${LAB_SMOKE.map(([key,label])=>control(key,label)).join('')}
+              \${control('agentTurns','R-AGENT model turns (1–3)')}\${control('agentRef','Redacted R-AGENT evidence ID')}
+              \${control('budgetRef','Approved smoke-budget addendum reference')}
+              \${control('smokeCalls','Total S1–S2 model requests used')}\${control('smokeRef','Redacted smoke evidence ID')}
             </div>
           </details>
-          ${labProvider.smokeOnly?'':`<details class="card lab-step">
+          \${labProvider.smokeOnly?'':\`<details class="card lab-step">
             <summary>S3 · Frozen P01–P10</summary>
-            <p id="lab-quality-hint">${decision.qualityReady?'Use fresh sessions. Give the model only the prompt, then score with the separate reviewer rubric.':'Save passing preflight, smoke and cohort records to unlock case entry.'}</p>
-            <fieldset id="lab-quality" class="lab-fieldset" ${decision.qualityReady?'':'disabled'}>
+            <p id="lab-quality-hint">\${decision.qualityReady?'Use fresh sessions. Give the model only the prompt, then score with the separate reviewer rubric.':'Save passing preflight, all smoke checks, approved budget reference, zero cash charge and top-three selection to unlock case entry.'}</p>
+            <fieldset id="lab-quality" class="lab-fieldset" \${decision.qualityReady?'':'disabled'}>
               <label class="formlabel lab-prompt-label">Prompt to give the model
-                <select id="lab-prompt-case">${LAB_CASES.map(({id})=>`<option>${id}</option>`).join('')}</select>
+                <select id="lab-prompt-case">\${LAB_CASES.map(({id})=>\`<option>\${id}</option>\`).join('')}</select>
               </label>
               <label class="formlabel lab-prompt-label">Frozen prompt text
-                <textarea id="lab-prompt" rows="5" readonly spellcheck="false">${escapeHTML(providerLabPrompt(LAB_CASES[0]))}</textarea>
+                <textarea id="lab-prompt" rows="5" readonly spellcheck="false">\${escapeHTML(providerLabPrompt(LAB_CASES[0]))}</textarea>
               </label>
-              ${LAB_CASES.map(({id,task})=>`<details class="lab-case"><summary>${id} · ${task}</summary><div class="lab-fields">
-                ${LAB_RUBRIC.map(([key,label])=>control(id+key,label)).join('')}
-                ${control(id+'critical','Critical failure')}${control(id+'ref','Redacted result evidence ID')}
-              </div></details>`).join('')}
+              \${LAB_CASES.map(({id,task})=>\`<details class="lab-case"><summary>\${id} · \${task}</summary><div class="lab-fields">
+                \${LAB_RUBRIC.map(([key,label])=>control(id+key,label)).join('')}
+                \${control(id+'critical','Critical failure')}\${control(id+'ref','Redacted result evidence ID')}
+              </div></details>\`).join('')}
             </fieldset>
-          </details>`}
+          </details>\`}
           <details class="card lab-step">
-            <summary>Run metrics${labProvider.smokeOnly?'':' and reliability'}</summary>
-            <p>Use actual whole-run totals. Blank means unknown, and zero means observed zero.${labProvider.smokeOnly?'':' Repeat only eligible leading routes with headroom, per the Sheet.'}</p>
+            <summary>Run metrics\${labProvider.smokeOnly?'':' and reliability'}</summary>
+            <p>Use actual whole-run totals. Blank means unknown, and zero means observed zero.\${labProvider.smokeOnly?'':' Repeat only eligible leading routes with headroom, per the Sheet.'}</p>
             <div class="lab-fields">
-              ${control('cash','Cash billed (USD)')}${control('credit','Free credit consumed (USD)')}
-              ${control('quotaUnits','Primary quota consumed')}${control('quotaType','Primary quota unit')}
-              ${control('seconds','Elapsed time (seconds)')}
-              ${labProvider.smokeOnly?'':control('reliability','Reliability result')+control('repeatCalls','Actual reliability repeat calls')}
-              ${control('reviewRef','Redacted metrics / review evidence ID')}
+              \${control('cash','Cash billed (USD)')}\${control('credit','Free credit consumed (USD)')}
+              \${control('quotaUnits','Primary quota consumed')}\${control('quotaType','Primary quota unit')}
+              \${control('seconds','Elapsed time (seconds)')}
+              \${labProvider.smokeOnly?'':control('reliability','Reliability result')+control('repeatCalls','Actual reliability repeat calls')}
+              \${control('reviewRef','Redacted metrics / review evidence ID')}
             </div>
           </details>
           <div class="lab-actions">
             <button type="submit" class="btn primary">Save draft</button>
-            <button type="button" class="btn" id="lab-clear" ${labRaw===null?'disabled':''}>Clear saved draft</button>
+            <button type="button" class="btn" id="lab-clear" \${labRaw===null?'disabled':''}>Clear saved draft</button>
           </div>
         </fieldset>
         <p id="lab-save-message" role="status"></p>
       </form>
     </div>
-    <aside class="card pad lab-summary" id="lab-summary" aria-live="polite">${labDecisionHTML(draft,decision)}</aside>
-  </div>`;
+    <aside class="card pad lab-summary" id="lab-summary" aria-live="polite">\${labDecisionHTML(draft,decision)}</aside>
+  </div>\`;
 }
 function labFormDraft(form){
   return Object.fromEntries(Object.keys(LAB_FIELDS).map(key=>[key,form.elements.namedItem(key)?.value.trim()??'']));
@@ -997,7 +1055,7 @@ function labCanLeave(){
 }
 function saveLabDraft(form){
   const message=$('#lab-save-message');
-  if(fileMode||sharedGitHubOrigin||labReadError)return;
+  if(fileMode||sharedGitHubOrigin||labReadError||labCohortReadError)return;
   const draft=labFormDraft(form);
   const invalid=Object.keys(draft).find(key=>form.elements.namedItem(key)?.validity.badInput||!labValueValid(key,draft[key]));
   if(invalid){
@@ -1008,48 +1066,72 @@ function saveLabDraft(form){
     return;
   }
   const old=labRaw===null?emptyLabDraft():JSON.parse(labRaw);
-  const hasResults=[...LAB_SMOKE.map(([key])=>key),'smokeCalls',...LAB_CASES.map(({id})=>id+'ref')].some(key=>old[key]!=='');
-  if(hasResults&&['run','model','route','effort'].some(key=>old[key]&&draft[key]!==old[key])){
-    message.textContent='Draft not saved. Clear the saved draft before changing the run, pinned model, route or effort.';
+  const hasResults=[...LAB_SMOKE.map(([key])=>key),'agentTurns','agentRef','budgetRef','smokeCalls',...LAB_CASES.map(({id})=>id+'ref')].some(key=>old[key]!=='');
+  if(hasResults&&['run','requestedModel','model','route','effort'].some(key=>old[key]&&draft[key]!==old[key])){
+    message.textContent='Draft not saved. Clear the saved draft before changing the run, requested/served model, route or effort.';
     return;
   }
-  const raw=JSON.stringify(draft), key=LAB_STORE+labProvider.id;
-  try {
-    if(localStorage.getItem(key)!==labRaw){
-      message.textContent='Draft changed in another tab. Reopen the Lab before saving.';
-      return;
-    }
+  const raw=JSON.stringify(draft),key=LAB_STORE+labProvider.id;
+  try{
+    if(localStorage.getItem(key)!==labRaw){message.textContent='Draft changed in another tab. Reopen the Lab before saving.';return;}
     localStorage.setItem(key,raw);
     if(localStorage.getItem(key)!==raw)throw Error('Readback failed');
-  }catch(_){
-    message.textContent='Draft could not be saved reliably. Keep this tab open and check browser storage.';
-    return;
-  }
+  }catch(_){message.textContent='Draft could not be saved reliably. Keep this tab open and check browser storage.';return;}
   labRaw=raw;
-  const decision=providerLabDecision(labProvider,draft);
+  const cohort=readLabCohort(),decision=providerLabDecision(labProvider,draft,cohort);
   $('#lab-summary').innerHTML=labDecisionHTML(draft,decision);
   const quality=$('#lab-quality');
   if(quality){
     quality.disabled=!decision.qualityReady;
-    $('#lab-quality-hint').textContent=decision.qualityReady?'Use fresh sessions. Give the model only the prompt, then score with the separate reviewer rubric.':'Save passing preflight, smoke and cohort records to unlock case entry.';
+    $('#lab-quality-hint').textContent=decision.qualityReady?'Use fresh sessions. Give the model only the prompt, then score with the separate reviewer rubric.':'Save passing preflight, all smoke checks, approved budget reference, zero cash charge and top-three selection to unlock case entry.';
   }
   $('#lab-clear').disabled=false;
-  message.textContent='Draft saved in this browser. Decision: '+decision.status+'.';
+  message.textContent='Draft saved in this browser. Manual status: '+decision.status+'.';
+}
+function saveLabCohort(action){
+  const message=$('#lab-cohort-message');
+  if(!message||fileMode||sharedGitHubOrigin||labReadError||labCohortReadError)return;
+  const cohort=readLabCohort();
+  if(labCohortReadError){message.textContent='Cohort registry could not be read. No changes were made.';return;}
+  const expected=labCohortRaw;
+  const ref=$('#lab-cohort-ref')?.value.trim()||cohort.evidenceRef;
+  let next;
+  if(action==='add'){
+    if(!labValueValid('run',ref)){message.textContent='Enter the redacted cohort-selection evidence ID from the canonical Sheet.';return;}
+    const draft=readLabDraft();
+    if(labReadError){message.textContent='Provider draft could not be read. No changes were made.';return;}
+    const decision=providerLabDecision(labProvider,draft,cohort);
+    if(!decision.canJoinCohort){message.textContent='Cannot add yet: complete preflight, all smoke checks including R-AGENT, approved budget reference, zero cash charge and the five-call ceiling for P01–P10.';return;}
+    next={providerIds:[...cohort.providerIds,labProvider.id],evidenceRef:ref};
+  }else{
+    if(!cohort.providerIds.includes(labProvider.id)){message.textContent='This provider is not in the cohort.';return;}
+    next={providerIds:cohort.providerIds.filter(id=>id!==labProvider.id),evidenceRef:ref};
+  }
+  if(!labCohortValid(next)){message.textContent='Cohort limit or evidence reference is invalid. No changes were made.';return;}
+  const raw=JSON.stringify(next);
+  try{
+    if(localStorage.getItem(LAB_COHORT_STORE)!==expected){message.textContent='Cohort registry changed in another tab. Reopen the Lab before editing.';return;}
+    localStorage.setItem(LAB_COHORT_STORE,raw);
+    if(localStorage.getItem(LAB_COHORT_STORE)!==raw)throw Error('Readback failed');
+  }catch(_){message.textContent='Cohort registry could not be saved reliably. No change is confirmed.';return;}
+  labCohortRaw=raw;
+  render();
+  const status=$('#lab-cohort-message');
+  if(status)status.textContent=action==='add'?'Provider added to the local top-three cohort. Record the same selection in the canonical Sheet.':'Provider removed from the local top-three cohort.';
 }
 function clearLabDraft(){
-  if(fileMode||sharedGitHubOrigin||labReadError||labRaw===null||!confirm('Clear this provider’s saved Lab draft? Preserve reviewed evidence in the canonical Sheet first.'))return;
-  const key=LAB_STORE+labProvider.id, message=$('#lab-save-message');
-  try {
-    if(localStorage.getItem(key)!==labRaw){
-      message.textContent='Draft changed in another tab. Reopen the Lab before clearing.';
-      return;
-    }
-    localStorage.removeItem(key);
-    if(localStorage.getItem(key)!==null)throw Error('Readback failed');
-  }catch(_){
-    message.textContent='Draft could not be cleared reliably. Check browser storage.';
+  if(fileMode||sharedGitHubOrigin||labReadError||labCohortReadError||labRaw===null||!confirm('Clear this provider’s saved Lab draft? Preserve reviewed evidence in the canonical Sheet first.'))return;
+  const cohort=readLabCohort();
+  if(labCohortReadError||cohort.providerIds.includes(labProvider.id)){
+    $('#lab-save-message').textContent='Remove this provider from the top-three cohort before clearing its draft.';
     return;
   }
+  const key=LAB_STORE+labProvider.id,message=$('#lab-save-message');
+  try{
+    if(localStorage.getItem(key)!==labRaw){message.textContent='Draft changed in another tab. Reopen the Lab before clearing.';return;}
+    localStorage.removeItem(key);
+    if(localStorage.getItem(key)!==null)throw Error('Readback failed');
+  }catch(_){message.textContent='Draft could not be cleared reliably. Check browser storage.';return;}
   render();
   $('#lab-provider').focus();
   $('#lab-save-message').textContent='Saved Lab draft cleared.';
@@ -1141,6 +1223,8 @@ $('#navigation').addEventListener('click',e=>{const b=e.target.closest('button[d
 $('#appview').addEventListener('click',e=>{
   const b=e.target.closest('button');if(!b)return;
   if(b.id==='lab-clear')clearLabDraft();
+  else if(b.id==='lab-cohort-add')saveLabCohort('add');
+  else if(b.id==='lab-cohort-remove')saveLabCohort('remove');
   else if(b.dataset.openProvider)visualDialog('provider',b.dataset.openProvider);
    else if(b.dataset.openPlan)visualDialog('plan',b.dataset.openPlan);
    else if(b.dataset.quotaList){cockpitQuotaMode=b.dataset.quotaList;render()}
