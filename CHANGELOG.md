@@ -9,6 +9,7 @@ All notable changes follow SemVer and Keep a Changelog.
 - Record requested and served model IDs separately; accept the documented `N/A` effort sentinel.
 - Replace provider self-attestation with a same-origin shared top-three cohort registry and canonical evidence reference.
 - Keep P01–P10 locked until a documented budget reconciliation resolves the smoke-test request-count conflict.
+- Make the budget gate fail-closed: only the exact owner-approved, build-configured amendment ID can unlock P01–P10; arbitrary typed references do not.
 - Distinguish `MANUAL PASS — REVIEW PENDING` from independently verified qualification; add Bengali-first safety guidance.
 - Add synthetic decision-logic and Chromium regression coverage. Physical-device acceptance and canonical Version Manager verification remain pending.
 
