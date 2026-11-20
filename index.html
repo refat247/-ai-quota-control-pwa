@@ -1080,6 +1080,10 @@ function saveLabDraft(form){
   labRaw=raw;
   const cohort=readLabCohort(),decision=providerLabDecision(labProvider,draft,cohort);
   $('#lab-summary').innerHTML=labDecisionHTML(draft,decision);
+  const addToCohort=$('#lab-cohort-add');
+  if(addToCohort)addToCohort.disabled=labCohortReadError||!decision.canJoinCohort||cohort.providerIds.includes(labProvider.id)||cohort.providerIds.length>=3;
+  const removeFromCohort=$('#lab-cohort-remove');
+  if(removeFromCohort)removeFromCohort.disabled=labCohortReadError||!cohort.providerIds.includes(labProvider.id);
   const quality=$('#lab-quality');
   if(quality){
     quality.disabled=!decision.qualityReady;
