@@ -55,7 +55,7 @@ def lab_flow(page):
     fill('preflightRef','synth-preflight')
     save.click()
     assert status.inner_text()=='HOLD'
-    assert 'budget-reconciliation' in page.locator('#lab-summary').inner_text()
+    assert 'no owner-approved budget addendum is configured' in page.locator('#lab-summary').inner_text()
 
     form.get_by_text('S1–S2 · Smoke and local tool checks',exact=True).click()
     for key in ('plain','stream','json','tool','agent'):
