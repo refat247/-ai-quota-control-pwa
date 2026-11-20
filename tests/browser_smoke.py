@@ -72,7 +72,8 @@ def lab_flow(page):
     # A typed (even plausible) budget reference is NOT build-authorized approval.
     # Keep the negative path locked until the owner approves a versioned addendum.
     assert page.locator('#lab-cohort-add').is_disabled()
-    assert page.locator('#lab-quality').is_disabled()
+    assert page.locator('#lab-quality').get_attribute('disabled') is not None
+    assert page.locator('#lab-prompt-case').is_disabled()
     assert page.locator('#lab-prompt-case').count()==1
     assert 'Selected (0/3)' in page.locator('#lab-cohort-panel').inner_text()
     assert page.evaluate("() => localStorage.getItem('ai-provider-lab-v1:cohort')") is None
