@@ -69,14 +69,16 @@ def lab_flow(page):
     fill('cash','0')
     save.click()
     assert status.inner_text()=='HOLD'
-    assert page.locator('#lab-cohort-add').is_enabled()
-    page.locator('#lab-cohort-ref').fill('cohort-selection-01')
-    page.locator('#lab-cohort-add').click()
-    assert '1/3' in page.locator('#lab-cohort-panel').inner_text()
-    assert page.locator('#lab-quality').is_enabled() is True
+    # A typed (even plausible) budget reference is NOT build-authorized approval.
+    # Keep the negative path locked until the owner approves a versioned addendum.
+    assert page.locator('#lab-cohort-add').is_disabled()
+    assert page.locator('#lab-quality').is_disabled()
     assert page.locator('#lab-prompt-case').count()==1
+    assert 'Selected (0/3)' in page.locator('#lab-cohort-panel').inner_text()
+    assert page.evaluate("() => localStorage.getItem('ai-provider-lab-v1:cohort')") is None
+    assert 'no owner-approved budget addendum is configured' in page.locator('#lab-summary').inner_text()
 
-    # Three selected IDs are the hard ceiling. A fourth provider cannot be added.
+    # A preloaded full cohort must still keep a fourth provider disabled.
     page.evaluate("""() => localStorage.setItem('ai-provider-lab-v1:cohort',
       JSON.stringify({providerIds:['gemini','groq','inferbase'],evidenceRef:'cohort-selection-01'}))""")
     page.locator('#lab-provider').select_option('vercel')
