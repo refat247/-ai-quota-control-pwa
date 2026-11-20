@@ -69,7 +69,6 @@ def lab_flow(page):
     save.click()
     assert status.inner_text()=='HOLD'
     assert page.locator('#lab-cohort-add').is_enabled()
-    fill('P01accuracy','2') if form.locator('[name="P01accuracy"]').count() else None
     page.locator('#lab-cohort-ref').fill('cohort-selection-01')
     page.locator('#lab-cohort-add').click()
     assert '1/3' in page.locator('#lab-cohort-panel').inner_text()
@@ -83,7 +82,7 @@ def lab_flow(page):
     assert '3/3' in page.locator('#lab-cohort-panel').inner_text()
     assert page.locator('#lab-cohort-add').is_disabled()
     assert page.evaluate('(key)=>localStorage.getItem(key)',STORE)==before
-    assert not page.locator('#lab-summary').inner_text().includes('PASS')
+    assert 'PASS' not in page.locator('#lab-summary').inner_text()
     print('PASS Lab: Bengali guidance, requested/served model, N/A, R-AGENT, budget HOLD and shared top-three cap')
  
 def main():
