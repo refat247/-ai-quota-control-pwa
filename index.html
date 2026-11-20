@@ -754,6 +754,8 @@ function legacyPlans(){return `${pageHead('Subscriptions','কোনটা র�
 function legacyDeadlines(){const rows=allEvents(),future=rows.filter(e=>difference(e.date).state!=='expired'),past=rows.filter(e=>difference(e.date).state==='expired');return `${pageHead('Dates & deadlines','Use-before targets, quota resets, renewals এবং cancellation plans।')}<div class="page-actions"><div class="section-label"><h2>Upcoming</h2><small>${future.length} items</small></div><button class="btn sm primary" data-new="milestone">${svg('plus')} Add</button></div><div class="deadline-rows">${(allDeadlines?future:future.slice(0,12)).map(eventRow).join('')||'<div class="empty card">No upcoming dates</div>'}</div>${future.length>12?`<button class="btn full soft" style="margin-top:10px" data-expand-dates="true">${allDeadlines?'Show fewer':'See all '+future.length+' upcoming dates'}</button>`:''}<section class="section-block">${section('Past · needs verification',past.length+' entries')}<div class="deadline-rows">${past.slice(0,allDeadlines?1000:5).map(eventRow).join('')||'<div class="card empty">Nothing to review</div>'}</div>${past.length>5&&!allDeadlines?'<button class="btn full soft" data-expand-dates="true" style="margin-top:9px">Show all past dates</button>':''}</section><section class="section-block">${section('Editable use-before targets','Custom milestones')}<div class="deadline-notes">${data.milestones.map(m=>`<div class="card"><strong>${escapeHTML(m.title)}</strong><div class="muted">${escapeHTML(fmtDate(m.date))} · ${escapeHTML(m.kind)}</div><div class="muted">${escapeHTML(m.note)}</div><div class="button-row"><button class="btn sm" data-edit="milestone" data-id="${escapeHTML(m.id)}">Edit</button><button class="btn sm danger" data-delete="milestone" data-id="${escapeHTML(m.id)}">Delete</button></div></div>`).join('')}</div></section>`}
 // Provider Lab drafts use their own storage. The workbook remains the execution ledger.
 const LAB_STORE='ai-provider-lab-v1:';
+// Deliberately empty until the owner approves a versioned budget reconciliation and its exact ID is recorded.
+const LAB_APPROVED_BUDGET_REF='';
 const LAB_COHORT_STORE=LAB_STORE+'cohort';
 const LAB_WORKBOOK='https://docs.google.com/spreadsheets/d/1p7Q1uHsi6-J4jlG4PXf0pDG9iwO0e4XfmB9_os1nVJ8/edit';
 const LAB_PROTOCOL='https://app.notion.com/p/419b9b7bab6e81569742f59f092e32cc';
@@ -840,14 +842,14 @@ function labCohortValid(cohort){
     (cohort.evidenceRef===''||labValueValid('run',cohort.evidenceRef))&&
     (!cohort.providerIds.length||labValueValid('run',cohort.evidenceRef)));
 }
-function providerLabDecision(provider,draft,cohort=emptyLabCohort()){
+function providerLabDecision(provider,draft,cohort=emptyLabCohort(),approvedBudgetRef=LAB_APPROVED_BUDGET_REF){
   const preflight=LAB_PREFLIGHT.every(([key])=>draft[key]==='pass')&&Boolean(draft.preflightRef)&&labRoutePinned(draft);
   const cap=provider.smokeOnly?5:6;
   const smokeCalls=Number(draft.smokeCalls);
   const agentTurns=Number(draft.agentTurns);
   const agentReady=draft.agent==='pass'&&Boolean(draft.agentRef)&&agentTurns>=1&&agentTurns<=3;
   const smoke=LAB_SMOKE.every(([key])=>draft[key]==='pass')&&Boolean(draft.smokeRef)&&agentReady&&smokeCalls>=1&&smokeCalls<=cap;
-  const budgetResolved=Boolean(draft.budgetRef);
+  const budgetResolved=Boolean(approvedBudgetRef)&&draft.budgetRef===approvedBudgetRef;
   const cashKnown=draft.cash!=='';
   const unsafe=cashKnown&&Number(draft.cash)>0;
   const cashZero=cashKnown&&!unsafe;
@@ -870,7 +872,7 @@ function providerLabDecision(provider,draft,cohort=emptyLabCohort()){
   if(!preflight)reasons.push('Clear account, quota, privacy and payment checks with separate requested/served model IDs and pinned route evidence.');
   if(unsafe)reasons.push('Cash charge recorded. Stop the run and reconcile billing.');
   if(!smoke)reasons.push('Record all five smoke checks, R-AGENT evidence (1–3 model turns), and the actual aggregate smoke-call count.');
-  if(!budgetResolved)reasons.push('HOLD: frozen protocol test definitions may exceed the six-call smoke ceiling. Do not run until an approved protocol budget-reconciliation reference is recorded.');
+  if(!budgetResolved)reasons.push('HOLD: no owner-approved budget addendum is configured in this build. A typed reference alone is not authorization. Do not run provider calls or P01–P10 until a versioned amendment is approved and its exact ID is configured.');
   if(smokeCalls>cap)reasons.push('Smoke call budget exceeded.');
   if(!hasCaseBudget)reasons.push('A six-call smoke run leaves fewer than ten requests in the initial 15-call budget; P01–P10 requires at most five smoke calls.');
   if(provider.smokeOnly)reasons.push('AIHubMix is smoke-only for this pilot and cannot enter P01–P10.');
@@ -997,17 +999,17 @@ function providerLab(){
           </details>
           <details class="card lab-step">
             <summary>S1–S2 · Smoke and local tool checks</summary>
-            <p>Manual evidence capture only. The app never calls a provider. Aggregate ceiling: ${labProvider.smokeOnly?'5':'6'} model requests; P01–P10 leaves room for at most five smoke requests. R-AGENT is capped at three model turns. The frozen protocol’s test definitions need an approved budget-reconciliation reference before any external run; do not guess how calls overlap.</p>
+            <p>Manual evidence capture only. The app never calls a provider. Aggregate ceiling: ${labProvider.smokeOnly?'5':'6'} model requests; P01–P10 leaves room for at most five smoke requests. R-AGENT is capped at three model turns. No owner-approved budget reconciliation is configured in this build. The field below records a reference only; typing any ID does not unlock P01–P10. Do not run provider calls or P01–P10 until a versioned amendment is approved and its exact ID is configured. Do not guess how calls overlap.</p>
             <div class="lab-fields">
               ${LAB_SMOKE.map(([key,label])=>control(key,label)).join('')}
               ${control('agentTurns','R-AGENT model turns (1–3)')}${control('agentRef','Redacted R-AGENT evidence ID')}
-              ${control('budgetRef','Approved smoke-budget addendum reference')}
+              ${control('budgetRef','Budget addendum ID (record only; does not unlock gate)')}
               ${control('smokeCalls','Total S1–S2 model requests used')}${control('smokeRef','Redacted smoke evidence ID')}
             </div>
           </details>
           ${labProvider.smokeOnly?'':`<details class="card lab-step">
             <summary>S3 · Frozen P01–P10</summary>
-            <p id="lab-quality-hint">${decision.qualityReady?'Use fresh sessions. Give the model only the prompt, then score with the separate reviewer rubric.':'Save passing preflight, all smoke checks, approved budget reference, zero cash charge and top-three selection to unlock case entry.'}</p>
+            <p id="lab-quality-hint">${decision.qualityReady?'Use fresh sessions. Give the model only the prompt, then score with the separate reviewer rubric.':'P01–P10 remains locked until the exact owner-approved budget addendum ID is configured in this build and all other gates pass.'}</p>
             <fieldset id="lab-quality" class="lab-fieldset" ${decision.qualityReady?'':'disabled'}>
               <label class="formlabel lab-prompt-label">Prompt to give the model
                 <select id="lab-prompt-case">${LAB_CASES.map(({id})=>`<option>${id}</option>`).join('')}</select>
@@ -1087,7 +1089,7 @@ function saveLabDraft(form){
   const quality=$('#lab-quality');
   if(quality){
     quality.disabled=!decision.qualityReady;
-    $('#lab-quality-hint').textContent=decision.qualityReady?'Use fresh sessions. Give the model only the prompt, then score with the separate reviewer rubric.':'Save passing preflight, all smoke checks, approved budget reference, zero cash charge and top-three selection to unlock case entry.';
+    $('#lab-quality-hint').textContent=decision.qualityReady?'Use fresh sessions. Give the model only the prompt, then score with the separate reviewer rubric.':'P01–P10 remains locked until the exact owner-approved budget addendum ID is configured in this build and all other gates pass.';
   }
   $('#lab-clear').disabled=false;
   message.textContent='Draft saved in this browser. Manual status: '+decision.status+'.';
@@ -1105,7 +1107,7 @@ function saveLabCohort(action){
     const draft=readLabDraft();
     if(labReadError){message.textContent='Provider draft could not be read. No changes were made.';return;}
     const decision=providerLabDecision(labProvider,draft,cohort);
-    if(!decision.canJoinCohort){message.textContent='Cannot add yet: complete preflight, all smoke checks including R-AGENT, approved budget reference, zero cash charge and the five-call ceiling for P01–P10.';return;}
+    if(!decision.canJoinCohort){message.textContent='Cannot add yet: complete preflight and smoke evidence. The owner-approved budget addendum must also be configured in this build; a typed reference alone cannot unlock P01–P10.';return;}
     next={providerIds:[...cohort.providerIds,labProvider.id],evidenceRef:ref};
   }else{
     if(!cohort.providerIds.includes(labProvider.id)){message.textContent='This provider is not in the cohort.';return;}
