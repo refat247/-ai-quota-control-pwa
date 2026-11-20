@@ -65,6 +65,7 @@ def lab_flow(page):
     fill('budgetRef','approved-budget-v1')
     fill('smokeCalls','5')
     fill('smokeRef','synth-smoke')
+    form.get_by_text('Run metrics and reliability',exact=True).click()
     fill('cash','0')
     save.click()
     assert status.inner_text()=='HOLD'
@@ -72,7 +73,7 @@ def lab_flow(page):
     page.locator('#lab-cohort-ref').fill('cohort-selection-01')
     page.locator('#lab-cohort-add').click()
     assert '1/3' in page.locator('#lab-cohort-panel').inner_text()
-    assert page.locator('#lab-quality').is_enabled() is False
+    assert page.locator('#lab-quality').is_enabled() is True
     assert page.locator('#lab-prompt-case').count()==1
 
     # Three selected IDs are the hard ceiling. A fourth provider cannot be added.
@@ -506,7 +507,8 @@ def main():
                 assert quota_backup == json.loads(before)
                 page.reload()
                 open_lab(page)
-                assert page.locator('#lab-decision-status').inner_text() == 'PASS'
+                assert page.locator('#lab-decision-status').inner_text() == 'HOLD'
+                assert '0/10 scored' in page.locator('#lab-summary').inner_text()
                 ctx.close()
 
                 # HTTP localhost is secure for service workers. Register the
