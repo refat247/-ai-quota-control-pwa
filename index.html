@@ -8,7 +8,7 @@
 <title>AI Quota Control · Mobile PWA v3.3.1</title>
 <style>:root{color-scheme:light;--canvas:#f5f7fb;--paper:#fff;--paper2:#fbfcff;--ink:#14223b;--muted:#586a82;--soft:#59687d;--line:#e2e8f2;--accent:#4a5fd1;--accent-soft:#eef0ff;--mint:#116b60;--mint-soft:#e8f6f1;--amber:#9e6418;--amber-soft:#fff3df;--red:#b54852;--red-soft:#fff1f2;--radius:17px;--shadow:0 8px 32px rgba(28,50,90,.045)}
 *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;min-width:280px;background:var(--canvas);color:var(--ink);font:14px/1.5 system-ui,-apple-system,'Segoe UI','Noto Sans Bengali',sans-serif;-webkit-font-smoothing:antialiased}button,input,select,textarea{font:inherit}button{cursor:pointer}button:disabled{opacity:.48;cursor:not-allowed}button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,a:focus-visible,summary:focus-visible{outline:3px solid #8b9afa;outline-offset:2px}button,input,select,textarea{font-size:16px}a{color:var(--accent)}.hide{display:none!important}.sr-only{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap}
-.layout{max-width:1470px;margin:auto;min-height:100dvh}.main-content{min-width:0;padding:20px 15px calc(105px + env(safe-area-inset-bottom,0px));max-width:1170px;margin:0 auto}.side-nav{position:fixed;z-index:20;left:12px;right:12px;bottom:calc(8px + env(safe-area-inset-bottom,0px));display:grid;grid-template-columns:repeat(5,minmax(0,1fr));background:rgba(255,255,255,.96);backdrop-filter:blur(18px);box-shadow:0 6px 36px #182c4f2b;border:1px solid var(--line);border-radius:19px;padding:7px 4px;max-width:640px;margin:auto}.nav-brand{display:none}.navitem{color:var(--muted);min-height:54px;border:0;background:none;border-radius:12px;padding:6px 3px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:3px;font-size:10px;line-height:1.1;letter-spacing:-.01em;font-weight:680}.navitem svg{width:21px;height:21px;stroke:currentColor;stroke-width:1.9;fill:none;stroke-linejoin:round;stroke-linecap:round}.navitem.active{color:var(--accent);background:var(--accent-soft)}.nav-footer{display:none}
+.layout{max-width:1470px;margin:auto;min-height:100dvh}.main-content{min-width:0;padding:20px 15px calc(105px + env(safe-area-inset-bottom,0px));max-width:1170px;margin:0 auto}.side-nav{position:fixed;z-index:20;left:12px;right:12px;bottom:calc(8px + env(safe-area-inset-bottom,0px));display:grid;grid-template-columns:repeat(6,minmax(0,1fr));background:rgba(255,255,255,.96);backdrop-filter:blur(18px);box-shadow:0 6px 36px #182c4f2b;border:1px solid var(--line);border-radius:19px;padding:7px 4px;max-width:640px;margin:auto}.nav-brand{display:none}.navitem{color:var(--muted);min-height:54px;border:0;background:none;border-radius:12px;padding:6px 3px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:3px;font-size:10px;line-height:1.1;letter-spacing:-.01em;font-weight:680}.navitem svg{width:21px;height:21px;stroke:currentColor;stroke-width:1.9;fill:none;stroke-linejoin:round;stroke-linecap:round}.navitem.active{color:var(--accent);background:var(--accent-soft)}.nav-footer{display:none}
 .topbar{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:20px}.brand-icon{width:35px;height:35px;background:var(--accent);color:#fff;border-radius:11px;display:grid;place-items:center;font-weight:850;font-size:18px;flex:none}.brand-line{display:flex;align-items:center;gap:10px}.brand-title{font-size:16px;font-weight:850;letter-spacing:-.035em;line-height:1.2}.eyebrow{color:var(--soft);font-size:11px;font-weight:650}.top-date{font-size:11px;color:var(--muted);text-align:right;line-height:1.4;white-space:nowrap}.top-date strong{display:block;color:var(--ink);font-size:12px;font-variant-numeric:tabular-nums}.page-head{margin-bottom:15px}.page-head h1{font-size:clamp(24px,4.5vw,38px);line-height:1.15;letter-spacing:-.043em;margin:0 0 6px;font-weight:820}.page-head p{color:var(--muted);margin:0;max-width:680px;font-size:13px}.page-actions{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:15px}.section-label{display:flex;align-items:baseline;gap:9px}.section-label h2{font-size:17px;margin:0;letter-spacing:-.025em;font-weight:800}.section-label small{font-size:11px;color:var(--soft)}.section-sub{font-size:12px;color:var(--muted);margin:4px 0 0}.section-block{margin:23px 0}.btn{border-radius:11px;padding:11px 13px;min-height:42px;border:1px solid #cfd9e8;background:var(--paper);color:var(--ink);font-size:12px;font-weight:750;display:inline-flex;align-items:center;justify-content:center;gap:7px;white-space:nowrap;transition:background .12s}.btn:hover{background:var(--paper2)}.btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}.btn.primary:hover{background:#3d50bb}.btn.quiet{border:0;background:var(--accent-soft);color:var(--accent)}.btn.soft{background:transparent;border:1px solid var(--line)}.btn.danger{color:var(--red);border:1px solid #f1c6ca;background:var(--red-soft)}.btn.sm{min-height:36px;padding:7px 11px}.btn.full{width:100%}.btn svg,.icon-inline{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .card{background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);min-width:0}.pad{padding:16px}.notice{padding:11px 13px;border:1px solid #dfe7f5;background:#edf3fb;color:#475c77;border-radius:12px;font-size:12px;line-height:1.5;margin:13px 0}.notice strong{color:var(--ink)}.notice.warn{border-color:#f1ddba;background:#fff8ea;color:#785728}.micro{font-size:11px;color:var(--soft)}.inline-tag{font-size:10px;font-weight:760;border-radius:7px;padding:4px 7px;color:var(--muted);background:#eff2f7;display:inline-block;white-space:nowrap}.inline-tag.weekly{color:#315fc1;background:#eaf2ff}.inline-tag.h5{color:#7353ad;background:#f2ebff}.inline-tag.custom{color:#a1642d;background:#fff0e5}.inline-tag.good{background:var(--mint-soft);color:var(--mint)}.inline-tag.warn{background:var(--amber-soft);color:var(--amber)}.inline-tag.red{background:var(--red-soft);color:var(--red)}
 .focus-banner{border-radius:21px;padding:21px 18px;background:linear-gradient(130deg,#263872,#4c62c3);color:#fff;position:relative;overflow:hidden;margin:10px 0 15px}.focus-banner::after{content:"";position:absolute;right:-45px;top:-75px;border:42px solid #ffffff12;width:180px;height:180px;border-radius:50%;pointer-events:none}.focus-banner .kicker{font-size:11px;opacity:.8;font-weight:720;letter-spacing:.06em;text-transform:uppercase}.focus-banner h2{margin:8px 0 6px;font-size:24px;line-height:1.16;max-width:410px;letter-spacing:-.038em}.focus-banner p{margin:0 0 14px;max-width:560px;font-size:12px;opacity:.88}.focus-banner .btn{background:#fff;color:#293d80;border:0;font-weight:800}.hero-footer{display:flex;align-items:center;gap:12px;flex-wrap:wrap}.hero-stat{font-size:12px;opacity:.86}.hero-stat b{font-size:16px;color:#fff}
@@ -336,6 +336,31 @@ html[data-quota-vnext="yes"] .sheethead h2{
  html[data-quota-vnext="yes"] .cockpit[data-dashboard="home"] .cockpit-provider-grid{gap:4px}
 }
 
+.lab-layout,.lab-main{display:grid;gap:14px;align-items:start}
+.lab-picker p,.lab-step p,.lab-summary p,.lab-summary li{color:var(--muted)}
+.lab-picker p{margin:10px 0}
+.lab-links{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:13px;font-weight:700}
+.lab-main .notice{margin:0}
+.lab-fieldset{border:0;padding:0;margin:0;min-inline-size:0}
+.lab-step{padding:0 14px;margin-bottom:10px}
+.lab-step>summary,.lab-case>summary{padding:12px 0;cursor:pointer;font-weight:760}
+.lab-step p{margin:0 0 10px;font-size:13px}
+.lab-fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,175px),1fr));gap:9px;padding-bottom:14px}
+.lab-case{border-top:1px solid var(--line)}
+.lab-prompt-label{margin:0 0 10px}
+.lab-prompt-label textarea{font-size:13px}
+.lab-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+#lab-save-message{margin:8px 0 0;color:var(--ink)}
+#lab-save-message:empty{margin:0}
+.lab-decision{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.lab-decision h2{font-size:17px;margin:0}
+.lab-summary ul{margin:8px 0;padding-left:18px;font-size:12px}
+.lab-summary li+li{margin-top:5px}
+.lab-metrics{display:grid;gap:7px;margin:12px 0 0}
+.lab-metrics div{display:flex;justify-content:space-between;gap:8px;padding:7px 0;border-top:1px solid var(--line)}
+.lab-metrics dt{color:var(--muted);font-size:12px}
+.lab-metrics dd{margin:0;font-weight:750;text-align:right;overflow-wrap:anywhere}
+@media(min-width:760px){.lab-layout{grid-template-columns:minmax(0,1fr) minmax(235px,31%)}}
 </style>
 <link href="manifest.webmanifest" rel="manifest"/><link href="icon-192.png" rel="icon" type="image/png"/></head>
 <body>
@@ -411,8 +436,8 @@ function validDataset(x){
  return x.quotas.every(q=>q&&typeof q.id==='string'&&q.id.length>0&&typeof q.subId==='string'&&subs.has(q.subId)&&typeof q.model==='string'&&q.model.trim()&&['5h','weekly','custom'].includes(q.window)&& (q.used===''||q.used===null||Number.isFinite(Number(q.used))&&Number(q.used)>=0&&Number(q.used)<=100)&& !(isGrokProvider(subs.get(q.subId).provider)&&q.window==='5h'));
 }
 const statusNames={keep:'Keep','conditional-keep':'Keep while possible','cancel-planned':'Cancel planned',trial:'Trial',cancelled:'Cancelled',unknown:'Unknown'};
-const tabs=[['overview','Home','home'],['quotas','Quotas','sliders'],['subscriptions','Plans','wallet'],['deadlines','Dates','calendar'],['backup','Backup','download']];
-const icons={home:'<path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z"/>',sliders:'<path d="M4 7h16M4 17h16"/><circle cx="9" cy="7" r="2" fill="currentColor" stroke="none"/><circle cx="15" cy="17" r="2" fill="currentColor" stroke="none"/>',wallet:'<rect x="3" y="6" width="18" height="15" rx="2"/><path d="M3 9V5a2 2 0 0 1 2-2h13M16 14h5"/>',calendar:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4M17 3v4M3 10h18"/>',download:'<path d="M12 3v12m-5-5 5 5 5-5M4 17v4h16v-4"/>',plus:'<path d="M12 5v14M5 12h14"/>',edit:'<path d="m4 20 4-.8L19 8.2a2 2 0 0 0-3-3L5 16z"/>',arrow:'<path d="M5 12h14m-6-6 6 6-6 6"/>'};
+const tabs=[['overview','Home','home'],['quotas','Quotas','sliders'],['subscriptions','Plans','wallet'],['deadlines','Dates','calendar'],['lab','Lab','lab'],['backup','Backup','download']];
+const icons={lab:'<path d="M9 3h6m-5 0v7l-5 8a2 2 0 0 0 2 3h10a2 2 0 0 0 2-3l-5-8V3M8 15h8"/>',home:'<path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z"/>',sliders:'<path d="M4 7h16M4 17h16"/><circle cx="9" cy="7" r="2" fill="currentColor" stroke="none"/><circle cx="15" cy="17" r="2" fill="currentColor" stroke="none"/>',wallet:'<rect x="3" y="6" width="18" height="15" rx="2"/><path d="M3 9V5a2 2 0 0 1 2-2h13M16 14h5"/>',calendar:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4M17 3v4M3 10h18"/>',download:'<path d="M12 3v12m-5-5 5 5 5-5M4 17v4h16v-4"/>',plus:'<path d="M12 5v14M5 12h14"/>',edit:'<path d="m4 20 4-.8L19 8.2a2 2 0 0 0-3-3L5 16z"/>',arrow:'<path d="M5 12h14m-6-6 6 6-6 6"/>'};
 const svg=k=>`<svg viewBox="0 0 24 24" aria-hidden="true">${icons[k]||''}</svg>`;
 let tab='overview',query='',category='all',provider='all',sort='default',allDeadlines=false,showAllProviders=false,editor=null,restoreFocus=null,quotaOnboarding=false;
 let overlayMode=null,overlayNext=null,returnToProvider=null;
@@ -561,7 +586,7 @@ function updateSaveStatus(){
  el.dataset.health=bad?'warning':'ok';
  el.innerHTML=`<div class="save-message"><span class="save-indicator ${bad?'attention':''}" aria-hidden="true"></span><div><strong>${title}</strong><p>${tip}</p></div></div>`;
 }
-function changeTab(t){if(!tabs.some(x=>x[0]===t))return;if(t==='quotas'&&tab!=='quotas')cockpitQuotaMode='grid';tab=t;render();window.scrollTo({top:0,behavior:'instant'})}
+function changeTab(t){if(!tabs.some(x=>x[0]===t)||tab==='lab'&&!labCanLeave())return;if(t==='quotas'&&tab!=='quotas')cockpitQuotaMode='grid';tab=t;render();window.scrollTo({top:0,behavior:'instant'})}
 function section(title,small){return `<div class="page-actions"><div class="section-label"><h2>${title}</h2>${small?`<small>${small}</small>`:''}</div></div>`}
 function pageHead(h,p){return `<div class="page-head"><h1>${h}</h1><p>${p}</p></div>`}
 function stat(label,num,detail,isWarn=false){return `<div class="card stat"><div class="label">${escapeHTML(label)}</div><div class="number ${isWarn?'warn':''}">${escapeHTML(num)}</div><div class="detail">${escapeHTML(detail)}</div></div>`}
@@ -722,6 +747,314 @@ function legacyQuotas(){return `${pageHead('Model quotas','5-hour, weekly এব
 function planCard(s){const cl=s.status==='keep'||s.status==='conditional-keep'?'good':s.status==='cancel-planned'?'warn':'',target=s.cancelDate||s.endDate,rel=target?difference(target).text:'';return `<article class="card plan"><div class="plan-top"><h3>${escapeHTML(s.plan)}</h3><span class="inline-tag ${cl} status">${escapeHTML(statusNames[s.status]||s.status)}</span></div><div class="account">${escapeHTML(s.emails)}</div><div class="facts"><div class="fact"><small>Monthly renewal</small><b>${s.renewDay?'Day '+escapeHTML(s.renewDay):'Not specified'}</b></div><div class="fact"><small>${s.cancelDate?'Cancel target':s.endDate?'Trial/access end':'Next decision'}</small><b>${target?escapeHTML(fmtDate(target)):'Not specified'}</b>${target?`<small>${escapeHTML(rel)}</small>`:''}</div></div>${s.credit?`<p class="detail"><strong>Credit note:</strong> ${escapeHTML(s.credit)}</p>`:''}<p class="detail">${escapeHTML(s.memo||'')}</p><div class="plan-actions"><button class="btn sm" data-edit="sub" data-id="${escapeHTML(s.id)}">Edit plan</button><button class="btn sm danger" data-delete="sub" data-id="${escapeHTML(s.id)}">Delete</button></div></article>`}
 function legacyPlans(){return `${pageHead('Subscriptions','কোনটা রাখবেন, কখন renew বা cancel করবেন—সব এক জায়গায়।')}<div class="page-actions"><div class="section-label"><h2>Plan inventory</h2><small>${data.subs.length} plans</small></div><button class="btn primary sm" data-new="sub">${svg('plus')} Add</button></div><div class="notice warn"><strong>Reminder:</strong> Cancel planned ≠ cancelled. Renewal date ≠ access expiry. এই HTML কোনো subscription cancel করে না।</div><div class="plans">${data.subs.map(planCard).join('')}</div>`}
 function legacyDeadlines(){const rows=allEvents(),future=rows.filter(e=>difference(e.date).state!=='expired'),past=rows.filter(e=>difference(e.date).state==='expired');return `${pageHead('Dates & deadlines','Use-before targets, quota resets, renewals এবং cancellation plans।')}<div class="page-actions"><div class="section-label"><h2>Upcoming</h2><small>${future.length} items</small></div><button class="btn sm primary" data-new="milestone">${svg('plus')} Add</button></div><div class="deadline-rows">${(allDeadlines?future:future.slice(0,12)).map(eventRow).join('')||'<div class="empty card">No upcoming dates</div>'}</div>${future.length>12?`<button class="btn full soft" style="margin-top:10px" data-expand-dates="true">${allDeadlines?'Show fewer':'See all '+future.length+' upcoming dates'}</button>`:''}<section class="section-block">${section('Past · needs verification',past.length+' entries')}<div class="deadline-rows">${past.slice(0,allDeadlines?1000:5).map(eventRow).join('')||'<div class="card empty">Nothing to review</div>'}</div>${past.length>5&&!allDeadlines?'<button class="btn full soft" data-expand-dates="true" style="margin-top:9px">Show all past dates</button>':''}</section><section class="section-block">${section('Editable use-before targets','Custom milestones')}<div class="deadline-notes">${data.milestones.map(m=>`<div class="card"><strong>${escapeHTML(m.title)}</strong><div class="muted">${escapeHTML(fmtDate(m.date))} · ${escapeHTML(m.kind)}</div><div class="muted">${escapeHTML(m.note)}</div><div class="button-row"><button class="btn sm" data-edit="milestone" data-id="${escapeHTML(m.id)}">Edit</button><button class="btn sm danger" data-delete="milestone" data-id="${escapeHTML(m.id)}">Delete</button></div></div>`).join('')}</div></section>`}
+// Provider Lab drafts use their own storage. The workbook remains the execution ledger.
+const LAB_STORE='ai-provider-lab-v1:';
+const LAB_WORKBOOK='https://docs.google.com/spreadsheets/d/1p7Q1uHsi6-J4jlG4PXf0pDG9iwO0e4XfmB9_os1nVJ8/edit';
+const LAB_PROTOCOL='https://app.notion.com/p/419b9b7bab6e81569742f59f092e32cc';
+const LAB_PROVIDERS=[
+  {id:'gemini', name:'Google Gemini API', note:'Bangladesh appears in the official region list. Verify the actual account and model quota.'},
+  {id:'groq', name:'GroqCloud', note:'Check the free organization limits and rate-limit headers for the exact model.'},
+  {id:'inferbase', name:'Inferbase', note:'Pin a free-band model. Verify managed inference headroom, the 10 RPM limit and logging/ZDR.'},
+  {id:'openrouter', name:'OpenRouter', note:'Pin and record the served free model and provider. Stay below the 50 RPD free-tier ceiling.'},
+  {id:'cloudflare', name:'Cloudflare Workers AI', note:'Check model billing eligibility and remaining daily Neurons.'},
+  {id:'sambanova', name:'SambaNova Cloud', note:'Use at most 15 of 20 daily requests per model. Keep payment unlinked.'},
+  {id:'cohere', name:'Cohere', note:'Confirm evaluation key entitlement and trial limits for the exact model.'},
+  {id:'nevermetered', name:'NeverMetered', note:'Run serially, with one stream at a time. Check the shared 20-per-day allowance.'},
+  {id:'vercel', name:'Vercel AI Gateway', note:'Select an eligible $0 model. Record any included credit burn separately.'},
+  {id:'aihubmix', name:'AIHubMix', note:'Smoke only. Use at most 5 of the 10 lifetime trial calls and preserve the rest.', smokeOnly:true}
+];
+const LAB_TASKS=[
+  'Estimate toy Alpha API cost from input/output token counts',
+  'Compare 2024 and 2026 toy prices',
+  'Beta model listed without effort metadata',
+  'Secondary source reproduces AA number',
+  'Source URL dead',
+  'No Bangladesh listing for route',
+  'Subscription active but API access unknown',
+  'Benchmark row has Default Fallback',
+  'No Bengali benchmark score published',
+  'Two cost/task tables differ by method and time'
+];
+const LAB_CASES=LAB_TASKS.map((task,i)=>({id:'P'+String(i+1).padStart(2,'0'),task}));
+const LAB_RUBRIC=[['accuracy','Accuracy',2],['evidence','Evidence',1],['output','Required output',1],['safety','Uncertainty / privacy / safety',1]];
+const LAB_PREFLIGHT=[
+  ['eligibility','BD-01 · Genuine Bangladesh account'],
+  ['quota','Q-01 · Exact account quota and reset'],
+  ['privacy','P-PRIV · Terms allow synthetic-only tests'],
+  ['payment','No card, top-up, auto-recharge or paid fallback']
+];
+const LAB_SMOKE=[
+  ['plain','R-PLAIN · Response and exact served model'],
+  ['stream','R-STREAM · Complete stream and clean close'],
+  ['json','R-JSON · Fixed JSON schema passes'],
+  ['tool','R-TOOL · Local mock arguments, ID and final result']
+];
+const LAB_GATE_OPTIONS=[['','Unknown / not checked'],['pass','Pass'],['hold','Hold / failed']];
+const LAB_SOURCE_OPTIONS=[['','Unknown'],['requests','Requests'],['tokens','Tokens'],['neurons','Neurons']];
+const LAB_ID_PATTERN='[A-Za-z0-9][A-Za-z0-9._-]{0,63}';
+const LAB_MODEL_PATTERN='@?[A-Za-z0-9][A-Za-z0-9._:/+-]{0,118}';
+const LAB_FIELDS={
+  run:{pattern:LAB_ID_PATTERN}, model:{pattern:LAB_MODEL_PATTERN}, route:{pattern:LAB_MODEL_PATTERN},
+  effort:{pattern:LAB_ID_PATTERN}, preflightRef:{pattern:LAB_ID_PATTERN}, smokeRef:{pattern:LAB_ID_PATTERN},
+  smokeCalls:{max:6,integer:true}, repeatCalls:{max:6,integer:true},
+  cohort:{options:[['','Not selected / unknown'],['yes','Selected among the top three']]},
+  reliability:{options:LAB_GATE_OPTIONS},
+  cash:{max:1e9}, credit:{max:1e9}, quotaUnits:{max:1e12}, quotaType:{options:LAB_SOURCE_OPTIONS},
+  seconds:{max:1e9}, reviewRef:{pattern:LAB_ID_PATTERN}
+};
+for(const [key] of [...LAB_PREFLIGHT,...LAB_SMOKE])LAB_FIELDS[key]={options:LAB_GATE_OPTIONS};
+for(const {id} of LAB_CASES){
+  for(const [key,,max] of LAB_RUBRIC)
+    LAB_FIELDS[id+key]={options:[['','—'],...Array.from({length:max+1},(_,i)=>[String(i),String(i)])]};
+  LAB_FIELDS[id+'critical']={options:[['','Unknown'],['no','No'],['yes','Yes']]};
+  LAB_FIELDS[id+'ref']={pattern:LAB_ID_PATTERN};
+}
+const looksLikeLabSecret=value=>/^(?:bearer|sk[-_]|AIza|ghp_|github_pat_|gsk_|hf_|eyJ)|:\/\//i.test(value);
+function labValueValid(key,value){
+  if(typeof value!=='string')return false;
+  if(value==='')return true;
+  const spec=LAB_FIELDS[key];
+  if(spec.options)return spec.options.some(([option])=>option===value);
+  if(spec.pattern)return new RegExp('^(?:'+spec.pattern+')$').test(value)&&!looksLikeLabSecret(value);
+  return /^\d+(?:\.\d+)?$/.test(value)&&Number(value)<=spec.max&&(!spec.integer||Number.isInteger(Number(value)));
+}
+function labRoutePinned(draft){
+  const pinned=['run','model','route','effort'].every(key=>draft[key]&&!/^(?:unknown|unverified|auto)$/i.test(draft[key]));
+  const routed=['model','route'].some(key=>/^(?:openrouter\/(?:free|auto))$/i.test(draft[key]));
+  return pinned&&!routed;
+}
+function providerLabDecision(provider,draft){
+  const preflight=LAB_PREFLIGHT.every(([key])=>draft[key]==='pass')&&Boolean(draft.preflightRef)&&labRoutePinned(draft);
+  const cap=provider.smokeOnly?5:6;
+  const smokeCalls=Number(draft.smokeCalls);
+  const smoke=LAB_SMOKE.every(([key])=>draft[key]==='pass')&&Boolean(draft.smokeRef)&&smokeCalls>=5&&smokeCalls<=cap;
+  const cashKnown=draft.cash!=='';
+  const unsafe=cashKnown&&Number(draft.cash)>0;
+  const hasCaseBudget=smokeCalls+LAB_CASES.length<=15;
+  const qualityReady=preflight&&smoke&&hasCaseBudget&&!unsafe&&!provider.smokeOnly&&draft.cohort==='yes';
+  let accepted=0, scored=0, critical=0;
+  for(const {id} of LAB_CASES){
+    const scores=LAB_RUBRIC.map(([key])=>draft[id+key]);
+    const outcome=draft[id+'critical'];
+    if(outcome==='yes')critical++;
+    if(scores.some(score=>score==='')||!outcome||!draft[id+'ref'])continue;
+    scored++;
+    if(outcome==='no'&&scores.reduce((total,score)=>total+Number(score),0)>=4)accepted++;
+  }
+  const measured=['cash','credit','quotaUnits','quotaType','seconds','reviewRef'].every(key=>draft[key]!=='');
+  const reasons=[];
+  if(!preflight)reasons.push('Clear account, quota, privacy and payment checks with a pinned route and evidence reference.');
+  if(unsafe)reasons.push('Cash charge recorded. Stop the run and reconcile billing.');
+  if(smokeCalls>cap)reasons.push('Smoke call budget exceeded.');
+  if(!smoke)reasons.push('Record all four smoke results and the actual smoke call count.');
+  if(provider.smokeOnly)reasons.push('AIHubMix is smoke-only for this pilot.');
+  else {
+    if(draft.cohort!=='yes')reasons.push('Select the eligible benchmark cohort after smoke review.');
+    if(!hasCaseBudget)reasons.push('A six-call smoke run leaves fewer than ten requests in the initial 15-call budget.');
+    if(critical)reasons.push('Critical failure recorded.');
+    if(scored<LAB_CASES.length||accepted<8)reasons.push('Score all ten cases. At least eight must be accepted.');
+    if(draft.reliability!=='pass'||Number(draft.repeatCalls)!==6)reasons.push('Record six bounded reliability repeats across the protocol’s separate days.');
+    if(!measured)reasons.push('Record actual cash, credit, quota units, elapsed time and the review evidence reference.');
+  }
+  const status=Object.values(draft).every(value=>value==='')?'NOT RUN':reasons.length?'HOLD':'PASS';
+  return {status,reasons,scored,accepted,critical,qualityReady};
+}
+function providerLabPrompt({id,task}){
+  return `You are being evaluated on a fictional or public-source task. Use ONLY the given FIXTURE as factual evidence. Do not invent references, page numbers, approvals, clinical facts or source URLs. Do not browse, execute code, edit Notion/GitHub, upload data or contact external services. Where evidence is absent write NOT_IN_SOURCE or UNVERIFIED. Respond in Bengali with English technical terms kept intact.
+CASE ID: ${id}
+FIXTURE: Toy catalogue dated 2026-11-01: Alpha model medium, API input $2/M tokens and output $10/M tokens; toy older document 2024-06-01 says $1/$4. Beta model is listed but effort and Bangladesh eligibility omitted. All prices invented for testing, not real offers.
+TASK: ${task}
+OUTPUT:
+Verdict:
+Exact evidence / section:
+Unknown / limitations:
+Safety or authorization gate:
+Final answer:`;
+}
+let labProvider=LAB_PROVIDERS[0], labRaw=null, labReadError=false;
+const emptyLabDraft=()=>Object.fromEntries(Object.keys(LAB_FIELDS).map(key=>[key,'']));
+function readLabDraft(){
+  labReadError=false;
+  if(fileMode||sharedGitHubOrigin)return emptyLabDraft();
+  try {
+    labRaw=localStorage.getItem(LAB_STORE+labProvider.id);
+    if(labRaw===null)return emptyLabDraft();
+    const draft=JSON.parse(labRaw);
+    if(!draft||Object.keys(draft).length!==Object.keys(LAB_FIELDS).length||
+        !Object.keys(LAB_FIELDS).every(key=>labValueValid(key,draft[key])))throw Error('Invalid Lab draft');
+    return draft;
+  }catch(_){
+    labReadError=true;
+    return emptyLabDraft();
+  }
+}
+function labControl(key,label,draft){
+  const spec=LAB_FIELDS[key], value=escapeHTML(draft[key]);
+  let input;
+  if(spec.options){
+    input=`<select name="${key}">${spec.options.map(([v,text])=>`<option value="${v}" ${v===value?'selected':''}>${text}</option>`).join('')}</select>`;
+  }else if(spec.pattern){
+    input=`<input name="${key}" value="${value}" autocomplete="off" autocapitalize="off" spellcheck="false" maxlength="${spec.pattern===LAB_ID_PATTERN?64:120}">`;
+  }else {
+    input=`<input name="${key}" type="number" inputmode="${spec.integer?'numeric':'decimal'}" min="0" max="${spec.max}" step="${spec.integer?'1':'any'}" value="${value}">`;
+  }
+  return `<label class="formlabel">${label}${input}</label>`;
+}
+function labDecisionHTML(draft,decision){
+  const {status,reasons,scored,accepted,critical}=decision;
+  const rate=key=>draft[key]===''||accepted===0?'—':(Number(draft[key])/accepted).toLocaleString('en',{maximumSignificantDigits:8});
+  return `<div class="lab-decision"><h2>Saved decision</h2><strong class="inline-tag ${status==='PASS'?'good':status==='HOLD'?'warn':''}" id="lab-decision-status">${status}</strong></div>
+  <p>${accepted}/10 accepted · ${scored}/10 scored · ${critical} critical</p>
+  ${status==='HOLD'?`<ul>${reasons.map(reason=>`<li>${reason}</li>`).join('')}</ul>`:''}
+  <dl class="lab-metrics">
+    <div><dt>Cash USD / accepted</dt><dd>${rate('cash')}</dd></div>
+    <div><dt>Credit USD / accepted</dt><dd>${rate('credit')}</dd></div>
+    <div><dt>Quota / accepted</dt><dd>${draft.quotaType&&draft.quotaUnits!==''&&accepted?rate('quotaUnits')+' '+draft.quotaType:'—'}</dd></div>
+  </dl>`;
+}
+function providerLab(){
+  const draft=readLabDraft(), decision=providerLabDecision(labProvider,draft);
+  const blocked=fileMode||sharedGitHubOrigin||labReadError;
+  const control=(key,label)=>labControl(key,label,draft);
+  return `${pageHead('Provider Qualification Lab','Record observed results for the Bangladesh provider pilot. This lab stores a local draft and makes no provider calls.')}
+  <div class="lab-layout">
+    <div class="lab-main">
+      <div class="card pad lab-picker">
+        <label class="formlabel">Provider
+          <select id="lab-provider">${LAB_PROVIDERS.map(p=>`<option value="${p.id}" ${p.id===labProvider.id?'selected':''}>${p.name}</option>`).join('')}</select>
+        </label>
+        <p>${labProvider.note}</p>
+        <div class="lab-links"><a href="${LAB_WORKBOOK}" target="_blank" rel="noopener noreferrer">Canonical Sheet ↗</a><a href="${LAB_PROTOCOL}" target="_blank" rel="noopener noreferrer">Frozen P01–P10 protocol ↗</a></div>
+      </div>
+      <p class="notice" id="lab-privacy">Use synthetic prompts and opaque IDs for redacted evidence. Keep raw responses with the reviewer. Never enter credentials, account identifiers or confidential data. Transcribe reviewed evidence into the Sheet’s Execution Log.</p>
+      ${blocked?`<p class="notice warn" role="status">${labReadError?'This local Lab draft could not be read. Saving is disabled to protect the stored copy.':'Draft storage requires an isolated HTTP(S) origin. Open the app on its dedicated host.'}</p>`:''}
+      <form id="lab-form" autocomplete="off" aria-describedby="lab-privacy" novalidate>
+        <fieldset class="lab-fieldset" ${blocked?'disabled':''}>
+          <details class="card lab-step" open>
+            <summary>S0 · Account, quota and privacy</summary>
+            <div class="lab-fields">
+              ${control('run','Run ID')}${control('model','Exact served model ID')}${control('route','Exact route / provider ID')}${control('effort','Effort or N/A')}
+              ${LAB_PREFLIGHT.map(([key,label])=>control(key,label)).join('')}
+              ${control('preflightRef','Redacted preflight evidence ID')}
+            </div>
+          </details>
+          <details class="card lab-step">
+            <summary>S1–S2 · Smoke and local tool checks</summary>
+            <p>Run externally only after S0 clears. Use the canonical Sheet’s fixed synthetic smoke checks and local mock tools. Up to ${labProvider.smokeOnly?'5 total smoke calls':'6 smoke calls, within the initial 15-call pilot budget'}. Stop on unexpected charges, unclear terms or exhausted quota.</p>
+            <div class="lab-fields">
+              ${LAB_SMOKE.map(([key,label])=>control(key,label)).join('')}
+              ${control('smokeCalls','Actual smoke calls used')}${control('smokeRef','Redacted smoke evidence ID')}
+              ${labProvider.smokeOnly?'':control('cohort','Benchmark cohort after smoke review')}
+            </div>
+          </details>
+          ${labProvider.smokeOnly?'':`<details class="card lab-step">
+            <summary>S3 · Frozen P01–P10</summary>
+            <p id="lab-quality-hint">${decision.qualityReady?'Use fresh sessions. Give the model only the prompt, then score with the separate reviewer rubric.':'Save passing preflight, smoke and cohort records to unlock case entry.'}</p>
+            <fieldset id="lab-quality" class="lab-fieldset" ${decision.qualityReady?'':'disabled'}>
+              <label class="formlabel lab-prompt-label">Prompt to give the model
+                <select id="lab-prompt-case">${LAB_CASES.map(({id})=>`<option>${id}</option>`).join('')}</select>
+              </label>
+              <label class="formlabel lab-prompt-label">Frozen prompt text
+                <textarea id="lab-prompt" rows="5" readonly spellcheck="false">${escapeHTML(providerLabPrompt(LAB_CASES[0]))}</textarea>
+              </label>
+              ${LAB_CASES.map(({id,task})=>`<details class="lab-case"><summary>${id} · ${task}</summary><div class="lab-fields">
+                ${LAB_RUBRIC.map(([key,label])=>control(id+key,label)).join('')}
+                ${control(id+'critical','Critical failure')}${control(id+'ref','Redacted result evidence ID')}
+              </div></details>`).join('')}
+            </fieldset>
+          </details>`}
+          <details class="card lab-step">
+            <summary>Run metrics${labProvider.smokeOnly?'':' and reliability'}</summary>
+            <p>Use actual whole-run totals. Blank means unknown, and zero means observed zero.${labProvider.smokeOnly?'':' Repeat only eligible leading routes with headroom, per the Sheet.'}</p>
+            <div class="lab-fields">
+              ${control('cash','Cash billed (USD)')}${control('credit','Free credit consumed (USD)')}
+              ${control('quotaUnits','Primary quota consumed')}${control('quotaType','Primary quota unit')}
+              ${control('seconds','Elapsed time (seconds)')}
+              ${labProvider.smokeOnly?'':control('reliability','Reliability result')+control('repeatCalls','Actual reliability repeat calls')}
+              ${control('reviewRef','Redacted metrics / review evidence ID')}
+            </div>
+          </details>
+          <div class="lab-actions">
+            <button type="submit" class="btn primary">Save draft</button>
+            <button type="button" class="btn" id="lab-clear" ${labRaw===null?'disabled':''}>Clear saved draft</button>
+          </div>
+        </fieldset>
+        <p id="lab-save-message" role="status"></p>
+      </form>
+    </div>
+    <aside class="card pad lab-summary" id="lab-summary" aria-live="polite">${labDecisionHTML(draft,decision)}</aside>
+  </div>`;
+}
+function labFormDraft(form){
+  return Object.fromEntries(Object.keys(LAB_FIELDS).map(key=>[key,form.elements.namedItem(key)?.value.trim()??'']));
+}
+function labCanLeave(){
+  const form=$('#lab-form');
+  if(!form||fileMode||sharedGitHubOrigin||labReadError)return true;
+  const stored=labRaw===null?emptyLabDraft():JSON.parse(labRaw);
+  const draft=labFormDraft(form);
+  return Object.keys(stored).every(key=>stored[key]===draft[key])||confirm('Discard unsaved Provider Lab changes?');
+}
+function saveLabDraft(form){
+  const message=$('#lab-save-message');
+  if(fileMode||sharedGitHubOrigin||labReadError)return;
+  const draft=labFormDraft(form);
+  const invalid=Object.keys(draft).find(key=>form.elements.namedItem(key)?.validity.badInput||!labValueValid(key,draft[key]));
+  if(invalid){
+    const input=form.elements.namedItem(invalid);
+    input.closest('details').open=true;
+    input.focus();
+    message.textContent='Draft not saved. Check the highlighted value. Use short identifiers, never credentials or URLs.';
+    return;
+  }
+  const old=labRaw===null?emptyLabDraft():JSON.parse(labRaw);
+  const hasResults=[...LAB_SMOKE.map(([key])=>key),'smokeCalls',...LAB_CASES.map(({id})=>id+'ref')].some(key=>old[key]!=='');
+  if(hasResults&&['run','model','route','effort'].some(key=>old[key]&&draft[key]!==old[key])){
+    message.textContent='Draft not saved. Clear the saved draft before changing the run, pinned model, route or effort.';
+    return;
+  }
+  const raw=JSON.stringify(draft), key=LAB_STORE+labProvider.id;
+  try {
+    if(localStorage.getItem(key)!==labRaw){
+      message.textContent='Draft changed in another tab. Reopen the Lab before saving.';
+      return;
+    }
+    localStorage.setItem(key,raw);
+    if(localStorage.getItem(key)!==raw)throw Error('Readback failed');
+  }catch(_){
+    message.textContent='Draft could not be saved reliably. Keep this tab open and check browser storage.';
+    return;
+  }
+  labRaw=raw;
+  const decision=providerLabDecision(labProvider,draft);
+  $('#lab-summary').innerHTML=labDecisionHTML(draft,decision);
+  const quality=$('#lab-quality');
+  if(quality){
+    quality.disabled=!decision.qualityReady;
+    $('#lab-quality-hint').textContent=decision.qualityReady?'Use fresh sessions. Give the model only the prompt, then score with the separate reviewer rubric.':'Save passing preflight, smoke and cohort records to unlock case entry.';
+  }
+  $('#lab-clear').disabled=false;
+  message.textContent='Draft saved in this browser. Decision: '+decision.status+'.';
+}
+function clearLabDraft(){
+  if(fileMode||sharedGitHubOrigin||labReadError||labRaw===null||!confirm('Clear this provider’s saved Lab draft? Preserve reviewed evidence in the canonical Sheet first.'))return;
+  const key=LAB_STORE+labProvider.id, message=$('#lab-save-message');
+  try {
+    if(localStorage.getItem(key)!==labRaw){
+      message.textContent='Draft changed in another tab. Reopen the Lab before clearing.';
+      return;
+    }
+    localStorage.removeItem(key);
+    if(localStorage.getItem(key)!==null)throw Error('Readback failed');
+  }catch(_){
+    message.textContent='Draft could not be cleared reliably. Check browser storage.';
+    return;
+  }
+  render();
+  $('#lab-provider').focus();
+  $('#lab-save-message').textContent='Saved Lab draft cleared.';
+}
+
 function backup(){return `${pageHead('Backup & settings','Import private data only after hosting on a dedicated origin.')}<div class="notice"><strong>${sharedGitHubOrigin?'PRIVATE IMPORT ON HOLD — shared GitHub origin':'One-time setup — isolated hostname required'}:</strong> ${sharedGitHubOrigin?'This github.io address shares its storage origin with other projects. No private account data should be imported here. Use a dedicated Firebase web.app site first.':'Before importing sensitive details, confirm this site has its own hostname and no untrusted scripts. Save remains browser-local; no per-edit HTML downloads.'}</div><div class="backup-grid"><div class="card help"><h3>Private data / one-time import</h3><p>Use file import or paste JSON. Both use the same validation. <strong>Existing records will be replaced.</strong> Export a JSON backup before replacing anything. Do not put private JSON in GitHub, Firebase assets or public logs.</p><div class="button-row"><button class="btn primary" data-action="exportJSON">Export private JSON backup</button><button class="btn" data-action="import" ${sharedGitHubOrigin?'disabled title="Blocked on shared GitHub Pages origin"':''}>Import JSON (replaces all)</button></div><label for="pasteJSON" class="paste-label">Alternatively, paste JSON privately in this browser:</label><textarea id="pasteJSON" rows="5" maxlength="5000000" placeholder="Paste a JSON backup here (not on the shared GitHub origin)" autocomplete="off" autocapitalize="off" spellcheck="false" ${sharedGitHubOrigin?'disabled':''}></textarea><button class="btn" data-action="pasteImport" ${sharedGitHubOrigin?'disabled title="Blocked on shared GitHub Pages origin"':''}>Validate & import pasted JSON</button><p class="help-note">Paste will be cleared after processing. Clipboard history may retain copied text; prefer file import when available.</p></div><div class="card help"><h3>Storage & recovery</h3><p>Chrome must allow site storage. Use the same exact website address and avoid incognito. Do not clear this site's data. An occasional JSON backup is recommended before browser reset, phone replacement or SSD migration.</p><p>Last edit: ${escapeHTML(data.meta.updated||'Not yet edited')} · Version ${VERSION}</p><button class="btn danger" data-action="reset">Reset all personal data</button></div><div class="card help"><h3>Quota tracking rules</h3><details open><summary>ChatGPT / Claude</summary><p>5-hour window tracked as usage-triggered per your convention, not auto-advanced.</p></details><details><summary>Gemini</summary><p>5-hour estimated rolling projection applies only when enabled; not a live provider guarantee.</p></details><details><summary>Grok</summary><p>Weekly and Bot custom limits only; no 5-hour limit added.</p></details></div><div class="card help"><h3>Privacy and limitations</h3><p>The hosted app code is publicly accessible, but no personal quota data is included in it. Browser storage is device/browser-specific, not cloud sync. It can be lost if site data is cleared or Chrome is reset.</p><p>There is no automatic provider quota API and this app cannot cancel subscriptions or send background notifications.</p></div></div>`}
 function compactQuotaCard(q){
  const s=subFor(q),used=q.used===''||q.used===null?'Unknown':Number(q.used)+'% used',reset=nextReset(q);
@@ -740,7 +1073,7 @@ function render(){
   nav();
   let view;
   try {
-    view=recoveryRequired?recoveryPage():(tab==='overview'?overview():tab==='quotas'?quotas():tab==='subscriptions'?plans():tab==='deadlines'?deadlines():backup());
+    view=recoveryRequired?recoveryPage():(tab==='overview'?overview():tab==='quotas'?quotas():tab==='subscriptions'?plans():tab==='deadlines'?deadlines():tab==='lab'?providerLab():backup());
   } catch(error) {
     // Non-destructive exception boundary; never reset, save, or rewrite storage.
     view=homeRenderFailure(error);
@@ -807,7 +1140,8 @@ function doAction(which){
 $('#navigation').addEventListener('click',e=>{const b=e.target.closest('button[data-tab]');if(b)changeTab(b.dataset.tab)});
 $('#appview').addEventListener('click',e=>{
   const b=e.target.closest('button');if(!b)return;
-  if(b.dataset.openProvider)visualDialog('provider',b.dataset.openProvider);
+  if(b.id==='lab-clear')clearLabDraft();
+  else if(b.dataset.openProvider)visualDialog('provider',b.dataset.openProvider);
    else if(b.dataset.openPlan)visualDialog('plan',b.dataset.openPlan);
    else if(b.dataset.quotaList){cockpitQuotaMode=b.dataset.quotaList;render()}
    else if(b.dataset.dateMode){cockpitDateMode=b.dataset.dateMode;render()}
@@ -846,6 +1180,23 @@ $('#appview').addEventListener('click',e=>{
 });
 $('#appview').addEventListener('input',e=>{if(e.target.id==='quotaSearch'){query=e.target.value;renderQuotaList()}else if(e.target.id==='homeSearch'){homeQuery=e.target.value;showAllProviders=false;refreshHomeResults()}});
 $('#appview').addEventListener('change',e=>{if(e.target.id==='providerFilter'){provider=e.target.value;renderQuotaList()}else if(e.target.id==='sortFilter'){sort=e.target.value;renderQuotaList()}});
+$('#appview').addEventListener('submit',event=>{
+  if(event.target.id!=='lab-form')return;
+  event.preventDefault();
+  saveLabDraft(event.target);
+});
+$('#appview').addEventListener('change',event=>{
+  const input=event.target;
+  if(input.id==='lab-provider'){
+    if(!labCanLeave()){input.value=labProvider.id;return;}
+    labProvider=LAB_PROVIDERS.find(p=>p.id===input.value)||LAB_PROVIDERS[0];
+    render();
+    $('#lab-provider').focus();
+  }else if(input.id==='lab-prompt-case'){
+    const selected=LAB_CASES.find(c=>c.id===input.value);
+    if(selected)$('#lab-prompt').value=providerLabPrompt(selected);
+  }
+});
 const cockpitDialog=$('#cockpitDialog');
  cockpitDialog.addEventListener('cancel',e=>{if(overlayMode==='dialog'){e.preventDefault();releaseOverlay()}});
  cockpitDialog.addEventListener('click',e=>{

@@ -6,6 +6,14 @@ A mobile-first manual AI quota tracker. Not a provider API, automatic quota upda
 
 **First-use order:** create a Plan (subscription) before adding a quota. When none exist, Quotas → Add guides the user to create a Plan and resumes the quota form after the Plan is saved. This does not change the JSON data schema.
 
+## Provider Qualification Lab
+
+Open **Lab** to record a manual Bangladesh provider pilot. The provider order, eligibility and quota checks, smoke tests, and benchmark rules come from the [canonical Sheet](https://docs.google.com/spreadsheets/d/1p7Q1uHsi6-J4jlG4PXf0pDG9iwO0e4XfmB9_os1nVJ8/edit). Use the [original P01–P10 protocol](https://app.notion.com/p/419b9b7bab6e81569742f59f092e32cc) to score. The prompt box contains the fictional fixture and exact case task, with the expected-answer column kept in Notion.
+
+Save one working draft per provider in this browser. Record the actual pinned model, route, effort, outcomes, totals and redacted evidence IDs. Clear the draft before switching runs. Use the Sheet’s **Execution Log** for reviewed, row-level records. Lab drafts are stored under `ai-provider-lab-v1:` and are outside the quota backup/import/reset flow. Use an isolated HTTP(S) origin. Browser storage is local plaintext and can be lost if cleared.
+
+The Lab makes no API calls and has no credentials or raw response fields. Use synthetic inputs for externally observed tests. The saved decision is based on manual entries. A blank economy metric is unknown. PASS requires completed preflight and smoke, a permitted benchmark route, at least 8/10 accepted with no critical failures, reliability and measured economics. AIHubMix is limited to five smoke calls. A sixth smoke call leaves too little capacity for all ten cases in the initial 15-call budget.
+
 ## Batch A mobile Home UX (v3.1.0 review candidate)
 
 Home search/clear and filters (All, Pinned, Reset ≤24h, Overdue, Weekly, 5-hour); independent provider pinning and Quick/Comfortable display density; safe provider quick actions (single pool edit, multiple pool details, zero-pool Add). UI preferences use a separate optional local key `ai-quota-ui-preferences-v1`, and are **not included in private JSON backup**; no provider quota schema or main key `ai-quota-control-center-v1` changes. Browser storage can fail; preferences then apply for this session only, and the interface discloses this. No background notifications or provider API sync.

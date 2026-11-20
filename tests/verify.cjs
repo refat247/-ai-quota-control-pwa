@@ -58,3 +58,62 @@ assert.ok(rootRule?.headers.some(h=>h.key==='Cache-Control'&&h.value==='no-cache
 console.log('PASS: versions, privacy smoke, valid asset references, JS syntax, Firebase deployment boundary');
 // A109 repair source invariants. Chromium covers rendered UX separately.
 for(const phrase of ['function rankedQuotas(', 'function compactQuotaCard(', 'data-date-shift', 'id="sheetError"', 'maxHiddenUsed('])assert.ok(html.includes(phrase),'A109 missing '+phrase);
+
+// Run the decision and prompt logic from the actual hosted HTML.
+const vm=require('node:vm');
+const labStart=html.indexOf("const LAB_STORE=");
+const labEnd=html.indexOf("let labProvider=",labStart);
+assert.ok(labStart>=0&&labEnd>labStart);
+const lab=vm.runInNewContext(html.slice(labStart,labEnd)+
+  '({LAB_FIELDS,LAB_PROVIDERS,LAB_CASES,LAB_RUBRIC,labValueValid,providerLabDecision,providerLabPrompt})');
+const {LAB_FIELDS,LAB_PROVIDERS,LAB_CASES,LAB_RUBRIC,labValueValid,providerLabDecision,providerLabPrompt}=lab;
+const [gemini]=LAB_PROVIDERS, mixed=LAB_PROVIDERS.at(-1);
+assert.deepEqual(Array.from(LAB_PROVIDERS,p=>p.name),[
+  'Google Gemini API','GroqCloud','Inferbase','OpenRouter','Cloudflare Workers AI',
+  'SambaNova Cloud','Cohere','NeverMetered','Vercel AI Gateway','AIHubMix'
+]);
+const fresh=Object.fromEntries(Object.keys(LAB_FIELDS).map(key=>[key,'']));
+assert.equal(providerLabDecision(gemini,fresh).status,'NOT RUN');
+const qualified={
+  ...fresh,run:'synth-run',model:'model-1',route:'synthetic/free',effort:'medium',
+  eligibility:'pass',quota:'pass',privacy:'pass',payment:'pass',preflightRef:'synth-s0',
+  plain:'pass',stream:'pass',json:'pass',tool:'pass',smokeCalls:'5',smokeRef:'synth-smoke',
+  cohort:'yes',reliability:'pass',repeatCalls:'6',cash:'0',credit:'0.08',quotaUnits:'21',
+  quotaType:'requests',seconds:'50',reviewRef:'synth-review'
+};
+for(const [i,c] of LAB_CASES.entries()){
+  assert.equal(c.id,'P'+String(i+1).padStart(2,'0'));
+  const prompt=providerLabPrompt(c);
+  assert.ok(prompt.includes('CASE ID: '+c.id)&&prompt.includes('TASK: '+c.task+'\nOUTPUT:'));
+  assert.ok(prompt.includes('All prices invented for testing, not real offers.'));
+  assert.doesNotMatch(prompt,/SOURCE_UNVERIFIED|ELIGIBILITY_UNVERIFIED|Expected reviewer evidence/);
+  for(const [key,,max] of LAB_RUBRIC)qualified[c.id+key]=String(i<8?max:0);
+  qualified[c.id+'critical']='no';
+  qualified[c.id+'ref']='synth-'+c.id;
+}
+const end=providerLabDecision(gemini,qualified);
+assert.equal(end.status,'PASS');
+assert.equal(end.accepted,8);
+assert.equal(end.scored,10);
+assert.equal(end.critical,0);
+for(const change of [
+  {eligibility:''},{privacy:'hold'},{payment:'hold'},{stream:'hold'},{tool:''},{model:'auto'},{route:'openrouter/free'},
+  {cash:''},{cash:'0.01'},{credit:''},{quotaType:''},{reviewRef:''},
+  {cohort:''},{reliability:''},{repeatCalls:'5'},{P10ref:''},{P10critical:'yes'},
+  {P01accuracy:'0'},{smokeCalls:'6'}
+])assert.equal(providerLabDecision(gemini,{...qualified,...change}).status,'HOLD',JSON.stringify(change));
+assert.equal(providerLabDecision(gemini,{...qualified,smokeCalls:'6'}).qualityReady,false);
+assert.equal(providerLabDecision(mixed,qualified).status,'HOLD');
+assert.equal(providerLabDecision(mixed,qualified).qualityReady,false);
+assert.match(providerLabDecision(mixed,{...qualified,smokeCalls:'6'}).reasons.join(' '),/budget exceeded/);
+assert.equal(labValueValid('cash','0'),true);
+assert.equal(labValueValid('cash',''),true);
+assert.equal(labValueValid('cash','-1'),false);
+assert.equal(labValueValid('smokeCalls','5.5'),false);
+assert.equal(labValueValid('P01accuracy','3'),false);
+assert.equal(labValueValid('model','@cf/toy/model'),true);
+assert.equal(labValueValid('model','example@example.test'),false);
+assert.equal(labValueValid('run','<img>'),false);
+assert.equal(labValueValid('preflightRef','https://example.test/?token=example'),false);
+assert.equal(labValueValid('preflightRef','sk-demonstration'),false);
+console.log('PASS: Lab shortlist, prompts, scoring, HOLD gates, budgets and known/unknown inputs');
