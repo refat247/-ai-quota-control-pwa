@@ -1,10 +1,20 @@
 # AI Quota Control PWA
 
-**Version:** 3.3.1 · **Status:** Claude A109 visual repair branch, not merged/deployed. Firebase live remains v3.3.0 (run #44277881446, SHA 67afe49a). Owner Android data acceptance and independent backup still unverified. Shared GitHub Pages import/edit HOLD.
+**Version:** 3.3.1 · **Status:** Provider Qualification Lab hardening candidate on `feat/provider-qualification-lab-v0.1.0`; not merged/deployed. Firebase live remains v3.3.0. Owner Android data acceptance and independent backup still unverified. Shared GitHub Pages import/edit HOLD.
 
 A mobile-first manual AI quota tracker. Not a provider API, automatic quota update, paid subscription sync, or alert service.
 
 **First-use order:** create a Plan (subscription) before adding a quota. When none exist, Quotas → Add guides the user to create a Plan and resumes the quota form after the Plan is saved. This does not change the JSON data schema.
+
+## Provider Qualification Lab
+
+Open **Lab** to manually record the Bangladesh provider pilot. The canonical Sheet contains the ten-provider shortlist, quota rules, smoke protocol, Execution Log and cost-per-accepted-task formulas. The frozen Notion protocol supplies P01–P10, fixtures and reviewer rubric. The app makes **no provider API calls** and never stores credentials or raw model responses.
+
+The Lab records exact **requested model** and **served model** separately, route, effort (including `N/A`), account/quota/privacy preflight, five smoke checks (R-PLAIN, R-STREAM, R-JSON, R-TOOL, R-AGENT), aggregate request count, redacted evidence references and actual economics. R-AGENT records its evidence and 1–3 model turns. The shared same-origin cohort registry caps P01–P10 selection at **three providers maximum** and requires a canonical Sheet evidence ID. It is a browser-local convenience gate, not a cross-device or server-enforced source of truth; reconcile it with the canonical Sheet.
+
+**Important budget hold:** the frozen protocol's smoke-test definitions may exceed the six-call smoke ceiling when counted as separate model requests. P01–P10 also needs ten requests inside the initial 15-call allowance, leaving at most five smoke requests. No owner-approved, versioned budget reconciliation is configured in this build. A user-entered reference ID alone cannot unlock P01–P10; the exact owner-approved ID must be configured in a later build after the decision is documented. Do not run provider tests or infer overlapping requests until then.
+
+The displayed result is **NOT RUN**, **HOLD**, or **MANUAL PASS — REVIEW PENDING**. A manual status is not an independently verified qualification. AIHubMix remains smoke-only (maximum five of ten lifetime trial calls). Use synthetic prompts, opaque evidence IDs and a dedicated isolated HTTP(S) origin. Lab drafts and the cohort registry are separate local browser storage keys and are outside the quota JSON backup/import/reset flow; browser storage is plaintext and device-specific.
 
 ## Batch A mobile Home UX (v3.1.0 review candidate)
 

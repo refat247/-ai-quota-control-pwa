@@ -25,6 +25,70 @@ def open_home_filters(page):
     if not page.locator('#cockpitFilters').evaluate('(e)=>e.open'):
         page.locator('#cockpitFilters summary').click()
 
+LAB_STORE = 'ai-provider-lab-v1:gemini'
+
+def open_lab(page):
+    page.locator('button[data-tab="lab"]').click()
+    assert page.get_by_role('heading', name='Provider Qualification Lab').is_visible()
+    assert page.evaluate('document.documentElement.scrollWidth <= window.innerWidth')
+
+def lab_flow(page):
+    open_lab(page)
+    form=page.locator('#lab-form')
+    save=form.get_by_role('button',name='Save draft')
+    status=page.locator('#lab-decision-status')
+    assert status.inner_text()=='NOT RUN'
+    assert page.locator('#lab-provider option').count()==10
+    assert page.locator('#lab-provider option').last.inner_text()=='AIHubMix'
+    assert page.locator('#lab-cohort-panel').is_visible()
+    assert 'কোনো provider API call করে না' in page.locator('#lab-privacy').inner_text()
+    before=page.evaluate('(key)=>localStorage.getItem(key)',STORE)
+
+    def fill(key,value): form.locator(f'[name="{key}"]').fill(value)
+    def choose(key,value): form.locator(f'[name="{key}"]').select_option(value)
+
+    for key,value in dict(run='synthetic-01',requestedModel='requested-1',model='served-1',
+                          route='toy/provider-1',effort='N/A').items():
+        fill(key,value)
+    for key in ('eligibility','quota','privacy','payment'):
+        choose(key,'pass')
+    fill('preflightRef','synth-preflight')
+    save.click()
+    assert status.inner_text()=='HOLD'
+    assert 'no owner-approved budget addendum is configured' in page.locator('#lab-summary').inner_text()
+
+    form.get_by_text('S1–S2 · Smoke and local tool checks',exact=True).click()
+    for key in ('plain','stream','json','tool','agent'):
+        choose(key,'pass')
+    fill('agentTurns','3')
+    fill('agentRef','synth-agent')
+    fill('budgetRef','approved-budget-v1')
+    fill('smokeCalls','5')
+    fill('smokeRef','synth-smoke')
+    form.get_by_text('Run metrics and reliability',exact=True).click()
+    fill('cash','0')
+    save.click()
+    assert status.inner_text()=='HOLD'
+    # A typed (even plausible) budget reference is NOT build-authorized approval.
+    # Keep the negative path locked until the owner approves a versioned addendum.
+    assert page.locator('#lab-cohort-add').is_disabled()
+    assert page.locator('#lab-quality').get_attribute('disabled') is not None
+    assert page.locator('#lab-prompt-case').is_disabled()
+    assert page.locator('#lab-prompt-case').count()==1
+    assert 'Selected (0/3)' in page.locator('#lab-cohort-panel').inner_text()
+    assert page.evaluate("() => localStorage.getItem('ai-provider-lab-v1:cohort')") is None
+    assert 'no owner-approved budget addendum is configured' in page.locator('#lab-summary').inner_text()
+
+    # A preloaded full cohort must still keep a fourth provider disabled.
+    page.evaluate("""() => localStorage.setItem('ai-provider-lab-v1:cohort',
+      JSON.stringify({providerIds:['gemini','groq','inferbase'],evidenceRef:'cohort-selection-01'}))""")
+    page.locator('#lab-provider').select_option('vercel')
+    assert '3/3' in page.locator('#lab-cohort-panel').inner_text()
+    assert page.locator('#lab-cohort-add').is_disabled()
+    assert page.evaluate('(key)=>localStorage.getItem(key)',STORE)==before
+    assert 'PASS' not in page.locator('#lab-summary').inner_text()
+    print('PASS Lab: Bengali guidance, requested/served model, N/A, R-AGENT, budget HOLD and shared top-three cap')
+ 
 def main():
     with sync_playwright() as p:
         executable=os.environ.get('CHROME_PATH')
@@ -207,6 +271,26 @@ def main():
                 print('PASS 390px: 6/17/6 paste, Grok5h rejection, 42% edit, same-origin reload, focus inert')
             ctx.close()
             print('PASS viewport',width)
+        for width in (320, 390, 768, 1366):
+            ctx, page, errs = get_page(width)
+            if width == 390:
+                lab_flow(page)
+            else:
+                open_lab(page)
+                assert page.locator('#lab-decision-status').inner_text() == 'NOT RUN'
+            assert not errs, errs
+            ctx.close()
+        ctx, page, errs = get_page(host=GITHUB)
+        open_lab(page)
+        assert page.get_by_role('button', name='Save draft').is_disabled()
+        assert not errs, errs
+        ctx.close()
+        ctx, page, errs = get_page(add_init="""localStorage.setItem('ai-provider-lab-v1:gemini','{corrupt');""")
+        open_lab(page)
+        assert page.get_by_role('button', name='Save draft').is_disabled()
+        assert page.evaluate('(key) => localStorage.getItem(key)', LAB_STORE) == '{corrupt'
+        assert not errs, errs
+        ctx.close()
         # v3.3.1 synthetic thresholds; every color must retain a textual percentage/Unknown.
         color_fixture=fixture()
         color_fixture['quotas'][0]['used']='30'
@@ -413,6 +497,39 @@ def main():
                 page=ctx.new_page();page.goto(url,wait_until='domcontentloaded')
                 assert str(json.loads(page.evaluate('localStorage.getItem("'+STORE+'")'))['quotas'][0]['used'])=='42'
                 print('PASS CI real localhost origin: imported 17 quotas; 42% survives new Chromium tab')
+                before = page.evaluate('(key) => localStorage.getItem(key)', STORE)
+                requests = []
+                ctx.on('request', lambda request: requests.append(request.url))
+                lab_flow(page)
+                assert page.evaluate('(key) => localStorage.getItem(key)', STORE) == before
+                assert not requests, requests
+                page.locator('button[data-tab="backup"]').click()
+                with page.expect_download() as export:
+                    page.get_by_role('button', name='Export private JSON backup').click()
+                quota_backup = json.loads(Path(export.value.path()).read_text('utf8'))
+                assert quota_backup == json.loads(before)
+                page.reload()
+                open_lab(page)
+                assert page.locator('#lab-decision-status').inner_text() == 'HOLD'
+                assert '0/10 scored' in page.locator('#lab-summary').inner_text()
+                ctx.close()
+
+                # HTTP localhost is secure for service workers. Register the
+                # shipped worker explicitly because auto-registration needs HTTPS.
+                ctx = browser.new_context(service_workers='allow')
+                page = ctx.new_page()
+                page.goto(url)
+                page.evaluate("async () => {await navigator.serviceWorker.register('./sw.js'); await navigator.serviceWorker.ready;}")
+                page.wait_for_function('navigator.serviceWorker.controller !== null')
+                open_lab(page)
+                page.locator('#lab-form [name="run"]').fill('offline-synthetic')
+                page.get_by_role('button', name='Save draft').click()
+                ctx.set_offline(True)
+                page.reload()
+                open_lab(page)
+                assert page.locator('#lab-form [name="run"]').input_value() == 'offline-synthetic'
+                assert page.locator('#lab-decision-status').inner_text() == 'HOLD'
+                print('PASS Lab: no requests during capture, quota backup unchanged, origin reload and cached offline draft')
                 ctx.close()
             finally:srv.shutdown();srv.server_close()
         browser.close()
