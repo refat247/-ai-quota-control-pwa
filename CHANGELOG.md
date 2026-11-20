@@ -4,6 +4,14 @@ All notable changes follow SemVer and Keep a Changelog.
 
 ## [3.3.1] - 2026-11-18 (A109 bounded repair DRAFT; not deployed)
 
+### Provider Lab review follow-up (candidate, not released)
+- Add explicit R-AGENT evidence and bounded 1–3 turn capture; retain manual-only provider execution.
+- Record requested and served model IDs separately; accept the documented `N/A` effort sentinel.
+- Replace provider self-attestation with a same-origin shared top-three cohort registry and canonical evidence reference.
+- Keep P01–P10 locked until a documented budget reconciliation resolves the smoke-test request-count conflict.
+- Distinguish `MANUAL PASS — REVIEW PENDING` from independently verified qualification; add Bengali-first safety guidance.
+- Add synthetic decision-logic and Chromium regression coverage. Physical-device acceptance and canonical Version Manager verification remain pending.
+
 ### Fixed
 - Critical-first model usage rings, model identity, hidden max and mobile readability.
 - Compact quotas list, provider worst-value preview, export-first Backup, correct empty state.
