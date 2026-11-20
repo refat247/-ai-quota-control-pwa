@@ -941,107 +941,107 @@ function labControl(key,label,draft){
 function labDecisionHTML(draft,decision){
   const {status,reasons,scored,accepted,critical}=decision;
   const rate=key=>draft[key]===''||accepted===0?'—':(Number(draft[key])/accepted).toLocaleString('en',{maximumSignificantDigits:8});
-  return \`<div class="lab-decision"><h2>Manual status · independent review pending</h2><strong class="inline-tag \${status.startsWith('MANUAL PASS')?'good':status==='HOLD'?'warn':''}" id="lab-decision-status">\${status}</strong></div>
-  <p>\${accepted}/10 accepted · \${scored}/10 scored · \${critical} critical</p>
-  \${status!=='MANUAL PASS — REVIEW PENDING'&&status!=='NOT RUN'?\`<ul>\${reasons.map(reason=>\`<li>\${reason}</li>\`).join('')}</ul>\`:''}
+  return `<div class="lab-decision"><h2>Manual status · independent review pending</h2><strong class="inline-tag ${status.startsWith('MANUAL PASS')?'good':status==='HOLD'?'warn':''}" id="lab-decision-status">${status}</strong></div>
+  <p>${accepted}/10 accepted · ${scored}/10 scored · ${critical} critical</p>
+  ${status!=='MANUAL PASS — REVIEW PENDING'&&status!=='NOT RUN'?`<ul>${reasons.map(reason=>`<li>${reason}</li>`).join('')}</ul>`:''}
   <dl class="lab-metrics">
-    <div><dt>Cash USD / accepted</dt><dd>\${rate('cash')}</dd></div>
-    <div><dt>Credit USD / accepted</dt><dd>\${rate('credit')}</dd></div>
-    <div><dt>Quota / accepted</dt><dd>\${draft.quotaType&&draft.quotaUnits!==''&&accepted?rate('quotaUnits')+' '+draft.quotaType:'—'}</dd></div>
-  </dl>\`;
+    <div><dt>Cash USD / accepted</dt><dd>${rate('cash')}</dd></div>
+    <div><dt>Credit USD / accepted</dt><dd>${rate('credit')}</dd></div>
+    <div><dt>Quota / accepted</dt><dd>${draft.quotaType&&draft.quotaUnits!==''&&accepted?rate('quotaUnits')+' '+draft.quotaType:'—'}</dd></div>
+  </dl>`;
 }
 function labCohortPanelHTML(cohort,decision,blocked){
   const selected=cohort.providerIds.includes(labProvider.id);
   const names=cohort.providerIds.map(id=>LAB_PROVIDERS.find(provider=>provider.id===id)?.name||id);
-  return \`<div class="card pad lab-cohort" id="lab-cohort-panel">
+  return `<div class="card pad lab-cohort" id="lab-cohort-panel">
     <h3>Top-three P01–P10 cohort · maximum 3</h3>
     <p lang="bn">শুধু preflight ও smoke checks পাস করা সর্বোচ্চ তিনটি provider নির্বাচন করুন। Selection evidence ID canonical Google Sheet-এ লিখুন। এই registry শুধু একই browser origin-এ কাজ করে; device sync করে না।</p>
-    <p><strong>Selected (\${cohort.providerIds.length}/3):</strong> \${names.length?names.map(escapeHTML).join(' · '):'None yet'}</p>
+    <p><strong>Selected (${cohort.providerIds.length}/3):</strong> ${names.length?names.map(escapeHTML).join(' · '):'None yet'}</p>
     <label class="formlabel">Canonical Sheet cohort-selection evidence ID
-      <input id="lab-cohort-ref" value="\${escapeHTML(cohort.evidenceRef)}" maxlength="64" autocomplete="off" autocapitalize="off" spellcheck="false">
+      <input id="lab-cohort-ref" value="${escapeHTML(cohort.evidenceRef)}" maxlength="64" autocomplete="off" autocapitalize="off" spellcheck="false">
     </label>
     <div class="lab-actions">
-      <button type="button" class="btn primary" id="lab-cohort-add" \${blocked||!decision.canJoinCohort||selected||cohort.providerIds.length>=3?'disabled':''}>Add current provider</button>
-      <button type="button" class="btn" id="lab-cohort-remove" \${blocked||!selected?'disabled':''}>Remove current provider</button>
+      <button type="button" class="btn primary" id="lab-cohort-add" ${blocked||!decision.canJoinCohort||selected||cohort.providerIds.length>=3?'disabled':''}>Add current provider</button>
+      <button type="button" class="btn" id="lab-cohort-remove" ${blocked||!selected?'disabled':''}>Remove current provider</button>
     </div>
     <p id="lab-cohort-message" role="status"></p>
-  </div>\`;
+  </div>`;
 }
 function providerLab(){
   const draft=readLabDraft(),cohort=readLabCohort(),decision=providerLabDecision(labProvider,draft,cohort);
   const blocked=fileMode||sharedGitHubOrigin||labReadError||labCohortReadError;
   const control=(key,label)=>labControl(key,label,draft);
-  return \`\${pageHead('Provider Qualification Lab','বাংলাদেশি account eligibility, quota, privacy এবং synthetic runtime evidence manually record করুন।')}
+  return `${pageHead('Provider Qualification Lab','বাংলাদেশি account eligibility, quota, privacy এবং synthetic runtime evidence manually record করুন।')}
   <div class="lab-layout">
     <div class="lab-main">
       <div class="card pad lab-picker">
         <label class="formlabel">Provider
-          <select id="lab-provider">\${LAB_PROVIDERS.map(p=>\`<option value="\${p.id}" \${p.id===labProvider.id?'selected':''}>\${p.name}</option>\`).join('')}</select>
+          <select id="lab-provider">${LAB_PROVIDERS.map(p=>`<option value="${p.id}" ${p.id===labProvider.id?'selected':''}>${p.name}</option>`).join('')}</select>
         </label>
-        <p>\${labProvider.note}</p>
-        <div class="lab-links"><a href="\${LAB_WORKBOOK}" target="_blank" rel="noopener noreferrer">Canonical Sheet ↗</a><a href="\${LAB_PROTOCOL}" target="_blank" rel="noopener noreferrer">Frozen P01–P10 protocol ↗</a></div>
+        <p>${labProvider.note}</p>
+        <div class="lab-links"><a href="${LAB_WORKBOOK}" target="_blank" rel="noopener noreferrer">Canonical Sheet ↗</a><a href="${LAB_PROTOCOL}" target="_blank" rel="noopener noreferrer">Frozen P01–P10 protocol ↗</a></div>
       </div>
-      \${labCohortPanelHTML(cohort,decision,blocked)}
+      ${labCohortPanelHTML(cohort,decision,blocked)}
       <p class="notice" id="lab-privacy" lang="bn">এই Lab শুধু manually observed evidence সংরক্ষণ করে—কোনো provider API call করে না, credential রাখে না, billing action নেয় না। Synthetic prompt ব্যবহার করুন; raw response আলাদা reviewer-এর কাছে রাখুন। Redacted evidence ID ছাড়া ব্যক্তিগত account information দেবেন না।</p>
       <p class="notice">Technical terms retained in English: API, RPM, RPD, TPM, TTFT, Streaming, Tool Calling, R-AGENT and P01–P10.</p>
-      \${blocked?\`<p class="notice warn" role="status">\${labReadError||labCohortReadError?'A saved Lab draft or cohort registry could not be read. Saving is disabled to protect the stored copy.':'Draft storage requires an isolated HTTP(S) origin. Open the app on its dedicated host.'}</p>\`:''}
+      ${blocked?`<p class="notice warn" role="status">${labReadError||labCohortReadError?'A saved Lab draft or cohort registry could not be read. Saving is disabled to protect the stored copy.':'Draft storage requires an isolated HTTP(S) origin. Open the app on its dedicated host.'}</p>`:''}
       <form id="lab-form" autocomplete="off" aria-describedby="lab-privacy" novalidate>
-        <fieldset class="lab-fieldset" \${blocked?'disabled':''}>
+        <fieldset class="lab-fieldset" ${blocked?'disabled':''}>
           <details class="card lab-step" open>
             <summary>S0 · Account, quota and privacy</summary>
             <div class="lab-fields">
-              \${control('run','Run ID')}\${control('requestedModel','Exact requested model ID')}\${control('model','Exact served model ID')}\${control('route','Exact route / provider ID')}\${control('effort','Effort or N/A')}
-              \${LAB_PREFLIGHT.map(([key,label])=>control(key,label)).join('')}
-              \${control('preflightRef','Redacted preflight evidence ID')}
+              ${control('run','Run ID')}${control('requestedModel','Exact requested model ID')}${control('model','Exact served model ID')}${control('route','Exact route / provider ID')}${control('effort','Effort or N/A')}
+              ${LAB_PREFLIGHT.map(([key,label])=>control(key,label)).join('')}
+              ${control('preflightRef','Redacted preflight evidence ID')}
             </div>
           </details>
           <details class="card lab-step">
             <summary>S1–S2 · Smoke and local tool checks</summary>
-            <p>Manual evidence capture only. The app never calls a provider. Aggregate ceiling: \${labProvider.smokeOnly?'5':'6'} model requests; P01–P10 leaves room for at most five smoke requests. R-AGENT is capped at three model turns. The frozen protocol’s test definitions need an approved budget-reconciliation reference before any external run; do not guess how calls overlap.</p>
+            <p>Manual evidence capture only. The app never calls a provider. Aggregate ceiling: ${labProvider.smokeOnly?'5':'6'} model requests; P01–P10 leaves room for at most five smoke requests. R-AGENT is capped at three model turns. The frozen protocol’s test definitions need an approved budget-reconciliation reference before any external run; do not guess how calls overlap.</p>
             <div class="lab-fields">
-              \${LAB_SMOKE.map(([key,label])=>control(key,label)).join('')}
-              \${control('agentTurns','R-AGENT model turns (1–3)')}\${control('agentRef','Redacted R-AGENT evidence ID')}
-              \${control('budgetRef','Approved smoke-budget addendum reference')}
-              \${control('smokeCalls','Total S1–S2 model requests used')}\${control('smokeRef','Redacted smoke evidence ID')}
+              ${LAB_SMOKE.map(([key,label])=>control(key,label)).join('')}
+              ${control('agentTurns','R-AGENT model turns (1–3)')}${control('agentRef','Redacted R-AGENT evidence ID')}
+              ${control('budgetRef','Approved smoke-budget addendum reference')}
+              ${control('smokeCalls','Total S1–S2 model requests used')}${control('smokeRef','Redacted smoke evidence ID')}
             </div>
           </details>
-          \${labProvider.smokeOnly?'':\`<details class="card lab-step">
+          ${labProvider.smokeOnly?'':`<details class="card lab-step">
             <summary>S3 · Frozen P01–P10</summary>
-            <p id="lab-quality-hint">\${decision.qualityReady?'Use fresh sessions. Give the model only the prompt, then score with the separate reviewer rubric.':'Save passing preflight, all smoke checks, approved budget reference, zero cash charge and top-three selection to unlock case entry.'}</p>
-            <fieldset id="lab-quality" class="lab-fieldset" \${decision.qualityReady?'':'disabled'}>
+            <p id="lab-quality-hint">${decision.qualityReady?'Use fresh sessions. Give the model only the prompt, then score with the separate reviewer rubric.':'Save passing preflight, all smoke checks, approved budget reference, zero cash charge and top-three selection to unlock case entry.'}</p>
+            <fieldset id="lab-quality" class="lab-fieldset" ${decision.qualityReady?'':'disabled'}>
               <label class="formlabel lab-prompt-label">Prompt to give the model
-                <select id="lab-prompt-case">\${LAB_CASES.map(({id})=>\`<option>\${id}</option>\`).join('')}</select>
+                <select id="lab-prompt-case">${LAB_CASES.map(({id})=>`<option>${id}</option>`).join('')}</select>
               </label>
               <label class="formlabel lab-prompt-label">Frozen prompt text
-                <textarea id="lab-prompt" rows="5" readonly spellcheck="false">\${escapeHTML(providerLabPrompt(LAB_CASES[0]))}</textarea>
+                <textarea id="lab-prompt" rows="5" readonly spellcheck="false">${escapeHTML(providerLabPrompt(LAB_CASES[0]))}</textarea>
               </label>
-              \${LAB_CASES.map(({id,task})=>\`<details class="lab-case"><summary>\${id} · \${task}</summary><div class="lab-fields">
-                \${LAB_RUBRIC.map(([key,label])=>control(id+key,label)).join('')}
-                \${control(id+'critical','Critical failure')}\${control(id+'ref','Redacted result evidence ID')}
-              </div></details>\`).join('')}
+              ${LAB_CASES.map(({id,task})=>`<details class="lab-case"><summary>${id} · ${task}</summary><div class="lab-fields">
+                ${LAB_RUBRIC.map(([key,label])=>control(id+key,label)).join('')}
+                ${control(id+'critical','Critical failure')}${control(id+'ref','Redacted result evidence ID')}
+              </div></details>`).join('')}
             </fieldset>
-          </details>\`}
+          </details>`}
           <details class="card lab-step">
-            <summary>Run metrics\${labProvider.smokeOnly?'':' and reliability'}</summary>
-            <p>Use actual whole-run totals. Blank means unknown, and zero means observed zero.\${labProvider.smokeOnly?'':' Repeat only eligible leading routes with headroom, per the Sheet.'}</p>
+            <summary>Run metrics${labProvider.smokeOnly?'':' and reliability'}</summary>
+            <p>Use actual whole-run totals. Blank means unknown, and zero means observed zero.${labProvider.smokeOnly?'':' Repeat only eligible leading routes with headroom, per the Sheet.'}</p>
             <div class="lab-fields">
-              \${control('cash','Cash billed (USD)')}\${control('credit','Free credit consumed (USD)')}
-              \${control('quotaUnits','Primary quota consumed')}\${control('quotaType','Primary quota unit')}
-              \${control('seconds','Elapsed time (seconds)')}
-              \${labProvider.smokeOnly?'':control('reliability','Reliability result')+control('repeatCalls','Actual reliability repeat calls')}
-              \${control('reviewRef','Redacted metrics / review evidence ID')}
+              ${control('cash','Cash billed (USD)')}${control('credit','Free credit consumed (USD)')}
+              ${control('quotaUnits','Primary quota consumed')}${control('quotaType','Primary quota unit')}
+              ${control('seconds','Elapsed time (seconds)')}
+              ${labProvider.smokeOnly?'':control('reliability','Reliability result')+control('repeatCalls','Actual reliability repeat calls')}
+              ${control('reviewRef','Redacted metrics / review evidence ID')}
             </div>
           </details>
           <div class="lab-actions">
             <button type="submit" class="btn primary">Save draft</button>
-            <button type="button" class="btn" id="lab-clear" \${labRaw===null?'disabled':''}>Clear saved draft</button>
+            <button type="button" class="btn" id="lab-clear" ${labRaw===null?'disabled':''}>Clear saved draft</button>
           </div>
         </fieldset>
         <p id="lab-save-message" role="status"></p>
       </form>
     </div>
-    <aside class="card pad lab-summary" id="lab-summary" aria-live="polite">\${labDecisionHTML(draft,decision)}</aside>
-  </div>\`;
+    <aside class="card pad lab-summary" id="lab-summary" aria-live="polite">${labDecisionHTML(draft,decision)}</aside>
+  </div>`;
 }
 function labFormDraft(form){
   return Object.fromEntries(Object.keys(LAB_FIELDS).map(key=>[key,form.elements.namedItem(key)?.value.trim()??'']));
