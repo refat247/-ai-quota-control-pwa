@@ -59,53 +59,71 @@ console.log('PASS: versions, privacy smoke, valid asset references, JS syntax, F
 // A109 repair source invariants. Chromium covers rendered UX separately.
 for(const phrase of ['function rankedQuotas(', 'function compactQuotaCard(', 'data-date-shift', 'id="sheetError"', 'maxHiddenUsed('])assert.ok(html.includes(phrase),'A109 missing '+phrase);
 
-// Run the decision and prompt logic from the actual hosted HTML.
+// Run the updated provider Lab gates from the exact shipped HTML.
 const vm=require('node:vm');
 const labStart=html.indexOf("const LAB_STORE=");
 const labEnd=html.indexOf("let labProvider=",labStart);
 assert.ok(labStart>=0&&labEnd>labStart);
 const lab=vm.runInNewContext(html.slice(labStart,labEnd)+
-  '({LAB_FIELDS,LAB_PROVIDERS,LAB_CASES,LAB_RUBRIC,labValueValid,providerLabDecision,providerLabPrompt})');
-const {LAB_FIELDS,LAB_PROVIDERS,LAB_CASES,LAB_RUBRIC,labValueValid,providerLabDecision,providerLabPrompt}=lab;
-const [gemini]=LAB_PROVIDERS, mixed=LAB_PROVIDERS.at(-1);
+ '({LAB_FIELDS,LAB_PROVIDERS,LAB_CASES,LAB_RUBRIC,LAB_SMOKE,labValueValid,labCohortValid,providerLabDecision,providerLabPrompt})');
+const {LAB_FIELDS,LAB_PROVIDERS,LAB_CASES,LAB_RUBRIC,LAB_SMOKE,labValueValid,labCohortValid,providerLabDecision,providerLabPrompt}=lab;
+const [gemini]=LAB_PROVIDERS,mixed=LAB_PROVIDERS.at(-1);
 assert.deepEqual(Array.from(LAB_PROVIDERS,p=>p.name),[
-  'Google Gemini API','GroqCloud','Inferbase','OpenRouter','Cloudflare Workers AI',
-  'SambaNova Cloud','Cohere','NeverMetered','Vercel AI Gateway','AIHubMix'
+ 'Google Gemini API','GroqCloud','Inferbase','OpenRouter','Cloudflare Workers AI',
+ 'SambaNova Cloud','Cohere','NeverMetered','Vercel AI Gateway','AIHubMix'
 ]);
+assert.equal(LAB_SMOKE.length,5);
+assert.ok(html.includes("LAB_COHORT_STORE=LAB_STORE+'cohort'"));
+assert.ok(html.includes("id='lab-cohort-add'")||html.includes('id="lab-cohort-add"'));
+assert.ok(html.includes("status.startsWith('MANUAL PASS')"));
+assert.ok(html.includes('requestedModel')&&html.includes('Exact requested model ID'));
+assert.ok(html.includes('lang="bn"'));
 const fresh=Object.fromEntries(Object.keys(LAB_FIELDS).map(key=>[key,'']));
 assert.equal(providerLabDecision(gemini,fresh).status,'NOT RUN');
+const cohort={providerIds:['gemini'],evidenceRef:'cohort-2026'};
+assert.equal(labCohortValid(cohort),true);
+assert.equal(labCohortValid({providerIds:['gemini','groq','inferbase','vercel'],evidenceRef:'cohort-2026'}),false);
+assert.equal(labCohortValid({providerIds:['gemini','gemini'],evidenceRef:'cohort-2026'}),false);
+assert.equal(labCohortValid({providerIds:['aihubmix'],evidenceRef:'cohort-2026'}),false);
 const qualified={
-  ...fresh,run:'synth-run',model:'model-1',route:'synthetic/free',effort:'medium',
-  eligibility:'pass',quota:'pass',privacy:'pass',payment:'pass',preflightRef:'synth-s0',
-  plain:'pass',stream:'pass',json:'pass',tool:'pass',smokeCalls:'5',smokeRef:'synth-smoke',
-  cohort:'yes',reliability:'pass',repeatCalls:'6',cash:'0',credit:'0.08',quotaUnits:'21',
-  quotaType:'requests',seconds:'50',reviewRef:'synth-review'
+ ...fresh,run:'synth-run',requestedModel:'requested-1',model:'served-1',route:'synthetic/provider-1',effort:'N/A',
+ eligibility:'pass',quota:'pass',privacy:'pass',payment:'pass',preflightRef:'synth-s0',
+ plain:'pass',stream:'pass',json:'pass',tool:'pass',agent:'pass',agentTurns:'3',agentRef:'synth-agent',
+ budgetRef:'approved-budget-v1',smokeCalls:'5',smokeRef:'synth-smoke',
+ reliability:'pass',repeatCalls:'6',cash:'0',credit:'0.08',quotaUnits:'21',
+ quotaType:'requests',seconds:'50',reviewRef:'synth-review'
 };
 for(const [i,c] of LAB_CASES.entries()){
-  assert.equal(c.id,'P'+String(i+1).padStart(2,'0'));
-  const prompt=providerLabPrompt(c);
-  assert.ok(prompt.includes('CASE ID: '+c.id)&&prompt.includes('TASK: '+c.task+'\nOUTPUT:'));
-  assert.ok(prompt.includes('All prices invented for testing, not real offers.'));
-  assert.doesNotMatch(prompt,/SOURCE_UNVERIFIED|ELIGIBILITY_UNVERIFIED|Expected reviewer evidence/);
-  for(const [key,,max] of LAB_RUBRIC)qualified[c.id+key]=String(i<8?max:0);
-  qualified[c.id+'critical']='no';
-  qualified[c.id+'ref']='synth-'+c.id;
+ assert.equal(c.id,'P'+String(i+1).padStart(2,'0'));
+ const prompt=providerLabPrompt(c);
+ assert.ok(prompt.includes('CASE ID: '+c.id)&&prompt.includes('TASK: '+c.task+'\nOUTPUT:'));
+ assert.ok(prompt.includes('All prices invented for testing, not real offers.'));
+ assert.doesNotMatch(prompt,/SOURCE_UNVERIFIED|ELIGIBILITY_UNVERIFIED|Expected reviewer evidence/);
+ for(const [key,,max] of LAB_RUBRIC)qualified[c.id+key]=String(i<8?max:0);
+ qualified[c.id+'critical']='no';
+ qualified[c.id+'ref']='synth-'+c.id;
 }
-const end=providerLabDecision(gemini,qualified);
-assert.equal(end.status,'PASS');
-assert.equal(end.accepted,8);
-assert.equal(end.scored,10);
-assert.equal(end.critical,0);
+const notSelected=providerLabDecision(gemini,qualified,{providerIds:[],evidenceRef:''});
+assert.equal(notSelected.status,'HOLD');
+assert.equal(notSelected.qualityReady,false);
+assert.equal(notSelected.canJoinCohort,true);
+const selected=providerLabDecision(gemini,qualified,cohort);
+assert.equal(selected.status,'MANUAL PASS — REVIEW PENDING');
+assert.equal(selected.accepted,8);
+assert.equal(selected.scored,10);
+assert.equal(selected.critical,0);
+assert.equal(selected.qualityReady,true);
 for(const change of [
-  {eligibility:''},{privacy:'hold'},{payment:'hold'},{stream:'hold'},{tool:''},{model:'auto'},{route:'openrouter/free'},
-  {cash:''},{cash:'0.01'},{credit:''},{quotaType:''},{reviewRef:''},
-  {cohort:''},{reliability:''},{repeatCalls:'5'},{P10ref:''},{P10critical:'yes'},
-  {P01accuracy:'0'},{smokeCalls:'6'}
-])assert.equal(providerLabDecision(gemini,{...qualified,...change}).status,'HOLD',JSON.stringify(change));
-assert.equal(providerLabDecision(gemini,{...qualified,smokeCalls:'6'}).qualityReady,false);
-assert.equal(providerLabDecision(mixed,qualified).status,'HOLD');
-assert.equal(providerLabDecision(mixed,qualified).qualityReady,false);
-assert.match(providerLabDecision(mixed,{...qualified,smokeCalls:'6'}).reasons.join(' '),/budget exceeded/);
+ {eligibility:''},{privacy:'hold'},{payment:'hold'},{stream:'hold'},{tool:''},{agent:''},
+ {agentTurns:'4'},{agentRef:''},{budgetRef:''},{requestedModel:'auto'},{model:'auto'},
+ {route:'openrouter/free'},{cash:''},{cash:'0.01'},{credit:''},{quotaType:''},{reviewRef:''},
+ {reliability:''},{repeatCalls:'5'},{P10ref:''},{P10critical:'yes'},{P01accuracy:'0'},
+ {smokeCalls:'6'}
+])assert.equal(providerLabDecision(gemini,{...qualified,...change},cohort).status,'HOLD',JSON.stringify(change));
+assert.equal(providerLabDecision(gemini,{...qualified,smokeCalls:'6'},cohort).qualityReady,false);
+assert.equal(providerLabDecision(mixed,qualified,cohort).status,'HOLD');
+assert.equal(providerLabDecision(mixed,qualified,cohort).qualityReady,false);
+assert.equal(labValueValid('effort','N/A'),true);
 assert.equal(labValueValid('cash','0'),true);
 assert.equal(labValueValid('cash',''),true);
 assert.equal(labValueValid('cash','-1'),false);
@@ -116,4 +134,4 @@ assert.equal(labValueValid('model','example@example.test'),false);
 assert.equal(labValueValid('run','<img>'),false);
 assert.equal(labValueValid('preflightRef','https://example.test/?token=example'),false);
 assert.equal(labValueValid('preflightRef','sk-demonstration'),false);
-console.log('PASS: Lab shortlist, prompts, scoring, HOLD gates, budgets and known/unknown inputs');
+console.log('PASS: Lab prompts, R-AGENT, manual status, shared top-three, budget and evidence gates');
