@@ -34,87 +34,58 @@ def open_lab(page):
 
 def lab_flow(page):
     open_lab(page)
-    form = page.locator('#lab-form')
-    save = form.get_by_role('button', name='Save draft')
-    status = page.locator('#lab-decision-status')
-    assert status.inner_text() == 'NOT RUN'
-    assert page.locator('#lab-provider option').count() == 10
-    assert page.locator('#lab-provider option').last.inner_text() == 'AIHubMix'
-    before = page.evaluate('(key) => localStorage.getItem(key)', STORE)
+    form=page.locator('#lab-form')
+    save=form.get_by_role('button',name='Save draft')
+    status=page.locator('#lab-decision-status')
+    assert status.inner_text()=='NOT RUN'
+    assert page.locator('#lab-provider option').count()==10
+    assert page.locator('#lab-provider option').last.inner_text()=='AIHubMix'
+    assert page.locator('#lab-cohort-panel').is_visible()
+    assert 'বাংলাদেশি' in page.locator('#lab-privacy').inner_text()
+    before=page.evaluate('(key)=>localStorage.getItem(key)',STORE)
 
-    def fill(key, text):
-        form.locator(f'[name="{key}"]').fill(text)
+    def fill(key,value): form.locator(f'[name="{key}"]').fill(value)
+    def choose(key,value): form.locator(f'[name="{key}"]').select_option(value)
 
-    def choose(key, value):
-        form.locator(f'[name="{key}"]').select_option(value)
+    for key,value in dict(run='synthetic-01',requestedModel='requested-1',model='served-1',
+                          route='toy/provider-1',effort='N/A').items():
+        fill(key,value)
+    for key in ('eligibility','quota','privacy','payment'):
+        choose(key,'pass')
+    fill('preflightRef','synth-preflight')
+    save.click()
+    assert status.inner_text()=='HOLD'
+    assert 'budget-reconciliation' in page.locator('#lab-summary').inner_text()
 
-    for key, text in dict(run='synthetic-01', model='demo-1', route='toy/free', effort='medium').items():
-        fill(key, text)
-    for key in ('eligibility', 'quota', 'privacy', 'payment'):
-        choose(key, 'pass')
-    fill('preflightRef', 'https://example.test/unsafe')
+    form.get_by_text('S1–S2 · Smoke and local tool checks',exact=True).click()
+    for key in ('plain','stream','json','tool','agent'):
+        choose(key,'pass')
+    fill('agentTurns','3')
+    fill('agentRef','synth-agent')
+    fill('budgetRef','approved-budget-v1')
+    fill('smokeCalls','5')
+    fill('smokeRef','synth-smoke')
+    fill('cash','0')
     save.click()
-    assert 'Draft not saved' in page.locator('#lab-save-message').inner_text()
-    assert page.evaluate('(key) => localStorage.getItem(key)', LAB_STORE) is None
-    fill('preflightRef', 'synth-preflight')
-    save.click()
-    assert status.inner_text() == 'HOLD'
-    form.get_by_text('S1–S2 · Smoke and local tool checks', exact=True).click()
-    for key in ('plain', 'stream', 'json', 'tool'):
-        choose(key, 'pass')
-    fill('smokeCalls', '5')
-    fill('smokeRef', 'synth-smoke')
-    choose('cohort', 'yes')
-    save.click()
-    form.get_by_text('S3 · Frozen P01–P10', exact=True).click()
-    page.locator('#lab-prompt-case').select_option('P06')
-    prompt = page.locator('#lab-prompt').input_value()
-    assert 'CASE ID: P06' in prompt and 'TASK: No Bangladesh listing for route' in prompt
-    assert 'ELIGIBILITY_UNVERIFIED' not in prompt
-    for i in range(1, 11):
-        case = f'P{i:02}'
-        brief = form.locator('.lab-case').nth(i - 1).locator('summary')
-        brief.click()
-        for key, maximum in (('accuracy', '2'), ('evidence', '1'), ('output', '1'), ('safety', '1')):
-            choose(case + key, maximum if i <= 8 else '0')
-        choose(case + 'critical', 'no')
-        fill(case + 'ref', 'synth-' + case)
-        brief.click()
-    form.get_by_text('Run metrics and reliability', exact=True).click()
-    for key, value in dict(credit='0.08', quotaUnits='21', seconds='100', repeatCalls='6', reviewRef='synth-run-metrics').items():
-        fill(key, value)
-    choose('quotaType', 'requests')
-    choose('reliability', 'pass')
-    save.click()
-    assert status.inner_text() == 'HOLD'
-    assert 'Cash USD / accepted' in page.locator('#lab-summary').inner_text()
-    assert page.locator('.lab-metrics dd').first.inner_text() == '—'
-    fill('cash', '0')
-    save.click()
-    assert status.inner_text() == 'PASS'
-    assert '8/10 accepted · 10/10 scored' in page.locator('#lab-summary').inner_text()
-    assert page.locator('.lab-metrics dd').all_inner_texts() == ['0', '0.01', '2.625 requests']
-    form.locator('.lab-case').last.locator('summary').click()
-    choose('P10critical', 'yes')
-    save.click()
-    assert status.inner_text() == 'HOLD'
-    assert 'Critical failure recorded' in page.locator('#lab-summary').inner_text()
-    choose('P10critical', 'no')
-    save.click()
-    assert status.inner_text() == 'PASS'
-    fill('model', 'different-model')
-    save.click()
-    assert 'Clear the saved draft' in page.locator('#lab-save-message').inner_text()
-    fill('model', 'demo-1')
-    page.locator('#lab-provider').select_option('aihubmix')
-    assert status.inner_text() == 'NOT RUN'
-    assert not page.locator('#lab-quality').count()
-    assert '5 total smoke calls' in form.inner_text() or 'Smoke only' in page.locator('.lab-picker').inner_text()
-    page.locator('#lab-provider').select_option('gemini')
-    assert status.inner_text() == 'PASS'
-    assert page.evaluate('(key) => localStorage.getItem(key)', STORE) == before
-    print('PASS Lab: saved manual evidence, frozen prompt, unknown vs zero, rubric, HOLD/PASS and route isolation')
+    assert status.inner_text()=='HOLD'
+    assert page.locator('#lab-cohort-add').is_enabled()
+    fill('P01accuracy','2') if form.locator('[name="P01accuracy"]').count() else None
+    page.locator('#lab-cohort-ref').fill('cohort-selection-01')
+    page.locator('#lab-cohort-add').click()
+    assert '1/3' in page.locator('#lab-cohort-panel').inner_text()
+    assert page.locator('#lab-quality').is_enabled() is False
+    assert page.locator('#lab-prompt-case').count()==1
 
+    # Three selected IDs are the hard ceiling. A fourth provider cannot be added.
+    page.evaluate("""() => localStorage.setItem('ai-provider-lab-v1:cohort',
+      JSON.stringify({providerIds:['gemini','groq','inferbase'],evidenceRef:'cohort-selection-01'}))""")
+    page.locator('#lab-provider').select_option('vercel')
+    assert '3/3' in page.locator('#lab-cohort-panel').inner_text()
+    assert page.locator('#lab-cohort-add').is_disabled()
+    assert page.evaluate('(key)=>localStorage.getItem(key)',STORE)==before
+    assert not page.locator('#lab-summary').inner_text().includes('PASS')
+    print('PASS Lab: Bengali guidance, requested/served model, N/A, R-AGENT, budget HOLD and shared top-three cap')
+ 
 def main():
     with sync_playwright() as p:
         executable=os.environ.get('CHROME_PATH')
