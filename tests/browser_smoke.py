@@ -41,7 +41,7 @@ def lab_flow(page):
     assert page.locator('#lab-provider option').count()==10
     assert page.locator('#lab-provider option').last.inner_text()=='AIHubMix'
     assert page.locator('#lab-cohort-panel').is_visible()
-    assert 'বাংলাদেশি' in page.locator('#lab-privacy').inner_text()
+    assert 'কোনো provider API call করে না' in page.locator('#lab-privacy').inner_text()
     before=page.evaluate('(key)=>localStorage.getItem(key)',STORE)
 
     def fill(key,value): form.locator(f'[name="{key}"]').fill(value)
