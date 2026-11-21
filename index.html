@@ -840,7 +840,7 @@ function labCohortValid(cohort){
     new Set(cohort.providerIds).size===cohort.providerIds.length&&
     cohort.providerIds.every(id=>LAB_PROVIDERS.some(provider=>provider.id===id&&!provider.smokeOnly))&&
     (cohort.evidenceRef===''||labValueValid('run',cohort.evidenceRef))&&
-    (!cohort.providerIds.length||labValueValid('run',cohort.evidenceRef)));
+    (!cohort.providerIds.length||(Boolean(cohort.evidenceRef)&&labValueValid('run',cohort.evidenceRef))));
 }
 function providerLabDecision(provider,draft,cohort=emptyLabCohort(),approvedBudgetRef=LAB_APPROVED_BUDGET_REF){
   const preflight=LAB_PREFLIGHT.every(([key])=>draft[key]==='pass')&&Boolean(draft.preflightRef)&&labRoutePinned(draft);
@@ -1103,7 +1103,7 @@ function saveLabCohort(action){
   const ref=$('#lab-cohort-ref')?.value.trim()||cohort.evidenceRef;
   let next;
   if(action==='add'){
-    if(!labValueValid('run',ref)){message.textContent='Enter the redacted cohort-selection evidence ID from the canonical Sheet.';return;}
+    if(!ref||!labValueValid('run',ref)){message.textContent='Enter the redacted cohort-selection evidence ID from the canonical Sheet.';return;}
     const draft=readLabDraft();
     if(labReadError){message.textContent='Provider draft could not be read. No changes were made.';return;}
     const decision=providerLabDecision(labProvider,draft,cohort);
