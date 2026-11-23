@@ -336,6 +336,7 @@ html[data-quota-vnext="yes"] .sheethead h2{
  html[data-quota-vnext="yes"] .cockpit[data-dashboard="home"] .cockpit-provider-grid{gap:4px}
 }
 
+.usage-row{border-top:1px solid var(--line);padding:10px 0}.usage-row select,.usage-preview select{width:100%;min-height:44px;margin:6px 0}.usage-paste textarea{display:block;width:100%;min-height:120px;padding:12px;border:1px solid var(--line);border-radius:10px;color:var(--ink);background:var(--paper)}.usage-paste summary{font-weight:750;font-size:13px;cursor:pointer;min-height:36px}.usage-paste,.usage-preview{margin:10px 0}
 </style>
 <link href="manifest.webmanifest" rel="manifest"/><link href="icon-192.png" rel="icon" type="image/png"/></head>
 <body>
@@ -416,6 +417,7 @@ const icons={home:'<path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1
 const svg=k=>`<svg viewBox="0 0 24 24" aria-hidden="true">${icons[k]||''}</svg>`;
 let tab='overview',query='',category='all',provider='all',sort='default',allDeadlines=false,showAllProviders=false,editor=null,restoreFocus=null,quotaOnboarding=false;
 let overlayMode=null,overlayNext=null,returnToProvider=null;
+let usageDraft=null,usageNotice='';
 function releaseOverlay(after=null){
  if(overlayMode){overlayNext=after;history.back();return}
  if(typeof after==='function')after();
@@ -687,7 +689,7 @@ function visualHome(){
 }
 function visualQuotas(){
  if(cockpitQuotaMode==='list')return `<div class="cockpit"><button class="cockpit-panel-action" data-quota-list="grid">‹ Provider overview</button></div>${legacyQuotas()}`;
- return `<div class="cockpit" data-dashboard="quotas"><div class="page-head"><h1>Model quotas</h1><p>${data.quotas.length} separate pools · select a provider</p></div><div class="cockpit-title-line"><h2>Provider shortcuts</h2><button class="cockpit-tiny-button" data-new="quota">+ Add quota</button></div><div class="cockpit-icon-grid">${data.subs.map(s=>{const [cl,av]=providerStyle(s.provider),rows=data.quotas.filter(q=>q.subId===s.id),n=rows.length,worst=rankedQuotas(rows)[0];return `<button class="cockpit-icon-tile" data-open-provider="${escapeHTML(s.id)}"><span class="cockpit-avatar ${cl}">${av}</span>${worst?visualMeter(worst):''}<strong>${escapeHTML(s.provider)}</strong><small>${n} pools · max ${maxHiddenUsed(rows)}</small></button>`}).join('')}</div>${!data.subs.length?'<div class="notice warn">Start with a Plan: tap Add quota to create a Plan first.</div>':''}<div class="cockpit-title-line"><h2>All models</h2></div><button class="cockpit-panel-action" data-quota-list="list">Open detailed list · ${data.quotas.length} models ›</button><p class="cockpit-subtle">Grok has no 5-hour quota. Blank usage is Unknown, not 0%.</p></div>`;
+ return `<div class="cockpit" data-dashboard="quotas"><div class="page-head"><h1>Model quotas</h1><p>${data.quotas.length} separate pools · select a provider</p></div><div class="cockpit-title-line"><h2>Provider shortcuts</h2><button class="cockpit-tiny-button" data-new="quota">+ Add quota</button></div><div class="cockpit-icon-grid">${data.subs.map(s=>{const [cl,av]=providerStyle(s.provider),rows=data.quotas.filter(q=>q.subId===s.id),n=rows.length,worst=rankedQuotas(rows)[0];return `<button class="cockpit-icon-tile" data-open-provider="${escapeHTML(s.id)}"><span class="cockpit-avatar ${cl}">${av}</span>${worst?visualMeter(worst):''}<strong>${escapeHTML(s.provider)}</strong><small>${n} pools · max ${maxHiddenUsed(rows)}</small></button>`}).join('')}</div>${!data.subs.length?'<div class="notice warn">Start with a Plan: tap Add quota to create a Plan first.</div>':''}<div id="usagePanel">${usagePanelHTML()}</div><div class="cockpit-title-line"><h2>All models</h2></div><button class="cockpit-panel-action" data-quota-list="list">Open detailed list · ${data.quotas.length} models ›</button><p class="cockpit-subtle">Grok has no 5-hour quota. Blank usage is Unknown, not 0%.</p></div>`;
 }
 function visualPlans(){
  return `<div class="cockpit" data-dashboard="plans"><div class="page-head"><h1>Subscriptions</h1><p>${data.subs.length} plans · open a tile to edit details</p></div><div class="cockpit-title-line"><h2>My plans</h2><button class="cockpit-tiny-button" data-new="sub">+ Add plan</button></div><div class="cockpit-plan-grid">${data.subs.map(s=>{const [cl,av]=providerStyle(s.provider),d=monthly(s.renewDay),status=statusNames[s.status]||'Unknown';return `<button class="cockpit-plan-tile" data-open-plan="${escapeHTML(s.id)}"><span class="cockpit-avatar ${cl}">${av}</span><strong>${escapeHTML(s.plan)}</strong><small>${escapeHTML(s.provider)} · ${d?escapeHTML(difference(d).text):'Unknown renewal'}</small><span class="inline-tag ${s.status==='keep'?'good':s.status==='cancel-planned'?'warn':''}">${escapeHTML(status)}</span></button>`}).join('')}</div><p class="cockpit-subtle">Cancel planned ≠ cancelled. Renewal day is not access expiry. Details and delete are second-level actions.</p></div>`;
@@ -804,9 +806,171 @@ function doAction(which){
  else if(which==='reset'&&confirm('Clear all personal quota data from this browser? Export JSON backup first if you may need it later.')){commit(copy(original))}
 }
 
+/*USAGE-PARSER-START*/
+const UP_MONTHS={jan:1,feb:2,mar:3,apr:4,may:5,jun:6,jul:7,aug:8,sep:9,oct:10,nov:11,dec:12};
+function upPad(n){return String(n).padStart(2,'0')}
+function upParts(s){const m=String(s||'').match(/^(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2})$/);return m?{y:+m[1],mo:+m[2],d:+m[3],h:+m[4],mi:+m[5]}:null}
+function upMs(p){return Date.UTC(p.y,p.mo-1,p.d,p.h,p.mi)}
+function upFmt(ms,dateOnly){const d=new Date(ms),day=`${d.getUTCFullYear()}-${upPad(d.getUTCMonth()+1)}-${upPad(d.getUTCDate())}`;return dateOnly?day:`${day} ${upPad(d.getUTCHours())}:${upPad(d.getUTCMinutes())}`}
+function upMake(y,mo,d,h,mi){const ms=Date.UTC(y,mo-1,d,h,mi),x=new Date(ms);return x.getUTCFullYear()===y&&x.getUTCMonth()===mo-1&&x.getUTCDate()===d?ms:null}
+function upClean(text){
+ return String(text||'').replace(/\u001b\[[0-9;?]*[A-Za-z]/g,'').replace(/[   ]/g,' ')
+  .replace(/[█▓▒░▉▊▋▌▍▎▏■□▪▫●○◐◑━─═╌╍▰▱]+/g,' ').replace(/\[\s*\]/g,' ')
+  .split(/\r?\n/).map(l=>l.replace(/\s+/g,' ').trim()).filter(Boolean);
+}
+function upWindow(head){
+ const l=String(head).toLowerCase(),a=/\b(?:5\s*-?\s*h(?:(?:ou)?rs?)?|five[- ]hour|session)\b/.test(l),b=/\b(?:weekly|week|7[- ]day|seven[- ]day)\b/.test(l);
+ return a&&!b?'5h':b&&!a?'weekly':null;
+}
+function upPercent(line){
+ const m=line.match(/(\d{1,3}(?:\.\d+)?)\s*%/);if(!m)return null;
+ const value=Number(m[1]),after=line.slice(m.index+m[0].length),before=line.slice(0,m.index);
+ let u=after.match(/^\s*(?:of (?:your |the )?(?:limit|quota|allowance|plan)\s*)?(used|consumed|left|remaining|available)\b/i);
+ if(!u)u=before.match(/\b(used|consumed|left|remaining|available)\s*[:=-]?\s*$/i);
+ const unit=u?(/used|consumed/i.test(u[1])?'used':'left'):null;
+ return {value,unit,text:m[0]};
+}
+function upParseReset(txt,nowBD){
+ let t=String(txt||'').trim();while(t.endsWith(')')&&(t.match(/\)/g)||[]).length>(t.match(/\(/g)||[]).length)t=t.slice(0,-1).trim();if(!t)return {iso:null,note:''};
+ const now=upParts(nowBD);if(!now)return {iso:null,note:'Reset time not applied: current time unavailable.'};
+ const nowMs=upMs(now);
+ const tzm=t.match(/\(([^)]*)\)/);
+ if(tzm){const tz=tzm[1].trim();t=t.replace(tzm[0],' ').trim();if(!/^(?:asia\/dhaka|(?:utc|gmt)\s*\+\s*0?6(?::?00)?|\+0?6(?::?00)?)$/i.test(tz))return {iso:null,note:'Reset time not applied: timezone "'+tz.slice(0,40)+'" is not Asia/Dhaka.'};}
+ t=t.replace(/[.,;]+$/,'').trim();
+ const bad={iso:null,note:'Reset time not understood: "'+t.slice(0,40)+'".'};
+ let m=t.match(/^in\s+(.+)$/i);
+ if(m){let mins=0,found=false;m[1].replace(/(\d+)\s*(d(?:ays?)?|h(?:ours?|rs?)?|m(?:in(?:ute)?s?)?)\b/gi,(_,n,u)=>{found=true;const k=u[0].toLowerCase();mins+=Number(n)*(k==='d'?1440:k==='h'?60:1);return ''});return found&&mins>0&&mins<=60*24*10?{iso:upFmt(nowMs+mins*60000),note:''}:bad;}
+ m=t.match(/^(\d{4})-(\d{2})-(\d{2})(?:[ T](\d{2}):(\d{2}))?$/);
+ if(m){const ms=upMake(+m[1],+m[2],+m[3],+(m[4]||0),+(m[5]||0));return ms===null?bad:{iso:upFmt(ms,m[4]===undefined),note:''};}
+ t=t.replace(/^(?:at|on)\s+/i,'');
+ const MON='(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\\.?';
+ let mo=null,day=null,rest=t;
+ let d1=rest.match(new RegExp('\\b'+MON+'\\s+(\\d{1,2})(?:st|nd|rd|th)?\\b','i')),d2=rest.match(new RegExp('\\b(\\d{1,2})(?:st|nd|rd|th)?\\s+'+MON+'(?![a-z])','i'));
+ if(d1){mo=UP_MONTHS[d1[1].toLowerCase()];day=+d1[2];rest=rest.replace(d1[0],' ');}
+ else if(d2){mo=UP_MONTHS[d2[2].toLowerCase()];day=+d2[1];rest=rest.replace(d2[0],' ');}
+ rest=rest.replace(/\b(?:at|on)\b/gi,' ').replace(/,/g,' ').replace(/\s+/g,' ').trim();
+ let hh=null,mi=0;
+ if(rest){
+  const tm=rest.match(/^(\d{1,2})(?::(\d{2}))?\s*(am|pm)?$/i);
+  if(!tm)return bad;
+  const ap=tm[3]&&tm[3].toLowerCase();
+  if(!ap&&tm[2]===undefined)return bad;
+  hh=+tm[1];mi=tm[2]===undefined?0:+tm[2];
+  if(ap){if(hh<1||hh>12)return bad;hh=hh%12+(ap==='pm'?12:0);}
+  if(hh>23||mi>59)return bad;
+ }
+ if(mo===null){
+  if(hh===null)return bad;
+  let ms=upMake(now.y,now.mo,now.d,hh,mi);if(ms===null)return bad;
+  if(ms<=nowMs)ms+=86400000;
+  return {iso:upFmt(ms),note:'',timeOnly:true};
+ }
+ let y=now.y,ms=upMake(y,mo,day,hh===null?0:hh,mi);
+ if(ms===null)return bad;
+ if(ms<nowMs-36*3600000){ms=upMake(y+1,mo,day,hh===null?0:hh,mi);if(ms===null)return bad;}
+ return {iso:upFmt(ms,hh===null),note:''};
+}
+function upDetectProvider(text){
+ const t=String(text||'').toLowerCase(),c=/\bclaude\b|anthropic|current session|current week|\/usage/.test(t),x=/\bcodex\b|chatgpt|openai|\b5h limit|weekly limit|rate limits?/.test(t);
+ return c&&!x?'claude':x&&!c?'codex':null;
+}
+function parseUsageText(text,nowBD,providerHint){
+ if(typeof text!=='string'||!text.trim())return {ok:false,error:'Paste the /usage or /status text first.',skipped:[]};
+ if(text.length>20000)return {ok:false,error:'Text is too long (max 20,000 characters). Nothing was changed.',skipped:[]};
+ const lines=upClean(text),cand=[];let cur=null;
+ lines.forEach((line,i)=>{
+  if(/\bcontext\b/i.test(line)||/^credits?\b/i.test(line))return;
+  const head=line.replace(/\(?\bresets?\b.*$/i,'').trim(),win=upWindow(head),pm=upPercent(line),rm=line.match(/\bresets?\b\s*(.*)$/i);
+  if(win){cur={window:win,label:head.replace(/\d{1,3}(?:\.\d+)?\s*%/g,'').replace(/[:\-–\s]+$/,'').trim().slice(0,60),at:i,pct:null,resetText:null};cand.push(cur);}
+  if(cur&&pm&&cur.pct===null&&(win||i-cur.at<=2))cur.pct=pm;
+  if(cur&&rm&&cur.resetText===null&&(win||i-cur.at<=3))cur.resetText=rm[1].trim();
+ });
+ const rows=[],skipped=[];
+ cand.forEach(c=>{
+  const name=c.label||c.window;
+  if(!c.pct){skipped.push({label:name,reason:'no percentage found'});return;}
+  if(!c.pct.unit){skipped.push({label:name,reason:'unclear whether '+c.pct.text+' is used or remaining'});return;}
+  if(!(c.pct.value>=0&&c.pct.value<=100)){skipped.push({label:name,reason:'percentage out of range'});return;}
+  const used=Math.round((c.pct.unit==='used'?c.pct.value:100-c.pct.value)*10)/10,hint=(c.label.match(/\b(sonnet|opus|haiku|fable|mythos|spark|mini)\b/i)||[])[1];
+  let r=upParseReset(c.resetText,nowBD);
+  if(r.timeOnly&&c.window==='weekly')r={iso:null,note:'Weekly reset shows a time but no date, so it was not applied.'};
+  rows.push({id:rows.length,window:c.window,label:name,hint:hint?hint.toLowerCase():'',used,shown:c.pct.text+' '+(c.pct.unit==='used'?'used':'left'),reset:r.iso,resetNote:r.note});
+ });
+ if(!rows.length)return {ok:false,error:'No usage lines recognised. Paste the full output of Claude Code /usage or Codex /status. Nothing was changed.',skipped};
+ const detected=upDetectProvider(text);
+ return {ok:true,detected,provider:providerHint||detected,rows,skipped};
+}
+function matchUsageRows(rows,provider,subs,quotas){
+ const re=provider==='claude'?/claude|anthropic/i:provider==='codex'?/chatgpt|openai|codex/i:null;
+ const ids=re?subs.filter(s=>re.test(s.provider)).map(s=>s.id):[];
+ return rows.map(r=>{
+  let c=re?quotas.filter(q=>ids.includes(q.subId)&&q.window===r.window):[];
+  if(r.hint)c=c.filter(q=>(q.model+' '+(q.scope||'')).toLowerCase().includes(r.hint));
+  return {rowId:r.id,candidates:c.map(q=>q.id),status:c.length===1?'matched':c.length?'ambiguous':'unmatched',poolId:c.length===1?c[0].id:''};
+ });
+}
+function usageConflicts(selection){
+ const seen=new Set(),dup=new Set();
+ selection.forEach(p=>{if(p&&p!=='skip'){if(seen.has(p))dup.add(p);seen.add(p);}});
+ return Array.from(dup);
+}
+/*USAGE-PARSER-END*/
+function usagePanelHTML(){
+ const blocked=recoveryRequired||sharedGitHubOrigin;
+ const notice=usageNotice?`<div class="notice" role="status">${escapeHTML(usageNotice)}</div>`:'';
+ const d=usageDraft;
+ if(d&&d.parsed&&d.parsed.ok){
+  const p=d.parsed,sel=d.sel,dups=usageConflicts(sel),unresolved=sel.some(v=>v===''),applied=sel.filter(v=>v&&v!=='skip').length;
+  const label=q=>{const s=subFor(q);return escapeHTML(`${s.provider} · ${q.model} · ${q.window==='5h'?'5-hour':q.window}`)};
+  const rowsHtml=p.rows.map((r,i)=>{
+   const m=d.match[i],pool=data.quotas.find(q=>q.id===sel[i]);
+   const opts=(m.candidates.length?data.quotas.filter(q=>m.candidates.includes(q.id)):data.quotas);
+   const status=sel[i]==='skip'?'Skipped':sel[i]===''?(m.status==='ambiguous'?'Choose a pool':'No match — choose or skip'):dups.includes(sel[i])?'Conflict — same pool twice':(m.status==='matched'&&sel[i]===m.poolId?'Matched':'Chosen by you');
+   const oldUsed=pool?(pool.used===''||pool.used==null?'Unknown':pool.used+'%'):'—',oldReset=pool?(pool.nextReset||'not set'):'—';
+   const newReset=r.reset?escapeHTML(r.reset):'unchanged';
+   return `<div class="usage-row"><strong>${escapeHTML(r.label)}</strong> <span class="inline-tag">${escapeHTML(status)}</span><div class="help-note">Pasted: ${escapeHTML(r.shown)} → used ${r.used}%</div><label class="sr-only" for="usageRow${i}">Target pool for ${escapeHTML(r.label)}</label><select id="usageRow${i}" data-usage-row="${i}"><option value="" ${sel[i]===''?'selected':''}>Choose pool…</option><option value="skip" ${sel[i]==='skip'?'selected':''}>Skip this row</option>${opts.map(q=>`<option value="${escapeHTML(q.id)}" ${sel[i]===q.id?'selected':''}>${label(q)}</option>`).join('')}</select>${pool&&sel[i]!=='skip'?`<div class="help-note">Used: ${escapeHTML(String(oldUsed))} → <b>${r.used}%</b> · Reset: ${escapeHTML(String(oldReset))} → <b>${newReset}</b></div>`:''}${r.resetNote?`<div class="help-note">${escapeHTML(r.resetNote)}</div>`:''}</div>`;
+  }).join('');
+  const skipped=p.skipped.length?`<p class="help-note">Not used: ${p.skipped.map(s=>escapeHTML(s.label+' ('+s.reason+')')).join('; ')}</p>`:'';
+  const prov=`<label for="usageProvider" class="paste-label">Provider</label><select id="usageProvider"><option value="" ${d.providerChoice===''?'selected':''}>Auto${p.detected?' ('+(p.detected==='claude'?'Claude Code':'Codex')+')':' — not detected'}</option><option value="claude" ${d.providerChoice==='claude'?'selected':''}>Claude Code</option><option value="codex" ${d.providerChoice==='codex'?'selected':''}>Codex / ChatGPT</option></select>`;
+  const why=blocked?'Saving is blocked here (recovery mode or shared origin).':dups.length?'Two rows target the same pool: skip one.':unresolved?'Choose a pool or skip for every row.':!applied?'Nothing to apply: every row is skipped.':d.fromOcr&&!d.verified?'Tick the box to confirm you compared the numbers with your screen.':'';
+  return `${notice}<div class="card help usage-preview"><h3>Preview — nothing saved yet</h3><p class="help-note">Manual paste, no provider sync. Each row updates one pool only; percentages are never averaged.</p>${prov}${rowsHtml}${skipped}${d.fromOcr?`<label class="inline-check"><input type="checkbox" data-usage-verify ${d.verified?'checked':''}/> <span>Read by OCR, which can misread digits: I compared these numbers with my screen.</span></label>`:''}${why?`<div class="notice warn" role="status">${escapeHTML(why)}</div>`:''}<div class="button-row"><button class="btn primary" data-usage-action="confirm" ${why?'disabled':''}>Confirm &amp; save</button><button class="btn" data-usage-action="cancel">Cancel</button></div></div>`;
+ }
+ return `${notice}<details class="card help usage-paste" ${d&&d.error?'open':''}><summary>Paste usage text (Claude /usage · Codex /status)</summary><p class="help-note">Manual paste only. Nothing is sent anywhere and nothing is saved until you confirm a preview.</p><label for="usagePaste" class="paste-label">Paste text</label><textarea id="usagePaste" rows="6" maxlength="20000" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Paste the /usage or /status output here">${escapeHTML(d?d.text:'')}</textarea><div data-ocr-slot></div><div class="button-row"><button class="btn primary" data-usage-action="preview">Preview changes</button></div><div class="notice warn" role="alert" ${d&&d.error?'':'hidden'}>${escapeHTML(d?d.error:'')}</div></details>`;
+}
+function usageRefresh(){const el=$('#usagePanel');if(el)el.innerHTML=usagePanelHTML();}
+function usageRun(text,choice,fromOcr){
+ const parsed=parseUsageText(text,inputNow(),choice||null);
+ if(!parsed.ok){usageDraft={text,providerChoice:choice||'',parsed:null,error:parsed.error,match:[],sel:[],fromOcr:!!fromOcr,verified:false};usageRefresh();return;}
+ const match=matchUsageRows(parsed.rows,parsed.provider,data.subs,data.quotas);
+ usageDraft={text,providerChoice:choice||'',parsed,error:'',match,sel:match.map(m=>m.poolId),fromOcr:!!fromOcr,verified:false};
+ usageRefresh();
+}
+function doUsageAction(which){
+ if(which==='preview'){const area=$('#usagePaste');usageNotice='';usageRun(area?area.value:'',usageDraft?usageDraft.providerChoice:'',!!(area&&area.dataset.ocr==='1'));return;}
+ if(which==='cancel'){usageDraft=null;usageNotice='';usageRefresh();return;}
+ if(which!=='confirm'||!usageDraft||!usageDraft.parsed)return;
+ if(recoveryRequired||sharedGitHubOrigin){alert('Saving is blocked here.');return;}
+ const d=usageDraft,sel=d.sel;
+ if(sel.some(v=>v==='')||usageConflicts(sel).length||!sel.some(v=>v&&v!=='skip')||(d.fromOcr&&!d.verified))return;
+ const next=copy(data),applied=[];
+ d.parsed.rows.forEach((r,i)=>{
+  const id=sel[i];if(!id||id==='skip')return;
+  const q=next.quotas.find(x=>x.id===id);if(!q)return;
+  q.used=String(r.used);if(r.reset)q.nextReset=r.reset;
+  applied.push({id,used:q.used,reset:r.reset||''});
+ });
+ if(!commit(next)){usageNotice='Not saved. Your existing records are unchanged.';usageRefresh();return;}
+ let ok=false;
+ try{const st=JSON.parse(localStorage.getItem(STORE));ok=applied.every(a=>{const q=st.quotas.find(x=>x.id===a.id);return q&&String(q.used)===a.used&&(!a.reset||q.nextReset===a.reset)});}catch(_){ok=false}
+ usageDraft=null;
+ usageNotice=ok?`Saved ${applied.length} pool${applied.length===1?'':'s'} · read-back verified.`:'Saved, but read-back could not be verified. Export a backup and check the values.';
+ usageRefresh();
+}
+
 $('#navigation').addEventListener('click',e=>{const b=e.target.closest('button[data-tab]');if(b)changeTab(b.dataset.tab)});
 $('#appview').addEventListener('click',e=>{
   const b=e.target.closest('button');if(!b)return;
+  if(b.dataset.usageAction){doUsageAction(b.dataset.usageAction);return;}
   if(b.dataset.openProvider)visualDialog('provider',b.dataset.openProvider);
    else if(b.dataset.openPlan)visualDialog('plan',b.dataset.openPlan);
    else if(b.dataset.quotaList){cockpitQuotaMode=b.dataset.quotaList;render()}
@@ -845,7 +1009,7 @@ $('#appview').addEventListener('click',e=>{
   else if(b.dataset.action)doAction(b.dataset.action);
 });
 $('#appview').addEventListener('input',e=>{if(e.target.id==='quotaSearch'){query=e.target.value;renderQuotaList()}else if(e.target.id==='homeSearch'){homeQuery=e.target.value;showAllProviders=false;refreshHomeResults()}});
-$('#appview').addEventListener('change',e=>{if(e.target.id==='providerFilter'){provider=e.target.value;renderQuotaList()}else if(e.target.id==='sortFilter'){sort=e.target.value;renderQuotaList()}});
+$('#appview').addEventListener('change',e=>{if(e.target.id==='usageProvider'){if(usageDraft)usageRun(usageDraft.text,e.target.value,usageDraft.fromOcr);return}if(e.target.dataset&&e.target.dataset.usageVerify!==undefined){if(usageDraft){usageDraft.verified=e.target.checked;usageRefresh()}return}if(e.target.dataset&&e.target.dataset.usageRow!==undefined){if(usageDraft){usageDraft.sel[+e.target.dataset.usageRow]=e.target.value;usageRefresh()}return}if(e.target.id==='providerFilter'){provider=e.target.value;renderQuotaList()}else if(e.target.id==='sortFilter'){sort=e.target.value;renderQuotaList()}});
 const cockpitDialog=$('#cockpitDialog');
  cockpitDialog.addEventListener('cancel',e=>{if(overlayMode==='dialog'){e.preventDefault();releaseOverlay()}});
  cockpitDialog.addEventListener('click',e=>{

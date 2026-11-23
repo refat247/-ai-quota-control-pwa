@@ -12,3 +12,4 @@ __pycache__/
 *.pyc
 # Generated Google Actions credentials; never commit
 gha-creds-*.json
+dist-ocr/

@@ -58,3 +58,69 @@ assert.ok(rootRule?.headers.some(h=>h.key==='Cache-Control'&&h.value==='no-cache
 console.log('PASS: versions, privacy smoke, valid asset references, JS syntax, Firebase deployment boundary');
 // A109 repair source invariants. Chromium covers rendered UX separately.
 for(const phrase of ['function rankedQuotas(', 'function compactQuotaCard(', 'data-date-shift', 'id="sheetError"', 'maxHiddenUsed('])assert.ok(html.includes(phrase),'A109 missing '+phrase);
+// Paste-usage-text parser. SYNTHETIC samples only: written from public descriptions, NOT real /usage or /status output.
+{
+ const blk=html.match(/\/\*USAGE-PARSER-START\*\/([\s\S]*?)\/\*USAGE-PARSER-END\*\//);
+ assert.ok(blk,'usage parser block missing');
+ const {parseUsageText,matchUsageRows,usageConflicts}=new Function(blk[1]+';return {parseUsageText,matchUsageRows,usageConflicts};')();
+ const NOW='2026-11-23 23:24';
+ // 1. Claude-style, "used" wording, multi-line layout.
+ let r=parseUsageText('Current session\n████░░░░ 12% used\nResets 3pm (Asia/Dhaka)\n\nCurrent week (all models)\n██░░ 34% used\nResets Nov 27, 9am (Asia/Dhaka)\n\nCurrent week (Sonnet only)\n 5% used\nResets Nov 27, 9am (Asia/Dhaka)\n',NOW);
+ assert.ok(r.ok);assert.equal(r.detected,'claude');assert.equal(r.rows.length,3);
+ assert.deepEqual(r.rows.map(x=>[x.window,x.used,x.hint,x.reset]),[['5h',12,'','2026-11-24 15:00'],['weekly',34,'','2026-11-27 09:00'],['weekly',5,'sonnet','2026-11-27 09:00']]);
+ // 2. Codex-style: REMAINING must be converted to used; unit-less percent is skipped, never guessed.
+ r=parseUsageText('Rate limits:\n  5h limit: [████░░] 96% left (resets 14:30)\n  Weekly limit: [███] 94% remaining (resets 14:30 on 28 Nov)\n  Context window: 100% left\n',NOW);
+ assert.ok(r.ok);assert.equal(r.detected,'codex');
+ assert.deepEqual(r.rows.map(x=>[x.window,x.used,x.reset]),[['5h',4,'2026-11-24 14:30'],['weekly',6,'2026-11-28 14:30']]);
+ r=parseUsageText('Weekly limit: 40%\n5h limit: remaining: 70% (resets in 2h 15m)\n',NOW);
+ assert.equal(r.rows.length,1);assert.equal(r.rows[0].used,30);assert.equal(r.rows[0].reset,'2026-11-24 01:39');
+ assert.equal(r.skipped.length,1);assert.match(r.skipped[0].reason,/unclear/);
+ r=parseUsageText('5h limit: 96% (3h left)',NOW);assert.equal(r.ok,false,'"3h left" must not be read as the percent unit');
+ // 3. Missing / foreign-timezone reset: value parsed, reset left unchanged (null).
+ r=parseUsageText('Current session\n 12% used\n',NOW);assert.equal(r.rows[0].reset,null);assert.equal(r.rows[0].resetNote,'');
+ r=parseUsageText('Current session\n 12% used\nResets 3pm (Europe/London)\n',NOW);assert.equal(r.rows[0].reset,null);assert.match(r.rows[0].resetNote,/timezone/);
+ r=parseUsageText('Current session\n 12% used\nResets someday soon\n',NOW);assert.equal(r.rows[0].reset,null);assert.match(r.rows[0].resetNote,/not understood/);
+ // 4. Garbage / empty / oversized text: clear error, no rows.
+ for(const g of ['','   ','hello world','Battery 50% used','\u0000\u0001{}[]','x'.repeat(20001)]){const q=parseUsageText(g,NOW);assert.equal(q.ok,false,JSON.stringify(g).slice(0,20));assert.ok(q.error);}
+ assert.equal(parseUsageText('Current session\n 120% used',NOW).ok,false,'out-of-range percent rejected');
+ // 5. Mapping: provider + window; ambiguity and duplicates are never resolved silently.
+ const subs=[{id:'c1',provider:'Claude Pro (synthetic)'},{id:'c2',provider:'Claude Max (synthetic)'},{id:'g1',provider:'ChatGPT Plus (synthetic)'},{id:'x1',provider:'SuperGrok'}];
+ const quotas=[{id:'qc1w',subId:'c1',model:'Claude weekly all',window:'weekly'},{id:'qc1s',subId:'c1',model:'Claude Sonnet weekly',window:'weekly'},{id:'qc2w',subId:'c2',model:'Claude weekly all',window:'weekly'},{id:'qc15',subId:'c1',model:'Claude session',window:'5h'},{id:'qg5',subId:'g1',model:'Codex',window:'5h'},{id:'qgw',subId:'g1',model:'Codex',window:'weekly'},{id:'qxw',subId:'x1',model:'Grok',window:'weekly'}];
+ r=parseUsageText('Current session\n 12% used\nCurrent week (all models)\n 34% used\nCurrent week (Sonnet only)\n 5% used\nCurrent week (Opus only)\n 1% used',NOW);
+ let m=matchUsageRows(r.rows,'claude',subs,quotas);
+ assert.deepEqual(m.map(x=>x.status),['matched','ambiguous','matched','unmatched']);
+ assert.deepEqual([...m[1].candidates].sort(),['qc1s','qc1w','qc2w']);
+ assert.equal(m[1].candidates.length,3,'two Claude accounts + Sonnet pool all weekly candidates for an unhinted row');
+ assert.equal(m[2].poolId,'qc1s');assert.equal(m[0].poolId,'qc15');
+ r=parseUsageText('5h limit: 96% left\nWeekly limit: 94% left',NOW);
+ m=matchUsageRows(r.rows,'codex',subs,quotas);assert.deepEqual(m.map(x=>x.poolId),['qg5','qgw']);
+ assert.equal(matchUsageRows(r.rows,null,subs,quotas)[0].status,'unmatched','undetected provider never auto-maps');
+ assert.deepEqual(usageConflicts(['qg5','qg5','skip','skip','']),['qg5']);
+ assert.deepEqual(usageConflicts(['qg5','qgw','skip','']),[]);
+ // Same text pasted twice => both rows auto-map to the same single pool => conflict that blocks Confirm.
+ r=parseUsageText('5h limit: 96% left\n5h limit: 90% left',NOW);m=matchUsageRows(r.rows,'codex',subs,quotas);
+ assert.deepEqual(usageConflicts(m.map(x=>x.poolId)),['qg5']);
+ // 6. Layout transcribed from owner screenshots of the Claude desktop Usage page and the ChatGPT/Codex Usage & billing page (24 Nov 2026).
+ // Label, then reset line, then percent. Weekly Claude reset has a time but no date => not applied. Unrelated lines must not create rows.
+ r=parseUsageText('Your usage Pro\nOn track. You should reach today\u2019s reset with room to spare.\nCurrent session\nResets at 4:40 AM\n5% used\nThis week\nResets at 9:00 AM\n89% used\nLimit resets\nFull reset\nExpires Dec 11, 4:00 AM GMT+6\nUsage credits\n$0\nAvailable for any task.\n','2026-11-24 00:25');
+ assert.ok(r.ok);assert.equal(r.detected,'claude');
+ assert.deepEqual(r.rows.map(x=>[x.window,x.used,x.reset]),[['5h',5,'2026-11-24 04:40'],['weekly',89,null]]);
+ assert.match(r.rows[1].resetNote,/no date/);
+ r=parseUsageText('Usage & billing\nPlan limits\nShared across Codex, Work, Workspace Agents, and ChatGPT for Excel.\nChat conversations are not included.\n5-hour limit\nResets in 19m\n94% left\nWeekly limit\nResets in 1d 7h\n20% left\nAllow your assistant to use resets\nAllow your assistant to use a reset only when you explicitly request it during a conversation and your current limit has 10% or less remaining. Resets are never used automatically.\nUsage limit resets\nUse a reset to restore your 5-hour limit, weekly limit, or both\nAvailable 3\nFull reset (Weekly + 5 hr)\nExpires Dec 1, 1:27 AM GMT+6\n','2026-11-24 00:28');
+ assert.ok(r.ok);assert.equal(r.detected,'codex');
+ assert.deepEqual(r.rows.map(x=>[x.window,x.used,x.reset]),[['5h',6,'2026-11-24 00:47'],['weekly',80,'2026-11-25 07:28']]);
+ // Invariants: no network primitives, storage key unchanged.
+ assert.ok(!/fetch\(|XMLHttpRequest|sendBeacon|WebSocket/.test(html.replace(/self\.addEventListener[^\n]*/,'')),'index.html must stay network-free');
+ assert.ok(html.includes("STORE='ai-quota-control-center-v1'"));
+ console.log('PASS: paste-usage parser (normal, remaining-vs-used, missing reset, garbage, duplicate/ambiguous pools) — synthetic samples only');
+}
+{
+ const fs2=require('fs'),as=require('assert');
+ const idx=fs2.readFileSync('index.html','utf8'),bld=fs2.readFileSync('scripts/build-ocr-preview.cjs','utf8'),ui=fs2.readFileSync('ocr-preview/ocr-ui.js','utf8'),host=fs2.readFileSync('scripts/build-hosting.cjs','utf8');
+ as.ok(idx.includes('data-ocr-slot')&&idx.includes('data-usage-verify'),'index.html OCR slot and verify tick present');
+ as.ok(!/tesseract|__quotaUsageParser/i.test(idx),'production index.html must not contain OCR engine or preview hooks');
+ as.ok(!/ocr/i.test(host.replace(/data-ocr-slot/g,'')),'production hosting build must not mention OCR');
+ as.ok(bld.includes('__quotaUsageParser')&&bld.includes('Content-Security-Policy'),'preview build injects parser hook and CSP');
+ as.ok(!/fetch\(|XMLHttpRequest|sendBeacon|WebSocket|localStorage/.test(ui),'ocr-ui.js has no network/storage primitives');
+ console.log('PASS: OCR preview boundary (production untouched, no storage/network in ocr-ui.js)');
+}

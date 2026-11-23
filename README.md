@@ -12,6 +12,12 @@ Home search/clear and filters (All, Pinned, Reset ≤24h, Overdue, Weekly, 5-hou
 
 Real Android/iPhone owner acceptance and a verified independent JSON backup are separate post-release safety checks for the already-deployed v3.2.0; they remain unverified. Do not reinstall or clear browser data to test them.
 
+## Paste usage text (unreleased, local branch `feat/paste-usage-import`)
+
+Quotas has a collapsible **Paste usage text** card. Paste the text of Claude Code `/usage` or Codex `/status`, tap **Preview changes**, check the table (pool, old -> new used %, old -> new reset) and tap **Confirm & save**. Cancel or leaving it changes nothing. "Left/remaining" percentages are converted to used; a percentage with no used/left word is skipped, never guessed. A row that matches no pool or several pools must be assigned (or skipped) by you, and two rows cannot target the same pool. Resets are applied only when they can be read as Asia/Dhaka time. After saving, the app re-reads localStorage to verify the values.
+
+This is **manual paste, not provider API sync**: no network request, token or login is involved. The parser is tested on synthetic samples and two layouts transcribed from the Claude desktop Usage page and the ChatGPT/Codex Usage & billing page; it is **unverified against raw Claude Code `/usage` and Codex CLI `/status` output**, and a weekly reset with a time but no date is not applied; a vendor format change can make it skip rows or refuse text (it fails closed). Real-device Android acceptance and independent review are still pending.
+
 ## Privacy rule
 
 The original GitHub Pages project URL `https://refat247.github.io/-ai-quota-control-pwa/` shares its browser **origin** with any sibling Pages project on `https://refat247.github.io`. Browser `localStorage` is not isolated by path. v3.0.1 **blocks file and paste JSON import on that known shared origin**. Do not enter private account details manually on the old host either. There is no evidence of past compromise.
