@@ -894,7 +894,7 @@ function parseUsageText(text,nowBD,providerHint){
   const used=Math.round((c.pct.unit==='used'?c.pct.value:100-c.pct.value)*10)/10,hint=(c.label.match(/\b(sonnet|opus|haiku|fable|mythos|spark|mini)\b/i)||[])[1];
   let r=upParseReset(c.resetText,nowBD);
   if(r.timeOnly&&c.window==='weekly')r={iso:null,note:'Weekly reset shows a time but no date, so it was not applied.'};
-  rows.push({id:rows.length,window:c.window,label:name,hint:hint?hint.toLowerCase():'',used,shown:c.pct.text+' '+(c.pct.unit==='used'?'used':'left'),reset:r.iso,resetNote:r.note});
+  rows.push({id:rows.length,window:c.window,label:name,hint:hint?hint.toLowerCase():'',used,shown:c.pct.text+' '+(c.pct.unit==='used'?'used':'left'),reset:r.iso,resetNote:r.note,resetText:c.resetText||''});
  });
  const resets=upParseResets(text,nowBD);
  if(!rows.length&&!resets.items.length)return {ok:false,error:'No usage lines recognised. Paste the full output of Claude Code /usage or Codex /status. Nothing was changed.',skipped};

@@ -21,7 +21,8 @@ function vote(results){
  var tally={},labels={},rtally={},avt={};
  results.forEach(function(res){if(res.avail!==null&&res.avail!==undefined)avt[res.avail]=(avt[res.avail]||0)+1;var rows=res.rows;var rs={};res.resets.forEach(function(x){var key=x.kind+'|'+x.expires;if(rs[key])return;rs[key]=1;rtally[key]=rtally[key]||{n:0,x:x};rtally[key].n++});var seen={};rows.forEach(function(r){var k=r.window+'|'+r.hint;if(seen[k])return;seen[k]=1;
   tally[k]=tally[k]||{};tally[k][r.used]=(tally[k][r.used]||0)+1;labels[k]=labels[k]||r;
-  if(r.reset){var rk=k+'|r';tally[rk]=tally[rk]||{};tally[rk][r.reset]=(tally[rk][r.reset]||0)+1}})});
+  var rv=r.reset||(/^[A-Za-z0-9 :.,'\u2019()\/\u2013-]{1,60}$/.test(r.resetText||'')?'t|'+r.resetText:null);
+  if(rv){var rk=k+'|r';tally[rk]=tally[rk]||{};tally[rk][rv]=(tally[rk][rv]||0)+1}})});
  var kept=[],unsure=[];
  Object.keys(tally).filter(function(k){return k.slice(-2)!=='|r'}).forEach(function(k){
   var best=null,bc=0,second=0;
@@ -42,7 +43,7 @@ function canonical(kept,provider,resets){
  kept.forEach(function(r){
   out.push((r.window==='5h'?'Current session':'Current week')+(r.hint?' ('+r.hint+' only)':''));
   out.push(r.used+'% used');
-  if(r.reset)out.push('Resets '+r.reset);
+  if(r.reset)out.push('Resets '+(r.reset.indexOf('t|')===0?r.reset.slice(2):r.reset));
  });
  if(resets&&resets.length){out.push('Usage limit resets','Available '+resets.length);resets.forEach(function(x){out.push('Full reset ('+x.kind+')','Expires '+x.expires+' GMT+6')})}
  return out.join('\n');
