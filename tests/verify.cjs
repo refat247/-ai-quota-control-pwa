@@ -114,3 +114,13 @@ for(const phrase of ['function rankedQuotas(', 'function compactQuotaCard(', 'da
  assert.ok(html.includes("STORE='ai-quota-control-center-v1'"));
  console.log('PASS: paste-usage parser (normal, remaining-vs-used, missing reset, garbage, duplicate/ambiguous pools) — synthetic samples only');
 }
+{
+ const fs2=require('fs'),as=require('assert');
+ const idx=fs2.readFileSync('index.html','utf8'),bld=fs2.readFileSync('scripts/build-ocr-preview.cjs','utf8'),ui=fs2.readFileSync('ocr-preview/ocr-ui.js','utf8'),host=fs2.readFileSync('scripts/build-hosting.cjs','utf8');
+ as.ok(idx.includes('data-ocr-slot')&&idx.includes('data-usage-verify'),'index.html OCR slot and verify tick present');
+ as.ok(!/tesseract|__quotaUsageParser/i.test(idx),'production index.html must not contain OCR engine or preview hooks');
+ as.ok(!/ocr/i.test(host.replace(/data-ocr-slot/g,'')),'production hosting build must not mention OCR');
+ as.ok(bld.includes('__quotaUsageParser')&&bld.includes('Content-Security-Policy'),'preview build injects parser hook and CSP');
+ as.ok(!/fetch\(|XMLHttpRequest|sendBeacon|WebSocket|localStorage/.test(ui),'ocr-ui.js has no network/storage primitives');
+ console.log('PASS: OCR preview boundary (production untouched, no storage/network in ocr-ui.js)');
+}

@@ -5,6 +5,7 @@
   "description": "Public-safe mobile-first manual AI quota tracker",
   "scripts": {
     "test": "node tests/verify.cjs",
-    "build:hosting": "node scripts/build-hosting.cjs"
+    "build:hosting": "node scripts/build-hosting.cjs",
+    "build:ocr-preview": "node scripts/build-ocr-preview.cjs"
   }
 }

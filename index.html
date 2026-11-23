@@ -932,26 +932,26 @@ function usagePanelHTML(){
   }).join('');
   const skipped=p.skipped.length?`<p class="help-note">Not used: ${p.skipped.map(s=>escapeHTML(s.label+' ('+s.reason+')')).join('; ')}</p>`:'';
   const prov=`<label for="usageProvider" class="paste-label">Provider</label><select id="usageProvider"><option value="" ${d.providerChoice===''?'selected':''}>Auto${p.detected?' ('+(p.detected==='claude'?'Claude Code':'Codex')+')':' — not detected'}</option><option value="claude" ${d.providerChoice==='claude'?'selected':''}>Claude Code</option><option value="codex" ${d.providerChoice==='codex'?'selected':''}>Codex / ChatGPT</option></select>`;
-  const why=blocked?'Saving is blocked here (recovery mode or shared origin).':dups.length?'Two rows target the same pool: skip one.':unresolved?'Choose a pool or skip for every row.':!applied?'Nothing to apply: every row is skipped.':'';
-  return `${notice}<div class="card help usage-preview"><h3>Preview — nothing saved yet</h3><p class="help-note">Manual paste, no provider sync. Each row updates one pool only; percentages are never averaged.</p>${prov}${rowsHtml}${skipped}${why?`<div class="notice warn" role="status">${escapeHTML(why)}</div>`:''}<div class="button-row"><button class="btn primary" data-usage-action="confirm" ${why?'disabled':''}>Confirm &amp; save</button><button class="btn" data-usage-action="cancel">Cancel</button></div></div>`;
+  const why=blocked?'Saving is blocked here (recovery mode or shared origin).':dups.length?'Two rows target the same pool: skip one.':unresolved?'Choose a pool or skip for every row.':!applied?'Nothing to apply: every row is skipped.':d.fromOcr&&!d.verified?'Tick the box to confirm you compared the numbers with your screen.':'';
+  return `${notice}<div class="card help usage-preview"><h3>Preview — nothing saved yet</h3><p class="help-note">Manual paste, no provider sync. Each row updates one pool only; percentages are never averaged.</p>${prov}${rowsHtml}${skipped}${d.fromOcr?`<label class="inline-check"><input type="checkbox" data-usage-verify ${d.verified?'checked':''}/> <span>Read by OCR, which can misread digits: I compared these numbers with my screen.</span></label>`:''}${why?`<div class="notice warn" role="status">${escapeHTML(why)}</div>`:''}<div class="button-row"><button class="btn primary" data-usage-action="confirm" ${why?'disabled':''}>Confirm &amp; save</button><button class="btn" data-usage-action="cancel">Cancel</button></div></div>`;
  }
- return `${notice}<details class="card help usage-paste" ${d&&d.error?'open':''}><summary>Paste usage text (Claude /usage · Codex /status)</summary><p class="help-note">Manual paste only. Nothing is sent anywhere and nothing is saved until you confirm a preview.</p><label for="usagePaste" class="paste-label">Paste text</label><textarea id="usagePaste" rows="6" maxlength="20000" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Paste the /usage or /status output here">${escapeHTML(d?d.text:'')}</textarea><div class="button-row"><button class="btn primary" data-usage-action="preview">Preview changes</button></div><div class="notice warn" role="alert" ${d&&d.error?'':'hidden'}>${escapeHTML(d?d.error:'')}</div></details>`;
+ return `${notice}<details class="card help usage-paste" ${d&&d.error?'open':''}><summary>Paste usage text (Claude /usage · Codex /status)</summary><p class="help-note">Manual paste only. Nothing is sent anywhere and nothing is saved until you confirm a preview.</p><label for="usagePaste" class="paste-label">Paste text</label><textarea id="usagePaste" rows="6" maxlength="20000" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Paste the /usage or /status output here">${escapeHTML(d?d.text:'')}</textarea><div data-ocr-slot></div><div class="button-row"><button class="btn primary" data-usage-action="preview">Preview changes</button></div><div class="notice warn" role="alert" ${d&&d.error?'':'hidden'}>${escapeHTML(d?d.error:'')}</div></details>`;
 }
 function usageRefresh(){const el=$('#usagePanel');if(el)el.innerHTML=usagePanelHTML();}
-function usageRun(text,choice){
+function usageRun(text,choice,fromOcr){
  const parsed=parseUsageText(text,inputNow(),choice||null);
- if(!parsed.ok){usageDraft={text,providerChoice:choice||'',parsed:null,error:parsed.error,match:[],sel:[]};usageRefresh();return;}
+ if(!parsed.ok){usageDraft={text,providerChoice:choice||'',parsed:null,error:parsed.error,match:[],sel:[],fromOcr:!!fromOcr,verified:false};usageRefresh();return;}
  const match=matchUsageRows(parsed.rows,parsed.provider,data.subs,data.quotas);
- usageDraft={text,providerChoice:choice||'',parsed,error:'',match,sel:match.map(m=>m.poolId)};
+ usageDraft={text,providerChoice:choice||'',parsed,error:'',match,sel:match.map(m=>m.poolId),fromOcr:!!fromOcr,verified:false};
  usageRefresh();
 }
 function doUsageAction(which){
- if(which==='preview'){const area=$('#usagePaste');usageNotice='';usageRun(area?area.value:'',usageDraft?usageDraft.providerChoice:'');return;}
+ if(which==='preview'){const area=$('#usagePaste');usageNotice='';usageRun(area?area.value:'',usageDraft?usageDraft.providerChoice:'',!!(area&&area.dataset.ocr==='1'));return;}
  if(which==='cancel'){usageDraft=null;usageNotice='';usageRefresh();return;}
  if(which!=='confirm'||!usageDraft||!usageDraft.parsed)return;
  if(recoveryRequired||sharedGitHubOrigin){alert('Saving is blocked here.');return;}
  const d=usageDraft,sel=d.sel;
- if(sel.some(v=>v==='')||usageConflicts(sel).length||!sel.some(v=>v&&v!=='skip'))return;
+ if(sel.some(v=>v==='')||usageConflicts(sel).length||!sel.some(v=>v&&v!=='skip')||(d.fromOcr&&!d.verified))return;
  const next=copy(data),applied=[];
  d.parsed.rows.forEach((r,i)=>{
   const id=sel[i];if(!id||id==='skip')return;
@@ -1009,7 +1009,7 @@ $('#appview').addEventListener('click',e=>{
   else if(b.dataset.action)doAction(b.dataset.action);
 });
 $('#appview').addEventListener('input',e=>{if(e.target.id==='quotaSearch'){query=e.target.value;renderQuotaList()}else if(e.target.id==='homeSearch'){homeQuery=e.target.value;showAllProviders=false;refreshHomeResults()}});
-$('#appview').addEventListener('change',e=>{if(e.target.id==='usageProvider'){if(usageDraft)usageRun(usageDraft.text,e.target.value);return}if(e.target.dataset&&e.target.dataset.usageRow!==undefined){if(usageDraft){usageDraft.sel[+e.target.dataset.usageRow]=e.target.value;usageRefresh()}return}if(e.target.id==='providerFilter'){provider=e.target.value;renderQuotaList()}else if(e.target.id==='sortFilter'){sort=e.target.value;renderQuotaList()}});
+$('#appview').addEventListener('change',e=>{if(e.target.id==='usageProvider'){if(usageDraft)usageRun(usageDraft.text,e.target.value,usageDraft.fromOcr);return}if(e.target.dataset&&e.target.dataset.usageVerify!==undefined){if(usageDraft){usageDraft.verified=e.target.checked;usageRefresh()}return}if(e.target.dataset&&e.target.dataset.usageRow!==undefined){if(usageDraft){usageDraft.sel[+e.target.dataset.usageRow]=e.target.value;usageRefresh()}return}if(e.target.id==='providerFilter'){provider=e.target.value;renderQuotaList()}else if(e.target.id==='sortFilter'){sort=e.target.value;renderQuotaList()}});
 const cockpitDialog=$('#cockpitDialog');
  cockpitDialog.addEventListener('cancel',e=>{if(overlayMode==='dialog'){e.preventDefault();releaseOverlay()}});
  cockpitDialog.addEventListener('click',e=>{
