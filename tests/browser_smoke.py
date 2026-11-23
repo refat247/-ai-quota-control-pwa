@@ -385,6 +385,69 @@ def main():
         assert 'Not saved reliably' in page.locator('#saveStatus').inner_text()
         assert 'Saved automatically' not in page.locator('#saveStatus').inner_text()
         ctx.close(); print('PASS localStorage setItem failure status')
+        # Paste-usage-text: SYNTHETIC samples only (not real /usage or /status output).
+        def usage_ds(extra_claude_weekly=False):
+            q=lambda i,sub,model,win,used:{'id':i,'subId':sub,'scope':'','model':model,'window':win,'used':used,'nextReset':'','behavior':'manual','cycleHours':'','project':False,'verified':False,'note':''}
+            quotas=[q('u1','c1','Claude session','5h','10'),q('u2','c1','Claude weekly all','weekly','20'),q('u3','g1','Codex 5h','5h','30'),q('u4','g1','Codex weekly','weekly','40')]
+            if extra_claude_weekly: quotas.append(q('u5','c2','Claude weekly all','weekly','50'))
+            subs=[{'id':'c1','provider':'Claude Pro (synthetic)','plan':'P1','emails':'','status':'unknown'},{'id':'g1','provider':'ChatGPT Plus (synthetic)','plan':'P2','emails':'','status':'unknown'}]
+            if extra_claude_weekly: subs.append({'id':'c2','provider':'Claude Max (synthetic)','plan':'P3','emails':'','status':'unknown'})
+            return {'meta':{'snapshot':'synthetic','version':'3.3.1','updated':''},'subs':subs,'quotas':quotas,'milestones':[]}
+        CODEX_TXT='Rate limits:\n  5h limit: [####--] 96% left (resets in 2h 15m)\n  Weekly limit: [###] 94% left (resets 14:30 on 28 Nov)\n'
+        CLAUDE_TXT='Current session\n 12% used\nResets 3pm (Asia/Dhaka)\nCurrent week (all models)\n 34% used\nResets Nov 27, 9am (Asia/Dhaka)\n'
+        def open_paste(page):
+            page.locator('button[data-tab="quotas"]').first.click()
+            page.locator('#usagePanel summary').click()
+        ds=usage_ds(); raw0=json.dumps(ds)
+        ctx,page,_=get_page(390,stored=raw0)
+        reqs=[]; page.on('request',lambda r:reqs.append(r.url))
+        open_paste(page)
+        # Preview then Cancel: stored JSON byte-identical, textarea cleared.
+        page.locator('#usagePaste').fill(CODEX_TXT); page.locator('[data-usage-action="preview"]').click()
+        t=page.locator('#usagePanel').inner_text()
+        assert 'Preview' in t and 'nothing saved yet' in t and 'used 4%' in t and 'used 6%' in t, t
+        assert page.evaluate('localStorage.getItem("'+STORE+'")')==raw0,'preview wrote storage'
+        page.locator('[data-usage-action="cancel"]').click()
+        assert page.evaluate('localStorage.getItem("'+STORE+'")')==raw0,'cancel changed storage'
+        page.locator('#usagePanel summary').click()
+        assert page.locator('#usagePaste').input_value()=='', 'textarea not cleared after cancel'
+        # Garbage: clear error, no change.
+        page.locator('#usagePaste').fill('hello world 50% used'); page.locator('[data-usage-action="preview"]').click()
+        assert 'No usage lines recognised' in page.locator('#usagePanel').inner_text()
+        assert page.evaluate('localStorage.getItem("'+STORE+'")')==raw0,'garbage changed storage'
+        # Confirm Codex (remaining -> used): only matched pools change, schema/key unchanged.
+        page.locator('#usagePaste').fill(CODEX_TXT); page.locator('[data-usage-action="preview"]').click()
+        assert page.locator('[data-usage-action="confirm"]').is_enabled()
+        page.locator('[data-usage-action="confirm"]').click()
+        st=json.loads(page.evaluate('localStorage.getItem("'+STORE+'")')); old=json.loads(raw0)
+        qs={x['id']:x for x in st['quotas']}
+        assert qs['u3']['used']=='4' and qs['u4']['used']=='6', qs
+        assert qs['u3']['nextReset'] and qs['u4']['nextReset'].endswith('-11-28 14:30'), qs
+        assert qs['u1']['used']=='10' and qs['u2']['used']=='20','unrelated pools changed'
+        assert set(st.keys())==set(old.keys()) and all(set(a.keys())==set(b.keys()) for a,b in zip(st['quotas'],old['quotas'])),'schema changed'
+        assert 'read-back verified' in page.locator('#usagePanel').inner_text()
+        page.locator('#usagePanel summary').click()
+        assert page.locator('#usagePaste').input_value()=='','textarea not cleared after save'
+        assert not reqs, f'network requests made: {reqs}'
+        ctx.close(); print('PASS paste usage: preview/cancel byte-identical, garbage error, remaining->used confirm, no network')
+        # Ambiguous pools (two Claude weekly pools): never auto-picked; Confirm blocked until user chooses.
+        ds=usage_ds(True); raw1=json.dumps(ds)
+        ctx,page,_=get_page(390,stored=raw1); open_paste(page)
+        page.locator('#usagePaste').fill('Current week (all models)\n 34% used\n'); page.locator('[data-usage-action="preview"]').click()
+        assert page.locator('[data-usage-action="confirm"]').is_disabled(), 'ambiguous row confirmable without a choice'
+        assert 'Choose a pool' in page.locator('#usagePanel').inner_text()
+        page.locator('select[data-usage-row="0"]').select_option('u5')
+        assert page.locator('[data-usage-action="confirm"]').is_enabled()
+        page.locator('[data-usage-action="confirm"]').click()
+        qs={x['id']:x for x in json.loads(page.evaluate('localStorage.getItem("'+STORE+'")'))['quotas']}
+        assert qs['u5']['used']=='34' and qs['u2']['used']=='20' and qs['u1']['used']=='10','wrong pool updated'
+        ctx.close(); print('PASS paste usage: ambiguous pool requires explicit choice')
+        # Duplicate target: same text pasted twice maps both rows to one pool; Confirm blocked.
+        ctx,page,_=get_page(390,stored=raw0); open_paste(page)
+        page.locator('#usagePaste').fill('5h limit: 96% left\n5h limit: 90% left\n'); page.locator('[data-usage-action="preview"]').click()
+        assert page.locator('[data-usage-action="confirm"]').is_disabled() and 'same pool' in page.locator('#usagePanel').inner_text()
+        assert page.evaluate('localStorage.getItem("'+STORE+'")')==raw0
+        ctx.close(); print('PASS paste usage: duplicate target pool blocks confirm')
         if os.environ.get('QUOTA_REAL_ORIGIN_TEST') == '1':
             # GitHub-hosted runner can reach a real loopback HTTP origin.
             # This is stronger than the mock-store test, but not Android acceptance.

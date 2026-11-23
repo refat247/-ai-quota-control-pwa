@@ -2,6 +2,16 @@
 
 All notable changes follow SemVer and Keep a Changelog.
 
+## [Unreleased] (local branch feat/paste-usage-import; no PR, not merged, not deployed; version not bumped)
+
+### Added
+- Quotas: **Paste usage text**. The user pastes Claude Code `/usage` or Codex `/status` text; a local parser extracts used % (converts "left/remaining" to used), the 5-hour or weekly window and, when it is unambiguous and in Asia/Dhaka, the reset time. A preview (pool, old -> new) is shown first; nothing is saved until Confirm. Rows that match no pool, or more than one pool, need an explicit choice or Skip; two rows aimed at the same pool block Confirm. Unit-less percentages and unparseable text are skipped or rejected with no data change.
+
+### Limits and evidence
+- This is still **manual paste**, not provider API sync, background sync or automatic quota update. No network call was added.
+- Storage key `ai-quota-control-center-v1`, JSON schema, Backup/Import, F1 recovery and the 5-file Hosting allowlist are unchanged.
+- Parser tested only with **synthetic** samples written from public descriptions; it is **UNVERIFIED against real `/usage` or `/status` output**, which vendors may change without notice. Real Android Chrome acceptance NOT RUN. Independent review NOT RUN.
+
 ## [3.3.1] - 2026-11-18 (A109 bounded repair DRAFT; not deployed)
 
 ### Fixed
