@@ -100,6 +100,15 @@ for(const phrase of ['function rankedQuotas(', 'function compactQuotaCard(', 'da
  // Same text pasted twice => both rows auto-map to the same single pool => conflict that blocks Confirm.
  r=parseUsageText('5h limit: 96% left\n5h limit: 90% left',NOW);m=matchUsageRows(r.rows,'codex',subs,quotas);
  assert.deepEqual(usageConflicts(m.map(x=>x.poolId)),['qg5']);
+ // 6. Layout transcribed from owner screenshots of the Claude desktop Usage page and the ChatGPT/Codex Usage & billing page (24 Nov 2026).
+ // Label, then reset line, then percent. Weekly Claude reset has a time but no date => not applied. Unrelated lines must not create rows.
+ r=parseUsageText('Your usage Pro\nOn track. You should reach today\u2019s reset with room to spare.\nCurrent session\nResets at 4:40 AM\n5% used\nThis week\nResets at 9:00 AM\n89% used\nLimit resets\nFull reset\nExpires Dec 11, 4:00 AM GMT+6\nUsage credits\n$0\nAvailable for any task.\n','2026-11-24 00:25');
+ assert.ok(r.ok);assert.equal(r.detected,'claude');
+ assert.deepEqual(r.rows.map(x=>[x.window,x.used,x.reset]),[['5h',5,'2026-11-24 04:40'],['weekly',89,null]]);
+ assert.match(r.rows[1].resetNote,/no date/);
+ r=parseUsageText('Usage & billing\nPlan limits\nShared across Codex, Work, Workspace Agents, and ChatGPT for Excel.\nChat conversations are not included.\n5-hour limit\nResets in 19m\n94% left\nWeekly limit\nResets in 1d 7h\n20% left\nAllow your assistant to use resets\nAllow your assistant to use a reset only when you explicitly request it during a conversation and your current limit has 10% or less remaining. Resets are never used automatically.\nUsage limit resets\nUse a reset to restore your 5-hour limit, weekly limit, or both\nAvailable 3\nFull reset (Weekly + 5 hr)\nExpires Dec 1, 1:27 AM GMT+6\n','2026-11-24 00:28');
+ assert.ok(r.ok);assert.equal(r.detected,'codex');
+ assert.deepEqual(r.rows.map(x=>[x.window,x.used,x.reset]),[['5h',6,'2026-11-24 00:47'],['weekly',80,'2026-11-25 07:28']]);
  // Invariants: no network primitives, storage key unchanged.
  assert.ok(!/fetch\(|XMLHttpRequest|sendBeacon|WebSocket/.test(html.replace(/self\.addEventListener[^\n]*/,'')),'index.html must stay network-free');
  assert.ok(html.includes("STORE='ai-quota-control-center-v1'"));

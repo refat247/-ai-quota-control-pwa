@@ -16,7 +16,7 @@ Real Android/iPhone owner acceptance and a verified independent JSON backup are 
 
 Quotas has a collapsible **Paste usage text** card. Paste the text of Claude Code `/usage` or Codex `/status`, tap **Preview changes**, check the table (pool, old -> new used %, old -> new reset) and tap **Confirm & save**. Cancel or leaving it changes nothing. "Left/remaining" percentages are converted to used; a percentage with no used/left word is skipped, never guessed. A row that matches no pool or several pools must be assigned (or skipped) by you, and two rows cannot target the same pool. Resets are applied only when they can be read as Asia/Dhaka time. After saving, the app re-reads localStorage to verify the values.
 
-This is **manual paste, not provider API sync**: no network request, token or login is involved. The parser is tested only on synthetic samples and is **unverified against real vendor output**; a vendor format change can make it skip rows or refuse text (it fails closed). Real-device Android acceptance and independent review are still pending.
+This is **manual paste, not provider API sync**: no network request, token or login is involved. The parser is tested on synthetic samples and two layouts transcribed from the Claude desktop Usage page and the ChatGPT/Codex Usage & billing page; it is **unverified against raw Claude Code `/usage` and Codex CLI `/status` output**, and a weekly reset with a time but no date is not applied; a vendor format change can make it skip rows or refuse text (it fails closed). Real-device Android acceptance and independent review are still pending.
 
 ## Privacy rule
 

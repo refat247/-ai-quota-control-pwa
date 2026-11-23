@@ -10,7 +10,7 @@ All notable changes follow SemVer and Keep a Changelog.
 ### Limits and evidence
 - This is still **manual paste**, not provider API sync, background sync or automatic quota update. No network call was added.
 - Storage key `ai-quota-control-center-v1`, JSON schema, Backup/Import, F1 recovery and the 5-file Hosting allowlist are unchanged.
-- Parser tested only with **synthetic** samples written from public descriptions; it is **UNVERIFIED against real `/usage` or `/status` output**, which vendors may change without notice. Real Android Chrome acceptance NOT RUN. Independent review NOT RUN.
+- Parser tested with **synthetic** samples plus two layouts transcribed from owner screenshots of the Claude desktop Usage page and the ChatGPT/Codex Usage & billing page (24 Nov 2026; text re-typed, not raw copy). It is **UNVERIFIED against real Claude Code `/usage` and Codex CLI `/status` output**, and vendors may change formats without notice. A weekly reset shown as a time without a date is not applied. Real Android Chrome acceptance NOT RUN. Independent review NOT RUN.
 
 ## [3.3.1] - 2026-11-18 (A109 bounded repair DRAFT; not deployed)
 

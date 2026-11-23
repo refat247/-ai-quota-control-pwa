@@ -863,7 +863,7 @@ function upParseReset(txt,nowBD){
   if(hh===null)return bad;
   let ms=upMake(now.y,now.mo,now.d,hh,mi);if(ms===null)return bad;
   if(ms<=nowMs)ms+=86400000;
-  return {iso:upFmt(ms),note:''};
+  return {iso:upFmt(ms),note:'',timeOnly:true};
  }
  let y=now.y,ms=upMake(y,mo,day,hh===null?0:hh,mi);
  if(ms===null)return bad;
@@ -892,7 +892,8 @@ function parseUsageText(text,nowBD,providerHint){
   if(!c.pct.unit){skipped.push({label:name,reason:'unclear whether '+c.pct.text+' is used or remaining'});return;}
   if(!(c.pct.value>=0&&c.pct.value<=100)){skipped.push({label:name,reason:'percentage out of range'});return;}
   const used=Math.round((c.pct.unit==='used'?c.pct.value:100-c.pct.value)*10)/10,hint=(c.label.match(/\b(sonnet|opus|haiku|fable|mythos|spark|mini)\b/i)||[])[1];
-  const r=upParseReset(c.resetText,nowBD);
+  let r=upParseReset(c.resetText,nowBD);
+  if(r.timeOnly&&c.window==='weekly')r={iso:null,note:'Weekly reset shows a time but no date, so it was not applied.'};
   rows.push({id:rows.length,window:c.window,label:name,hint:hint?hint.toLowerCase():'',used,shown:c.pct.text+' '+(c.pct.unit==='used'?'used':'left'),reset:r.iso,resetNote:r.note});
  });
  if(!rows.length)return {ok:false,error:'No usage lines recognised. Paste the full output of Claude Code /usage or Codex /status. Nothing was changed.',skipped};
