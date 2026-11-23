@@ -807,6 +807,8 @@ function doAction(which){
 }
 
 /*USAGE-PARSER-START*/
+const UP_PROV_RE={claude:/claude|anthropic/i,codex:/chatgpt|openai|codex/i,gemini:/gemini|google/i,antigravity:/antigravity/i,grok:/grok|xai|x\.ai/i};
+const UP_PROV_NAME={claude:'Claude Code',codex:'Codex',gemini:'Gemini',antigravity:'Antigravity',grok:'Grok'};
 const UP_MONTHS={jan:1,feb:2,mar:3,apr:4,may:5,jun:6,jul:7,aug:8,sep:9,oct:10,nov:11,dec:12};
 function upPad(n){return String(n).padStart(2,'0')}
 function upParts(s){const m=String(s||'').match(/^(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2})$/);return m?{y:+m[1],mo:+m[2],d:+m[3],h:+m[4],mi:+m[5]}:null}
@@ -827,8 +829,9 @@ function upPercent(line){
  const value=Number(m[1]),after=line.slice(m.index+m[0].length),before=line.slice(0,m.index);
  let u=after.match(/^\s*(?:of (?:your |the )?(?:limit|quota|allowance|plan)\s*)?(used|consumed|left|remaining|available)\b/i);
  if(!u)u=before.match(/\b(used|consumed|left|remaining|available)\s*[:=-]?\s*$/i);
- const unit=u?(/used|consumed/i.test(u[1])?'used':'left'):null;
- return {value,unit,text:m[0]};
+ let unit=u?(/used|consumed/i.test(u[1])?'used':'left'):null,inferred=false;
+ if(!u&&/^\s*of\s+total\b/i.test(after)){unit='used';inferred=true;}
+ return {value,unit,text:m[0],inferred};
 }
 function upParseReset(txt,nowBD){
  let t=String(txt||'').trim();while(t.endsWith(')')&&(t.match(/\)/g)||[]).length>(t.match(/\(/g)||[]).length)t=t.slice(0,-1).trim();if(!t)return {iso:null,note:''};
@@ -842,6 +845,7 @@ function upParseReset(txt,nowBD){
  if(m){let mins=0,found=false;m[1].replace(/(\d+)\s*(d(?:ays?)?|h(?:ours?|rs?)?|m(?:in(?:ute)?s?)?)\b/gi,(_,n,u)=>{found=true;const k=u[0].toLowerCase();mins+=Number(n)*(k==='d'?1440:k==='h'?60:1);return ''});return found&&mins>0&&mins<=60*24*10?{iso:upFmt(nowMs+mins*60000),note:''}:bad;}
  m=t.match(/^(\d{4})-(\d{2})-(\d{2})(?:[ T](\d{2}):(\d{2}))?$/);
  if(m){const ms=upMake(+m[1],+m[2],+m[3],+(m[4]||0),+(m[5]||0));return ms===null?bad:{iso:upFmt(ms,m[4]===undefined),note:''};}
+ t=t.replace(/^(?:mon|tue|tues|wed|thu|thur|thurs|fri|sat|sun)[a-z]*\.?,?\s+(?=\d|(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec))/i,'');
  t=t.replace(/^(?:at|on)\s+/i,'');
  const MON='(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\\.?';
  let mo=null,day=null,rest=t;
@@ -871,19 +875,25 @@ function upParseReset(txt,nowBD){
  return {iso:upFmt(ms,hh===null),note:''};
 }
 function upDetectProvider(text){
- const t=String(text||'').toLowerCase(),c=/\bclaude\b|anthropic|current session|current week|\/usage/.test(t),x=/\bcodex\b|chatgpt|openai|\b5h limit|weekly limit|rate limits?/.test(t);
+ const t=String(text||'').toLowerCase();
+ if(/grok/.test(t))return 'grok';
+ if(/antigravity|claude and gpt models/.test(t))return 'antigravity';
+ if(/\bgemini\b/.test(t)&&!/\bcodex\b|chatgpt/.test(t))return 'gemini';
+ const c=/\bclaude\b|anthropic|current session|current week|\/usage/.test(t),x=/\bcodex\b|chatgpt|openai|\b5h limit|weekly limit|rate limits?/.test(t);
  return c&&!x?'claude':x&&!c?'codex':null;
 }
 function parseUsageText(text,nowBD,providerHint){
  if(typeof text!=='string'||!text.trim())return {ok:false,error:'Paste the /usage or /status text first.',skipped:[]};
  if(text.length>20000)return {ok:false,error:'Text is too long (max 20,000 characters). Nothing was changed.',skipped:[]};
- const lines=upClean(text),cand=[];let cur=null;
+ const lines=upClean(text),cand=[],prov0=providerHint||upDetectProvider(text);let cur=null,group='';
  lines.forEach((line,i)=>{
   if(/\bcontext\b/i.test(line)||/^credits?\b/i.test(line))return;
-  const head=line.replace(/\(?\bresets?\b.*$/i,'').trim(),win=upWindow(head),pm=upPercent(line),rm=line.match(/\bresets?\b\s*(.*)$/i);
-  if(win){cur={window:win,label:head.replace(/\d{1,3}(?:\.\d+)?\s*%/g,'').replace(/[:\-–\s]+$/,'').trim().slice(0,60),at:i,pct:null,resetText:null};cand.push(cur);}
+  const head=line.replace(/\(?\bresets?\b.*$/i,'').trim(),pm=upPercent(line),rm=line.match(/\bresets?\b\s*(.*)$/i);
+  const win=upWindow(head)||(/^\W*current usage\b/i.test(head)?'unknown':null);
+  if(!win&&prov0==='antigravity'&&!pm&&!rm&&line.length<=40&&/\b(models?|argon)\b/i.test(line))group=line.replace(/[^A-Za-z0-9 .]/g,' ').replace(/\s+/g,' ').trim();
+  if(win){let lab=head.replace(/\d{1,3}(?:\.\d+)?\s*%/g,'').replace(/\b(used|left|remaining|of total)\b/gi,'').replace(/[^A-Za-z0-9 .,()+·\-]/g,' ').replace(/\s+/g,' ').replace(/[:,\-–\s]+$/,'').trim();const wm=lab.search(/\b(?:(?:this|current)\s+)?(?:5\s*-?\s*h|five|session|weekly|week|7[- ]day|seven)/i);if(wm>0&&!group&&win!=='unknown')lab=lab.slice(wm);cur={window:win,label:((group&&win!=='unknown'?group+' · ':'')+lab).slice(0,70),at:i,pct:null,resetText:null};cand.push(cur);}
   if(cur&&pm&&cur.pct===null&&(win||i-cur.at<=2))cur.pct=pm;
-  if(cur&&rm&&cur.resetText===null&&(win||i-cur.at<=3))cur.resetText=rm[1].trim();
+  if(cur&&rm&&cur.resetText===null&&(win||i-cur.at<=3)){let rt=rm[1].trim();const nx=lines[i+1]&&lines[i+1].match(/^\d{1,2}:\d{2}\s*[ap]m\b/i);if(nx&&!/\d:\d{2}/.test(rt))rt=rt.replace(/[,\s]+$/,'')+', '+nx[0];cur.resetText=rt;}
  });
  const rows=[],skipped=[];
  cand.forEach(c=>{
@@ -894,7 +904,9 @@ function parseUsageText(text,nowBD,providerHint){
   const used=Math.round((c.pct.unit==='used'?c.pct.value:100-c.pct.value)*10)/10,hint=(c.label.match(/\b(sonnet|opus|haiku|fable|mythos|spark|mini)\b/i)||[])[1];
   let r=upParseReset(c.resetText,nowBD);
   if(r.timeOnly&&c.window==='weekly')r={iso:null,note:'Weekly reset shows a time but no date, so it was not applied.'};
-  rows.push({id:rows.length,window:c.window,label:name,hint:hint?hint.toLowerCase():'',used,shown:c.pct.text+' '+(c.pct.unit==='used'?'used':'left'),reset:r.iso,resetNote:r.note,resetText:c.resetText||''});
+  if(r.iso&&r.iso.length===10&&!r.note)r.note='Reset shows only a date; the time was not read.';
+  if(r.timeOnly&&c.window==='unknown')r={iso:null,note:'This limit has no stated window and its reset shows no date, so the reset was not applied.'};
+  rows.push({id:rows.length,window:c.window,label:name,hint:hint?hint.toLowerCase():'',used,shown:c.pct.text+' '+(c.pct.unit==='used'?'used':'left'),reset:r.iso,resetNote:r.note,resetText:c.resetText||'',unitNote:c.pct.inferred?'"% of total" was read as used.':''});
  });
  const resets=upParseResets(text,nowBD);
  if(!rows.length&&!resets.items.length)return {ok:false,error:'No usage lines recognised. Paste the full output of Claude Code /usage or Codex /status. Nothing was changed.',skipped};
@@ -918,16 +930,16 @@ function upParseResets(text,nowBD){
  return {items,avail,notes};
 }
 function matchUsageRows(rows,provider,subs,quotas){
- const re=provider==='claude'?/claude|anthropic/i:provider==='codex'?/chatgpt|openai|codex/i:null;
+ const re=UP_PROV_RE[provider]||null;
  const ids=re?subs.filter(s=>re.test(s.provider)).map(s=>s.id):[];
  return rows.map(r=>{
-  let c=re?quotas.filter(q=>ids.includes(q.subId)&&q.window===r.window):[];
+  let c=re?quotas.filter(q=>ids.includes(q.subId)&&(r.window==='unknown'||q.window===r.window)):[];
   if(r.hint)c=c.filter(q=>(q.model+' '+(q.scope||'')).toLowerCase().includes(r.hint));
   return {rowId:r.id,candidates:c.map(q=>q.id),status:c.length===1?'matched':c.length?'ambiguous':'unmatched',poolId:c.length===1?c[0].id:''};
  });
 }
 function matchResetPool(provider,subs,quotas){
- const re=provider==='claude'?/claude|anthropic/i:provider==='codex'?/chatgpt|openai|codex/i:null;
+ const re=UP_PROV_RE[provider]||null;
  const ids=re?subs.filter(s=>re.test(s.provider)).map(s=>s.id):[];
  const c=re?quotas.filter(q=>ids.includes(q.subId)&&q.window==='weekly'):[];
  return {candidates:c.map(q=>q.id),poolId:c.length===1?c[0].id:''};
@@ -951,12 +963,12 @@ function usagePanelHTML(){
    const status=sel[i]==='skip'?'Skipped':sel[i]===''?(m.status==='ambiguous'?'Choose a pool':'No match — choose or skip'):dups.includes(sel[i])?'Conflict — same pool twice':(m.status==='matched'&&sel[i]===m.poolId?'Matched':'Chosen by you');
    const oldUsed=pool?(pool.used===''||pool.used==null?'Unknown':pool.used+'%'):'—',oldReset=pool?(pool.nextReset||'not set'):'—';
    const newReset=r.reset?escapeHTML(r.reset):'unchanged';
-   return `<div class="usage-row"><strong>${escapeHTML(r.label)}</strong> <span class="inline-tag">${escapeHTML(status)}</span><div class="help-note">Pasted: ${escapeHTML(r.shown)} → used ${r.used}%</div><label class="sr-only" for="usageRow${i}">Target pool for ${escapeHTML(r.label)}</label><select id="usageRow${i}" data-usage-row="${i}"><option value="" ${sel[i]===''?'selected':''}>Choose pool…</option><option value="skip" ${sel[i]==='skip'?'selected':''}>Skip this row</option>${opts.map(q=>`<option value="${escapeHTML(q.id)}" ${sel[i]===q.id?'selected':''}>${label(q)}</option>`).join('')}</select>${pool&&sel[i]!=='skip'?`<div class="help-note">Used: ${escapeHTML(String(oldUsed))} → <b>${r.used}%</b> · Reset: ${escapeHTML(String(oldReset))} → <b>${newReset}</b></div>`:''}${r.resetNote?`<div class="help-note">${escapeHTML(r.resetNote)}</div>`:''}</div>`;
+   return `<div class="usage-row"><strong>${escapeHTML(r.label)}</strong> <span class="inline-tag">${escapeHTML(status)}</span><div class="help-note">Pasted: ${escapeHTML(r.shown)} → used ${r.used}%</div><label class="sr-only" for="usageRow${i}">Target pool for ${escapeHTML(r.label)}</label><select id="usageRow${i}" data-usage-row="${i}"><option value="" ${sel[i]===''?'selected':''}>Choose pool…</option><option value="skip" ${sel[i]==='skip'?'selected':''}>Skip this row</option>${opts.map(q=>`<option value="${escapeHTML(q.id)}" ${sel[i]===q.id?'selected':''}>${label(q)}</option>`).join('')}</select>${pool&&sel[i]!=='skip'?`<div class="help-note">Used: ${escapeHTML(String(oldUsed))} → <b>${r.used}%</b> · Reset: ${escapeHTML(String(oldReset))} → <b>${newReset}</b></div>`:''}${r.resetNote?`<div class="help-note">${escapeHTML(r.resetNote)}</div>`:''}${r.unitNote?`<div class="help-note">${escapeHTML(r.unitNote)}</div>`:''}</div>`;
   }).join('');
   const rpool=hasR?data.quotas.find(q=>q.id===d.rsel):null,rlab=q=>{const s=subFor(q);return escapeHTML(`${s.provider} · ${q.model} · ${q.window==='5h'?'5-hour':q.window}`)};
   const resetHtml=hasR?`<div class="usage-row"><strong>Full resets available: ${p.resets.items.length}</strong> <span class="inline-tag">${d.rsel==='skip'?'Skipped':d.rsel===''?'Choose a pool':'Will be saved in the pool note'}</span>${p.resets.avail!==null&&p.resets.avail!==p.resets.items.length?`<div class="help-note">The screen says ${p.resets.avail} available but ${p.resets.items.length} could be read.</div>`:''}<div class="help-note">${p.resets.items.map(i=>escapeHTML(i.kind+' · expires '+i.expires)).join('<br>')}</div><label class="sr-only" for="usageResetPool">Pool whose note stores the full resets</label><select id="usageResetPool" data-usage-resetpool><option value="" ${d.rsel===''?'selected':''}>Choose pool…</option><option value="skip" ${d.rsel==='skip'?'selected':''}>Do not save</option>${(d.rmatch&&d.rmatch.candidates.length?data.quotas.filter(q=>d.rmatch.candidates.includes(q.id)):data.quotas).map(q=>`<option value="${escapeHTML(q.id)}" ${d.rsel===q.id?'selected':''}>${rlab(q)}</option>`).join('')}</select><div class="help-note">Saved as one line in that pool's note. Your other note text is kept; the quota numbers are not changed.${rpool?' Old note: '+escapeHTML(rpool.note?String(rpool.note).slice(0,80):'empty'):''}</div>${p.resets.notes.map(n=>`<div class="help-note">${escapeHTML(n)}</div>`).join('')}</div>`:'';
   const skipped=p.skipped.length?`<p class="help-note">Not used: ${p.skipped.map(s=>escapeHTML(s.label+' ('+s.reason+')')).join('; ')}</p>`:'';
-  const prov=`<label for="usageProvider" class="paste-label">Provider</label><select id="usageProvider"><option value="" ${d.providerChoice===''?'selected':''}>Auto${p.detected?' ('+(p.detected==='claude'?'Claude Code':'Codex')+')':' — not detected'}</option><option value="claude" ${d.providerChoice==='claude'?'selected':''}>Claude Code</option><option value="codex" ${d.providerChoice==='codex'?'selected':''}>Codex / ChatGPT</option></select>`;
+  const prov=`<label for="usageProvider" class="paste-label">Provider</label><select id="usageProvider"><option value="" ${d.providerChoice===''?'selected':''}>Auto${p.detected?' ('+UP_PROV_NAME[p.detected]+')':' — not detected'}</option>${['claude','codex','gemini','antigravity','grok'].map(k=>`<option value="${k}" ${d.providerChoice===k?'selected':''}>${k==='codex'?'Codex / ChatGPT':UP_PROV_NAME[k]}</option>`).join('')}</select>`;
   const why=blocked?'Saving is blocked here (recovery mode or shared origin).':dups.length?'Two rows target the same pool: skip one.':unresolved?'Choose a pool or skip for every row.':!applied?'Nothing to apply: every row is skipped.':d.fromOcr&&!d.verified?'Tick the box to confirm you compared the numbers with your screen.':'';
   return `${notice}<div class="card help usage-preview"><h3>Preview — nothing saved yet</h3><p class="help-note">Manual paste, no provider sync. Each row updates one pool only; percentages are never averaged.</p>${prov}${rowsHtml}${resetHtml}${skipped}${d.fromOcr?`<label class="inline-check"><input type="checkbox" data-usage-verify ${d.verified?'checked':''}/> <span>Read by OCR, which can misread digits: I compared these numbers with my screen.</span></label>`:''}${why?`<div class="notice warn" role="status">${escapeHTML(why)}</div>`:''}<div class="button-row"><button class="btn primary" data-usage-action="confirm" ${why?'disabled':''}>Confirm &amp; save</button><button class="btn" data-usage-action="cancel">Cancel</button></div></div>`;
  }

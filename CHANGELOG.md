@@ -9,6 +9,8 @@ All notable changes follow SemVer and Keep a Changelog.
 
 - Paste usage text also reads a "Usage limit resets" list (full resets with expiry, GMT+6 only). It is saved only if you choose a pool, as one line in that pool's note; schema unchanged.
 
+- Paste usage text also understands Gemini, Antigravity and Grok layouts (unknown window needs an explicit pool; "% of total" read as used and flagged). OCR Preview adds black/white threshold passes for low-contrast screenshots.
+
 ### Limits and evidence
 - This is still **manual paste**, not provider API sync, background sync or automatic quota update. No network call was added.
 - Storage key `ai-quota-control-center-v1`, JSON schema, Backup/Import, F1 recovery and the 5-file Hosting allowlist are unchanged.

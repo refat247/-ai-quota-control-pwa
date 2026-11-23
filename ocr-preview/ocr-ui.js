@@ -7,20 +7,33 @@
 (function(){
 'use strict';
 var BASE=new URL('ocr/',document.baseURI).href,busy=false;
-var PASSES=[[3,0,0],[6,0,0],[11,0,0],[3,1,0],[6,1,0],[11,1,0],[3,0,1],[6,0,1],[11,0,1],[3,1,1],[6,1,1],[11,1,1]]; // [page-segmentation mode, scale slot, crop away left 30% (sidebar)]
+// A pass is [page-segmentation mode, scale slot, crop away left 30% (sidebar, landscape only), black/white threshold 0..1 or 0 for plain grayscale]
+function makePasses(landscape){
+ var p=[],m,sc;
+ for(sc=0;sc<2;sc++)for(m=0;m<3;m++)p.push([[3,6,11][m],sc,0,0]);
+ if(landscape){for(sc=0;sc<2;sc++)for(m=0;m<3;m++)p.push([[3,6,11][m],sc,1,0]);[6,11].forEach(function(x){p.push([x,0,0,0.6]);p.push([x,0,1,0.6])})}
+ else{[0.6,0.75].forEach(function(t){[6,11].forEach(function(x){p.push([x,0,0,t])})})}
+ return p;
+}
 function loadScript(src){return new Promise(function(ok,fail){var s=document.createElement('script');s.src=src;s.onload=ok;s.onerror=function(){fail(new Error('OCR engine files could not be loaded.'))};document.head.appendChild(s)})}
 function say(el,t){if(el)el.textContent=t}
 function nowBD(){return new Intl.DateTimeFormat('sv-SE',{timeZone:'Asia/Dhaka',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).format(new Date()).replace(',','')}
-async function variant(bitmap,scale,crop){
+async function variant(bitmap,scale,crop,thr){
  var sx=crop?Math.round(bitmap.width*0.3):0,sw=bitmap.width-sx;
  var c=document.createElement('canvas');c.width=Math.max(1,Math.round(sw*scale));c.height=Math.max(1,Math.round(bitmap.height*scale));
  var g=c.getContext('2d');g.filter='grayscale(1)';g.drawImage(bitmap,sx,0,sw,bitmap.height,0,0,c.width,c.height);
+ if(thr){var im=g.getImageData(0,0,c.width,c.height),d=im.data,h=new Array(256).fill(0),n=d.length/4,i,y;
+  for(i=0;i<d.length;i+=4){y=Math.round(0.299*d[i]+0.587*d[i+1]+0.114*d[i+2]);d[i]=y;h[y]++}
+  var lo=0,hi=255,a=0;for(i=0;i<256;i++){a+=h[i];if(a>=n*0.02){lo=i;break}}a=0;for(i=255;i>=0;i--){a+=h[i];if(a>=n*0.02){hi=i;break}}
+  var T=lo+(hi-lo)*thr;for(i=0;i<d.length;i+=4){y=d[i]>T?255:0;d[i]=d[i+1]=d[i+2]=y;d[i+3]=255}g.putImageData(im,0,0)}
  var blob=await new Promise(function(r){c.toBlob(r,'image/png')});c.width=c.height=1;return blob;
 }
+var STOP={weekly:1,limit:1,hour:1,hours:1,session:1,current:1,week:1,usage:1,this:1,left:1,used:1,reset:1,resets:1,total:1,your:1,limits:1};
+function labelKey(label){return String(label||'').toLowerCase().split(/[^a-z0-9]+/).filter(function(w){return w.length>=4&&!STOP[w]}).join('-')}
 function vote(results){
- var tally={},labels={},rtally={},avt={};
- results.forEach(function(res){if(res.avail!==null&&res.avail!==undefined)avt[res.avail]=(avt[res.avail]||0)+1;var rows=res.rows;var rs={};res.resets.forEach(function(x){var key=x.kind+'|'+x.expires;if(rs[key])return;rs[key]=1;rtally[key]=rtally[key]||{n:0,x:x};rtally[key].n++});var seen={};rows.forEach(function(r){var k=r.window+'|'+r.hint;if(seen[k])return;seen[k]=1;
-  tally[k]=tally[k]||{};tally[k][r.used]=(tally[k][r.used]||0)+1;labels[k]=labels[k]||r;
+ var tally={},labels={},lcount={},rtally={},avt={};
+ results.forEach(function(res){if(res.avail!==null&&res.avail!==undefined)avt[res.avail]=(avt[res.avail]||0)+1;var rows=res.rows;var rs={};res.resets.forEach(function(x){var key=x.kind+'|'+x.expires;if(rs[key])return;rs[key]=1;rtally[key]=rtally[key]||{n:0,x:x};rtally[key].n++});var seen={};rows.forEach(function(r){var k=r.window+'|'+r.hint+'|'+labelKey(r.label);if(seen[k])return;seen[k]=1;
+  tally[k]=tally[k]||{};tally[k][r.used]=(tally[k][r.used]||0)+1;labels[k]=labels[k]||r;lcount[k]=lcount[k]||{};lcount[k][r.label]=(lcount[k][r.label]||0)+1;
   var rv=r.reset||(/^[A-Za-z0-9 :.,'\u2019()\/\u2013-]{1,60}$/.test(r.resetText||'')?'t|'+r.resetText:null);
   if(rv){var rk=k+'|r';tally[rk]=tally[rk]||{};tally[rk][rv]=(tally[rk][rv]||0)+1}})});
  var kept=[],unsure=[];
@@ -30,8 +43,10 @@ function vote(results){
   var l=labels[k];
   if(bc>=3&&bc>second){
    var reset=null,rt=tally[k+'|r']||{},rb=0;Object.keys(rt).forEach(function(v){if(rt[v]>rb&&rt[v]>=2){rb=rt[v];reset=v}});
-   kept.push({window:l.window,hint:l.hint,used:Number(best),reset:reset});
-  }else unsure.push(l.window==='5h'?'5-hour':'weekly');
+   if(reset&&/^\d{4}-\d{2}-\d{2}$/.test(reset)){Object.keys(rt).forEach(function(v){if(v.indexOf(reset+' ')===0&&rt[v]>=2)reset=v})}
+   var lb=l.label,lbc=0;Object.keys(lcount[k]).forEach(function(x){if(lcount[k][x]>lbc){lbc=lcount[k][x];lb=x}});
+   kept.push({window:l.window,hint:l.hint,label:lb,used:Number(best),reset:reset});
+  }else unsure.push(l.label||(l.window==='5h'?'5-hour':'weekly'));
  });
  var rkept=Object.keys(rtally).filter(function(k){return rtally[k].n>=3}).map(function(k){return rtally[k].x}).sort(function(a,b){return a.expires<b.expires?-1:1});
  var av=null,ac=0;Object.keys(avt).forEach(function(k){if(avt[k]>ac){ac=avt[k];av=Number(k)}});
@@ -39,13 +54,13 @@ function vote(results){
  return {kept:kept,unsure:unsure,resets:rkept,resetUnsure:runsure};
 }
 function canonical(kept,provider,resets){
- var out=[provider==='claude'?'Claude usage':provider==='codex'?'Codex rate limits':'Usage'];
+ var out=[{claude:'Claude usage',codex:'Codex rate limits',gemini:'Gemini usage',antigravity:'Antigravity usage',grok:'Grok usage'}[provider]||'Usage'];
  kept.forEach(function(r){
-  out.push((r.window==='5h'?'Current session':'Current week')+(r.hint?' ('+r.hint+' only)':''));
+  out.push(r.label||(r.window==='5h'?'Current session':'Current week'));
   out.push(r.used+'% used');
   if(r.reset)out.push('Resets '+(r.reset.indexOf('t|')===0?r.reset.slice(2):r.reset));
  });
- if(resets&&resets.length){out.push('Usage limit resets','Available '+resets.length);resets.forEach(function(x){out.push('Full reset ('+x.kind+')','Expires '+x.expires+' GMT+6')})}
+ if(resets&&resets.length){out.push('Usage limit resets','Available '+resets.length);resets.forEach(function(x){out.push(x.kind==='Full reset'?'Full reset':'Full reset ('+x.kind+')','Expires '+x.expires+' GMT+6')})}
  return out.join('\n');
 }
 async function scan(file,statusEl,fileInput){
@@ -58,11 +73,11 @@ async function scan(file,statusEl,fileInput){
   if(!window.Tesseract)await loadScript(BASE+'tesseract.min.js');
   worker=await window.Tesseract.createWorker('eng',1,{workerPath:BASE+'worker.min.js',corePath:BASE+'core/',langPath:BASE+'lang/',gzip:true,workerBlobURL:false,cacheMethod:'none'});
   bitmap=await createImageBitmap(file);
-  var side=Math.max(bitmap.width,bitmap.height),scales=[1,side<=1400?2:0.75],results=[],providers={};
+  var side=Math.max(bitmap.width,bitmap.height),scales=[1,side<=1400?2:0.75],results=[],providers={},PASSES=makePasses(bitmap.width>=bitmap.height*1.2);
   for(var i=0;i<PASSES.length;i++){
    say(statusEl,'Reading screenshot… pass '+(i+1)+' of '+PASSES.length);
    await worker.setParameters({tessedit_pageseg_mode:String(PASSES[i][0]),user_defined_dpi:'300'});
-   var blob=await variant(bitmap,scales[PASSES[i][1]],PASSES[i][2]);
+   var blob=await variant(bitmap,scales[PASSES[i][1]],PASSES[i][2],PASSES[i][3]);
    var res=await worker.recognize(blob),text=String((res&&res.data&&res.data.text)||'');
    var parsed=P.parseUsageText(text,nowBD(),null);
    results.push(parsed.ok?{rows:parsed.rows,resets:(parsed.resets&&parsed.resets.items)||[],avail:parsed.resets?parsed.resets.avail:null}:{rows:[],resets:[],avail:null});
