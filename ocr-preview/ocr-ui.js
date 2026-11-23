@@ -18,8 +18,8 @@ async function variant(bitmap,scale,crop){
  var blob=await new Promise(function(r){c.toBlob(r,'image/png')});c.width=c.height=1;return blob;
 }
 function vote(results){
- var tally={},labels={};
- results.forEach(function(rows){var seen={};rows.forEach(function(r){var k=r.window+'|'+r.hint;if(seen[k])return;seen[k]=1;
+ var tally={},labels={},rtally={},avt={};
+ results.forEach(function(res){if(res.avail!==null&&res.avail!==undefined)avt[res.avail]=(avt[res.avail]||0)+1;var rows=res.rows;var rs={};res.resets.forEach(function(x){var key=x.kind+'|'+x.expires;if(rs[key])return;rs[key]=1;rtally[key]=rtally[key]||{n:0,x:x};rtally[key].n++});var seen={};rows.forEach(function(r){var k=r.window+'|'+r.hint;if(seen[k])return;seen[k]=1;
   tally[k]=tally[k]||{};tally[k][r.used]=(tally[k][r.used]||0)+1;labels[k]=labels[k]||r;
   if(r.reset){var rk=k+'|r';tally[rk]=tally[rk]||{};tally[rk][r.reset]=(tally[rk][r.reset]||0)+1}})});
  var kept=[],unsure=[];
@@ -32,15 +32,19 @@ function vote(results){
    kept.push({window:l.window,hint:l.hint,used:Number(best),reset:reset});
   }else unsure.push(l.window==='5h'?'5-hour':'weekly');
  });
- return {kept:kept,unsure:unsure};
+ var rkept=Object.keys(rtally).filter(function(k){return rtally[k].n>=3}).map(function(k){return rtally[k].x}).sort(function(a,b){return a.expires<b.expires?-1:1});
+ var av=null,ac=0;Object.keys(avt).forEach(function(k){if(avt[k]>ac){ac=avt[k];av=Number(k)}});
+ var runsure=(av!==null&&rkept.length<av)?av-rkept.length:0;
+ return {kept:kept,unsure:unsure,resets:rkept,resetUnsure:runsure};
 }
-function canonical(kept,provider){
+function canonical(kept,provider,resets){
  var out=[provider==='claude'?'Claude usage':provider==='codex'?'Codex rate limits':'Usage'];
  kept.forEach(function(r){
   out.push((r.window==='5h'?'Current session':'Current week')+(r.hint?' ('+r.hint+' only)':''));
   out.push(r.used+'% used');
   if(r.reset)out.push('Resets '+r.reset);
  });
+ if(resets&&resets.length){out.push('Usage limit resets','Available '+resets.length);resets.forEach(function(x){out.push('Full reset ('+x.kind+')','Expires '+x.expires+' GMT+6')})}
  return out.join('\n');
 }
 async function scan(file,statusEl,fileInput){
@@ -60,14 +64,14 @@ async function scan(file,statusEl,fileInput){
    var blob=await variant(bitmap,scales[PASSES[i][1]],PASSES[i][2]);
    var res=await worker.recognize(blob),text=String((res&&res.data&&res.data.text)||'');
    var parsed=P.parseUsageText(text,nowBD(),null);
-   results.push(parsed.ok?parsed.rows:[]);
+   results.push(parsed.ok?{rows:parsed.rows,resets:(parsed.resets&&parsed.resets.items)||[],avail:parsed.resets?parsed.resets.avail:null}:{rows:[],resets:[],avail:null});
    if(parsed.ok&&parsed.detected)providers[parsed.detected]=(providers[parsed.detected]||0)+1;
   }
   var v=vote(results),prov=null,pc=0;Object.keys(providers).forEach(function(k){if(providers[k]>pc){pc=providers[k];prov=k}});
   var area=document.getElementById('usagePaste');if(!area)throw new Error('Paste box not found.');
-  if(!v.kept.length)throw new Error('No numbers could be read reliably.');
-  area.value=canonical(v.kept,prov);area.dataset.ocr='1';
-  say(statusEl,'Read '+v.kept.length+' value'+(v.kept.length===1?'':'s')+' (majority of '+PASSES.length+' OCR passes)'+(v.unsure.length?'. Left out because passes disagreed: '+v.unsure.join(', ')+'.':'.')+' Check them against your screen, then tap Preview changes. Nothing is saved yet.');
+  if(!v.kept.length&&!v.resets.length)throw new Error('No numbers could be read reliably.');
+  area.value=canonical(v.kept,prov,v.resets);area.dataset.ocr='1';
+  say(statusEl,'Read '+v.kept.length+' value'+(v.kept.length===1?'':'s')+(v.resets.length?' and '+v.resets.length+' full reset'+(v.resets.length===1?'':'s'):'')+' (majority of '+PASSES.length+' OCR passes)'+(v.unsure.length?'. Left out because passes disagreed: '+v.unsure.join(', ')+'.':'.')+(v.resetUnsure?' Some full-reset lines were left out because passes disagreed.':'')+' Check them against your screen, then tap Preview changes. Nothing is saved yet.');
  }catch(e){say(statusEl,'OCR failed: '+(e&&e.message?e.message:'unknown error')+' Nothing was changed.')}
  finally{
   try{if(bitmap)bitmap.close()}catch(_){}

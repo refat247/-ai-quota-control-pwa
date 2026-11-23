@@ -124,3 +124,18 @@ for(const phrase of ['function rankedQuotas(', 'function compactQuotaCard(', 'da
  as.ok(!/fetch\(|XMLHttpRequest|sendBeacon|WebSocket|localStorage/.test(ui),'ocr-ui.js has no network/storage primitives');
  console.log('PASS: OCR preview boundary (production untouched, no storage/network in ocr-ui.js)');
 }
+
+{
+ const as=require('assert'),fs3=require('fs');
+ const html3=fs3.readFileSync('index.html','utf8'),blk3=html3.match(/\/\*USAGE-PARSER-START\*\/([\s\S]*?)\/\*USAGE-PARSER-END\*\//);
+ const {parseUsageText:pu}=new Function(blk3[1]+';return {parseUsageText};')();
+ const T='Usage limit resets\nAvailable 3\nFull reset (Weekly + 5 hr)\nExpires Dec 1, 1:27 AM GMT+6\nFull reset (Weekly + 5 hr)\nExpires Dec 2, 4:09 AM GMT+6\nFull reset (Weekly + 5 hr)\nExpires Dec 13, 3:00 AM GMT+6\n';
+ let r3=pu(T,'2026-11-24 00:28');
+ as.ok(r3.ok&&r3.rows.length===0&&r3.resets.items.length===3&&r3.resets.avail===3,'full resets parsed');
+ as.equal(r3.resets.items[0].expires,'2026-12-01 01:27');as.equal(r3.resets.items[2].expires,'2026-12-13 03:00');
+ r3=pu('Full reset\nExpires Dec 1, 1:27 AM GMT-5\nFull reset\nExpires 1:27 AM GMT+6\nFull reset (Weekly)\n','2026-11-24 00:28');
+ as.equal(r3.ok,false,'foreign-tz, time-only and missing-expiry full resets must be left out');
+ r3=pu('Current week (all models)\n 34% used\n'+T,'2026-11-24 00:28');
+ as.ok(r3.rows.length===1&&r3.resets.items.length===3,'usage rows and full resets coexist');
+ console.log('PASS: full-reset list parser (3 items, foreign timezone/time-only/missing expiry left out, coexists with usage rows)');
+}
