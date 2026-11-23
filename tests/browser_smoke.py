@@ -430,6 +430,30 @@ def main():
         assert page.locator('#usagePaste').input_value()=='','textarea not cleared after save'
         assert not reqs, f'network requests made: {reqs}'
         ctx.close(); print('PASS paste usage: preview/cancel byte-identical, garbage error, remaining->used confirm, no network')
+        # Full resets list (Codex "Usage limit resets"): numbers unchanged, one note line saved, existing note kept, read-back verified.
+        ds=usage_ds(False)
+        for q in ds['quotas']:
+            if q['id']=='u4': q['note']='my own note'
+        raw2=json.dumps(ds); ctx,page,reqs=get_page(390,stored=raw2); open_paste(page)
+        page.locator('#usagePaste').fill('Codex\nUsage limit resets\nAvailable 2\nFull reset (Weekly + 5 hr)\nExpires Dec 1, 1:27 AM GMT+6\nFull reset (Weekly + 5 hr)\nExpires Dec 2, 4:09 AM GMT+6\n')
+        page.locator('[data-usage-action="preview"]').click()
+        assert 'Full resets available: 2' in page.locator('#usagePanel').inner_text()
+        page.locator('#usageResetPool').select_option('u4')
+        page.locator('[data-usage-action="confirm"]').click()
+        st=json.loads(page.evaluate('localStorage.getItem("'+STORE+'")')); old=json.loads(raw2)
+        qs={x['id']:x for x in st['quotas']}; oq={x['id']:x for x in old['quotas']}
+        import re
+        assert qs['u4']['note'].startswith('my own note\nFull resets available: 2 ') and re.search(r'expires \d{4}-12-01 01:27; Weekly \+ 5 hr expires \d{4}-12-02 04:09$',qs['u4']['note']), qs['u4']['note']
+        assert all(qs[k]['used']==oq[k]['used'] and qs[k].get('nextReset')==oq[k].get('nextReset') for k in qs),'numbers changed by full-reset save'
+        assert all(qs[k]['note']==oq[k]['note'] for k in qs if k!='u4'),'other notes changed'
+        assert set(st.keys())==set(old.keys()) and all(set(a.keys())==set(b.keys()) for a,b in zip(st['quotas'],old['quotas'])),'schema changed'
+        assert 'read-back verified' in page.locator('#usagePanel').inner_text()
+        assert not reqs, f'network requests made: {reqs}'
+        # Foreign-timezone expiry is left out, not guessed.
+        page.locator('#usagePanel summary').click()
+        page.locator('#usagePaste').fill('Codex\nFull reset\nExpires Dec 1, 1:27 AM GMT-5\n'); page.locator('[data-usage-action="preview"]').click()
+        assert page.locator('#usageError, [role="alert"]').first.is_visible() or 'No usage lines' in page.locator('#usagePanel').inner_text()
+        ctx.close(); print('PASS paste usage: full resets saved as note line, numbers/schema unchanged, foreign timezone left out')
         # Ambiguous pools (two Claude weekly pools): never auto-picked; Confirm blocked until user chooses.
         ds=usage_ds(True); raw1=json.dumps(ds)
         ctx,page,_=get_page(390,stored=raw1); open_paste(page)

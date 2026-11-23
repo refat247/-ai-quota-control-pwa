@@ -7,6 +7,10 @@ All notable changes follow SemVer and Keep a Changelog.
 ### Added
 - Quotas: **Paste usage text**. The user pastes Claude Code `/usage` or Codex `/status` text; a local parser extracts used % (converts "left/remaining" to used), the 5-hour or weekly window and, when it is unambiguous and in Asia/Dhaka, the reset time. A preview (pool, old -> new) is shown first; nothing is saved until Confirm. Rows that match no pool, or more than one pool, need an explicit choice or Skip; two rows aimed at the same pool block Confirm. Unit-less percentages and unparseable text are skipped or rejected with no data change.
 
+- Paste usage text also reads a "Usage limit resets" list (full resets with expiry, GMT+6 only). It is saved only if you choose a pool, as one line in that pool's note; schema unchanged.
+
+- Paste usage text also understands Gemini, Antigravity and Grok layouts (unknown window needs an explicit pool; "% of total" read as used and flagged). OCR Preview adds black/white threshold passes for low-contrast screenshots.
+
 ### Limits and evidence
 - This is still **manual paste**, not provider API sync, background sync or automatic quota update. No network call was added.
 - Storage key `ai-quota-control-center-v1`, JSON schema, Backup/Import, F1 recovery and the 5-file Hosting allowlist are unchanged.

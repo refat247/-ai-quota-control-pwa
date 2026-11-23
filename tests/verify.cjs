@@ -124,3 +124,39 @@ for(const phrase of ['function rankedQuotas(', 'function compactQuotaCard(', 'da
  as.ok(!/fetch\(|XMLHttpRequest|sendBeacon|WebSocket|localStorage/.test(ui),'ocr-ui.js has no network/storage primitives');
  console.log('PASS: OCR preview boundary (production untouched, no storage/network in ocr-ui.js)');
 }
+
+{
+ const as=require('assert'),fs3=require('fs');
+ const html3=fs3.readFileSync('index.html','utf8'),blk3=html3.match(/\/\*USAGE-PARSER-START\*\/([\s\S]*?)\/\*USAGE-PARSER-END\*\//);
+ const {parseUsageText:pu}=new Function(blk3[1]+';return {parseUsageText};')();
+ const T='Usage limit resets\nAvailable 3\nFull reset (Weekly + 5 hr)\nExpires Dec 1, 1:27 AM GMT+6\nFull reset (Weekly + 5 hr)\nExpires Dec 2, 4:09 AM GMT+6\nFull reset (Weekly + 5 hr)\nExpires Dec 13, 3:00 AM GMT+6\n';
+ let r3=pu(T,'2026-11-24 00:28');
+ as.ok(r3.ok&&r3.rows.length===0&&r3.resets.items.length===3&&r3.resets.avail===3,'full resets parsed');
+ as.equal(r3.resets.items[0].expires,'2026-12-01 01:27');as.equal(r3.resets.items[2].expires,'2026-12-13 03:00');
+ r3=pu('Full reset\nExpires Dec 1, 1:27 AM GMT-5\nFull reset\nExpires 1:27 AM GMT+6\nFull reset (Weekly)\n','2026-11-24 00:28');
+ as.equal(r3.ok,false,'foreign-tz, time-only and missing-expiry full resets must be left out');
+ r3=pu('Current week (all models)\n 34% used\n'+T,'2026-11-24 00:28');
+ as.ok(r3.rows.length===1&&r3.resets.items.length===3,'usage rows and full resets coexist');
+ console.log('PASS: full-reset list parser (3 items, foreign timezone/time-only/missing expiry left out, coexists with usage rows)');
+}
+
+{
+ const as=require('assert'),fs4=require('fs');
+ const h4=fs4.readFileSync('index.html','utf8'),b4=h4.match(/\/\*USAGE-PARSER-START\*\/([\s\S]*?)\/\*USAGE-PARSER-END\*\//);
+ const {parseUsageText:pu4,matchUsageRows:mu4}=new Function(b4[1]+';return {parseUsageText,matchUsageRows};')();
+ const N4='2026-11-24 01:47';
+ // Transcribed from owner phone screenshots (Gemini app, Antigravity, Grok).
+ let g=pu4("Usage limits PRO\nYour plan's limits determine how much you can use Gemini over time.\nUpdated just now\nCurrent usage 0% used\nResets at 5:05 am\nWeekly limit 5% used\nResets on 25 November at 2:05 am\n",N4);
+ as.equal(g.detected,'gemini');as.equal(g.rows.length,2);as.equal(g.rows[0].window,'unknown');as.equal(g.rows[0].reset,null);as.equal(g.rows[1].used,5);as.equal(g.rows[1].reset,'2026-11-25 02:05');
+ let a4=pu4('Usage\nGemini Models\nWeekly limit 30% left\nResets in 4d 18h\n5h limit 21% left\nResets in 1h 46m\nClaude and GPT models\nWeekly limit 86% left\nResets in 6d 15h\n5h limit 100% left\nGemini 4 Argon 80% left\nWeekly limit, resets in 4d 21h\n',N4);
+ as.equal(a4.detected,'antigravity');as.deepEqual(a4.rows.map(r=>[r.label,r.used]),[['Gemini Models · Weekly limit',70],['Gemini Models · 5h limit',79],['Claude and GPT models · Weekly limit',14],['Claude and GPT models · 5h limit',0]]);
+ as.equal(a4.rows[0].reset,'2026-11-28 19:47');
+ let k=pu4('Usage\nWeekly SuperGrok Limit\n4% of total Resets Wed, 25 Nov,\n9:32 pm\nGrok Build 4% of total\nWeekly Grok Bot Limit\n54% used Resets Thu, 26 Nov, 1:16am\n',N4);
+ as.equal(k.detected,'grok');as.equal(k.rows.length,2);as.equal(k.rows[0].used,4);as.ok(/of total/.test(k.rows[0].unitNote));as.equal(k.rows[0].reset,'2026-11-25 21:32');as.equal(k.rows[1].reset,'2026-11-26 01:16');
+ // Unknown window must never auto-match one pool silently when several exist; unit-less "of" lines stay rejected.
+ const subs=[{id:'s1',provider:'Google Gemini'}],qs=[{id:'a',subId:'s1',window:'5h',model:'x'},{id:'b',subId:'s1',window:'weekly',model:'y'}];
+ as.equal(mu4([{id:0,window:'unknown',hint:''}],'gemini',subs,qs)[0].status,'ambiguous');
+ as.equal(pu4('Weekly limit 40% of your plan',N4).ok,false);
+ as.equal(pu4('Appearance This week 89% used\nResets at 9:00 AM\nLED Weekly limit 80% used',N4).rows.map(r=>r.label).join('|'),'This week|Weekly limit');
+ console.log('PASS: Gemini / Antigravity / Grok layouts (transcribed phone screenshots), unknown window needs explicit pool');
+}
